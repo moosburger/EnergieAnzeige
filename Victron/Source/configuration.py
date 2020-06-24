@@ -36,7 +36,7 @@ class Global():
     MQTT_TSL_PORT = 8883
 
     SCHED_INTERVAL = 30          #  seconds delay
-    LOG_LEVEL = logging.INFO
+    #LOG_LEVEL = logging.INFO
     """
         Levels:
         DEBUG       -> alle Level werden ausgegeben
@@ -45,8 +45,10 @@ class Global():
         ERROR       -> Error, Critical
         CRITITCAL   -> Critical
     """
-    LOG_FORMAT = '%(asctime)s - %(levelname)s - %(name)s\n\t\t\t\t\t\t- %(message)s'
-    LOG_FILEPATH = '/mnt/dietpi_userdata/EnergieAnzeige/LogFile.log'
+    #LOG_FORMAT = '%(asctime)s - %(levelname)8s - %(name)15s - %(message)s'
+    #LOG_FILEPATH = '/mnt/dietpi_userdata/EnergieAnzeige/LogFile.log'
+    #LOG_SIZE = 20000
+    #LOG_BACKUP = 10
 
     EXPORT_INTERVAL = 120
     EXPORT_FILEPATH = '/mnt/dietpi_userdata/SolarExport/'
@@ -76,7 +78,7 @@ class Global():
     PIKO_ENERGY2 = "SELECT last(AcL2EnergyForward) FROM pvinverter where instance='PIKO'"
     PIKO_ENERGY3 = "SELECT last(AcL3EnergyForward) FROM pvinverter where instance='PIKO'"
     PIKO_ENERGY_TOTAL = "SELECT last(AcEnergyForwardTotal) FROM pvinverter where instance='PIKO'"
-    PIKO_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='PIKO' and AcEnergyForwardDay > 0"
+    PIKO_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='PIKO' and time > now() - 26h"
 
     SMA = "SELECT last(AcPower) FROM pvinverter where instance='SMA'"
     SMA_VL1 = "SELECT last(AcL1Voltage) FROM pvinverter where instance='SMA'"
@@ -89,7 +91,7 @@ class Global():
     SMA_ENERGY2 = "SELECT last(AcL2EnergyForward) FROM pvinverter where instance='SMA'"
     SMA_ENERGY3 = "SELECT last(AcL3EnergyForward) FROM pvinverter where instance='SMA'"
     SMA_ENERGY_TOTAL = "SELECT last(AcEnergyForwardTotal) FROM pvinverter where instance='SMA'"
-    SMA_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='SMA' and AcEnergyForwardDay > 0"
+    SMA_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='SMA' and time > now() - 26h"
 
     PvOnGridL1 = "SELECT last(AcPvOnGridL1Power) FROM system where instance='Gateway'"
     PvOnGridL2 = "SELECT last(AcPvOnGridL2Power) FROM system where instance='Gateway'"

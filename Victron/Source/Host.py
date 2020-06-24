@@ -21,7 +21,9 @@
 #import string
 import threading
 import time
-import logging
+#import logging
+#from logging.config import fileConfig
+#from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import psutil
 from collections import namedtuple as NamedTuple
@@ -45,14 +47,15 @@ CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp cores
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
 # #################################################################################################
-log = logging.getLogger('Host')
-log.setLevel(_conf.LOG_LEVEL)
-fh = logging.FileHandler(_conf.LOG_FILEPATH)
-fh.setLevel(logging.DEBUG)
-log.addHandler(fh)
-formatter = logging.Formatter(_conf.LOG_FORMAT)
-fh.setFormatter(formatter)
-log.addHandler(fh)
+#fileConfig('logging_config.ini')
+#~ log = logging.getLogger('Host')
+#~ log.setLevel(_conf.LOG_LEVEL)
+#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
+#~ fh.setLevel(logging.DEBUG)
+#~ log.addHandler(fh)
+#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
+#~ fh.setFormatter(formatter)
+#~ log.addHandler(fh)
 
 #log.debug('Debug-Nachricht')
 #log.info('Info-Nachricht')
@@ -80,9 +83,9 @@ class Raspi_CallBack():  #object
 #   \param[in] CallBack
 #   \return -
 # #################################################################################################
-    def __init__(self, interval, funcObj):
-        #self.interval = interval
-        #self.funcObj = funcObj
+    def __init__(self, interval, funcObj, logger):
+
+        self.log = logger.getLogger('Host')
         self.callFunc = ['GetBootTimeData', 'GetCpuInfoData', 'GetMemoryInfoData', 'GetCpuInfoData', 'GetDiskUsageData']
         self.mBootTime = ""
         self.mDiskUsage = []
@@ -110,13 +113,12 @@ class Raspi_CallBack():  #object
 # #################################################################################################
     def run(self, interval, funcObj):
 
-        log.info("Starte Raspi Callback mit Intervall {} sek.".format(self.interval))
-
+        self.log.info("Starte Raspi Callback mit Intervall {} sek.".format(interval))
         self.mBootTime = self._GetBootTime()
 
         fncCnt = 0
         while True:
-            log.debug(self.callFunc[fncCnt])
+            self.log.debug(self.callFunc[fncCnt])
 
             if (self.callFunc[fncCnt] == 'GetDiskUsageData'):
                 self.mDiskUsage = self._GetDiskUsage()

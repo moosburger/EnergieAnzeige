@@ -19,10 +19,12 @@
 # # Python Imports (Standard Library)
 # #################################################################################################
 import sys
-import logging
+#import logging
 import json
-from collections import namedtuple as NamedTuple
+#from logging.config import fileConfig
+#from logging.handlers import RotatingFileHandler
 from influxdb import InfluxDBClient
+from collections import namedtuple as NamedTuple
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -50,14 +52,15 @@ except:
 # #################################################################################################
 # # Logging
 # #################################################################################################
-log = logging.getLogger('influxHandles')
-log.setLevel(_conf.LOG_LEVEL)
-fh = logging.FileHandler(_conf.LOG_FILEPATH)
-fh.setLevel(logging.DEBUG)
-log.addHandler(fh)
-formatter = logging.Formatter(_conf.LOG_FORMAT)
-fh.setFormatter(formatter)
-log.addHandler(fh)
+#fileConfig('logging_config.ini')
+#~ log = logging.getLogger('InfluxHandler')
+#~ log.setLevel(_conf.LOG_LEVEL)
+#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
+#~ fh.setLevel(logging.DEBUG)
+#~ log.addHandler(fh)
+#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
+#~ fh.setFormatter(formatter)
+#~ log.addHandler(fh)
 
 #log.debug('Debug-Nachricht')
 #log.info('Info-Nachricht')
@@ -79,9 +82,9 @@ class influxIO(object):
 #   \param[in] portal_id
 #   \return -
 # #################################################################################################
-    def __init__(self, _host, _port, _username, _password, _database, _gzip):
+    def __init__(self, _host, _port, _username, _password, _database, _gzip, logger):
 
-        #self.influxdb_client = self
+        self.log = logger.getLogger('InfluxHandler')
         self.influxdb_client = InfluxDBClient(host = _host, port = _port, username =_username, password = _password, database = _database, gzip = _gzip)
 
 # # Ende Funktion: ' Constructor ' ################################################################
@@ -106,14 +109,14 @@ class influxIO(object):
 #   \return          -
 # #################################################################################################
     def _init_influxdb_database(self, _database):
+
         databases = self.influxdb_client.get_list_database()
-        #print databases
 
         if len(list(filter(lambda x: x['name'] == _database, databases))) == 0:
             self.influxdb_client.create_database(_database)
 
         self.influxdb_client.switch_database(_database)
-        log.info("Initialisierte Datenbank: {}".format(_database))
+        self.log.info("Initialisierte Datenbank: {}".format(_database))
 
 # # Ende Funktion: ' _init_influxdb_database ' ####################################################
 
@@ -133,7 +136,7 @@ class influxIO(object):
 
         except:
             for info in sys.exc_info():
-                log.error("Fehler: {}".format(info))
+                self.log.error("Fehler: {}".format(info))
 
         return False
 
@@ -163,7 +166,7 @@ class influxIO(object):
             jsDict.update( {type:value} )
 
         json_body[0]["fields"] = jsDict
-        log.debug(json_body)
+        self.log.debug(json_body)
         retVal = self.influxdb_client.write_points(json_body)
         if (retVal == False):
             retVal = self.influxdb_client.write_points(json_body)

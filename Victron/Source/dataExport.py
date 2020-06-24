@@ -22,7 +22,9 @@ import sys
 import os
 import threading
 import time
-import logging
+#import logging
+#from logging.config import fileConfig
+#from logging.handlers import RotatingFileHandler
 import datetime
 from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
 from influxHandler import influxIO, _SensorData as SensorData
@@ -52,14 +54,15 @@ except:
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
 # #################################################################################################
-log = logging.getLogger('ExportDataFromInflux')
-log.setLevel(_conf.LOG_LEVEL)
-fh = logging.FileHandler(_conf.LOG_FILEPATH)
-fh.setLevel(logging.DEBUG)
-log.addHandler(fh)
-formatter = logging.Formatter(_conf.LOG_FORMAT)
-fh.setFormatter(formatter)
-log.addHandler(fh)
+#fileConfig('logging_config.ini')
+#~ log = logging.getLogger('ExportData')
+#~ log.setLevel(_conf.LOG_LEVEL)
+#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
+#~ fh.setLevel(logging.DEBUG)
+#~ log.addHandler(fh)
+#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
+#~ fh.setFormatter(formatter)
+#~ log.addHandler(fh)
 
 #log.debug('Debug-Nachricht')
 #log.info('Info-Nachricht')
@@ -88,9 +91,10 @@ class ExportDataFromInflux(object):
 #   \param[in] portal_id
 #   \return -
 # #################################################################################################
-    def __init__(self, interval):
+    def __init__(self, interval, logger):
 
-        self.influxHdlr = influxIO(_host = _conf.INFLUXDB_ADDRESS, _port = _conf.INFLUXDB_PORT, _username = _conf.INFLUXDB_USER, _password = _conf.INFLUXDB_PASSWORD, _database = None, _gzip = _conf.INFLUXDB_ZIPPED)
+        self.log = logger.getLogger('ExportData')
+        self.influxHdlr = influxIO(_host = _conf.INFLUXDB_ADDRESS, _port = _conf.INFLUXDB_PORT, _username = _conf.INFLUXDB_USER, _password = _conf.INFLUXDB_PASSWORD, _database = None, _gzip = _conf.INFLUXDB_ZIPPED, logger = logger)
         thread = threading.Thread(target=self.main, args=(interval, ))
         thread.daemon = True
         thread.start()
@@ -184,6 +188,8 @@ class ExportDataFromInflux(object):
         PvInvertersAcEnergyForwardPerDay = PikoAcEnergyForwardPerDay + SmaAcEnergyForwardPerDay
         PvInvertersAcEnergyForwardTotal = PikoEn + SmaEn
         sensor_data.append(SensorData(System.RegEx, System.Label1, ["PvInvertersAcEnergyForwardTotal",], [PvInvertersAcEnergyForwardTotal,], timestamp))
+        # aktuelle Energie bis jetzt
+        sensor_data.append(SensorData(System.RegEx, System.Label1, ["PvInvertersAcEnergyForwardDay",], [PvInvertersAcEnergyForwardPerDay,], timestamp))
 
         sensor_data_day = []
         #GesamtEnergie am heutigen Tag für Sma, Piko
@@ -194,6 +200,16 @@ class ExportDataFromInflux(object):
         sensor_data_day.append(SensorData(PvInv.RegEx, PvInv.Label2, ["AcEnergyForwardPerDay",], [PikoAcEnergyForwardPerDay,], timestamp))
         sensor_data_day.append(SensorData(PvInv.RegEx, PvInv.Label1, ["AcEnergyForwardPerDay",], [SmaAcEnergyForwardPerDay,], timestamp))
         sensor_data_day.append(SensorData(System.RegEx, System.Label1, ["PvInvertersAcEnergyForwardPerDay",], [PvInvertersAcEnergyForwardPerDay,], timestamp))
+
+        toDay = datetime.date.today()
+        yesterDay = datetime.date(2020,6,21)
+        if (yesterDay == toDay):
+            self.log.info("Piko AcEnergyForwardDay: {}".format(PikoEn))
+            self.log.info("Sma AcEnergyForwardDay: {}".format(SmaEn))
+
+            self.log.info("Piko AcEnergyForwardPerDay: {}".format(PikoAcEnergyForwardPerDay))
+            self.log.info("Sma AcEnergyForwardPerDay: {}".format(SmaAcEnergyForwardPerDay))
+            self.log.info("Sma PvInvertersAcEnergyForwardPerDay: {}".format(PvInvertersAcEnergyForwardPerDay))
 
         return [PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal, sensor_data, sensor_data_day]
 
@@ -214,15 +230,19 @@ class ExportDataFromInflux(object):
         Sma_U1, Sma_U2, Sma_U3, Sma_I1, Sma_I2, Sma_I3 = self.influxHdlr._Query_influxDb([_conf.SMA_VL1,_conf.SMA_VL2,_conf.SMA_VL3, _conf.SMA_IL1, _conf.SMA_IL2, _conf.SMA_IL3], PvInv.RegEx, 'last')
 
         # GesamtStröme je Phase
-        Ges_I1 = round(Piko_I1 + Sma_I1) * 1000
-        Ges_I2 = round(Piko_I2 + Sma_I2) * 1000
-        Ges_I3 = round(Piko_I3 + Sma_I3) * 1000
+        Ges_I1 = int((Piko_I1 + Sma_I1) * 1000)
+        Ges_I2 = int((Piko_I2 + Sma_I2) * 1000)
+        Ges_I3 = int((Piko_I3 + Sma_I3) * 1000)
+
+        U1 = Piko_U1 if Sma_U1 < Piko_U1 else Sma_U1
+        U2 = Piko_U2 if Sma_U2 < Piko_U2 else Sma_U2
+        U3 = Piko_U3 if Sma_U3 < Piko_U3 else Sma_U3
 
         # Aktuelle Gesamtleistung je Phase
         Ges_P1, Ges_P2, Ges_P3 = self.influxHdlr._Query_influxDb([_conf.PvOnGridL1,_conf.PvOnGridL2,_conf.PvOnGridL3], System.RegEx, 'last')
-        PAC = round(Ges_P1 + Ges_P2 + Ges_P3)
+        PAC = int(round(Ges_P1 + Ges_P2 + Ges_P3))
 
-        return [round(Piko_U1), Ges_I1, round(Ges_P1), round(Piko_U2), Ges_I2, round(Ges_P2), round(Piko_U3), Ges_I3, round(Ges_P3), PAC]
+        return [int(round(U1)), Ges_I1, int(round(Ges_P1)), int(round(U2)), Ges_I2, int(round(Ges_P2)), int(round(U3)), Ges_I3, int(round(Ges_P3)), PAC]
 
 # # Ende Funktion: ' _get_PUI ' #################################################################
 
@@ -252,13 +272,11 @@ class ExportDataFromInflux(object):
 # #################################################################################################
     def _write_File(self, strFile, txtStream, oType):
 
-        try:
-            with open(strFile, oType) as f:
-                f.write (txtStream)
-                f.close()
+        with open(strFile, oType) as f:
+            f.write (txtStream)
+            f.flush()
 
-        except IOError as e:
-            log.error("IOError: {}".format(e.msg))
+        f.close()
 
 # # Ende Funktion: ' _write_File ' #################################################################
 
@@ -270,8 +288,7 @@ class ExportDataFromInflux(object):
     def main(self, interval):
 
         try:
-            log.info("Starte Export mit Intervall {} sek.".format(interval))
-            log.info("ExportPfad: {}".format(_conf.EXPORT_FILEPATH))
+            self.log.info("ExportPfad: {} Intervall {} sek.".format(_conf.EXPORT_FILEPATH, interval))
 
             ## Import fehlgeschlagen
             if (PrivateImport == False):
@@ -296,15 +313,16 @@ class ExportDataFromInflux(object):
                 csvFile = toDay.strftime('%Y%m%d.csv')
                 strFile = os.path.join(strFolder, csvFile)
 
-                if (yesterDay < toDay):
+                if (yesterDay < toDay) and (not os.path.exists(strFile)):
                     yesterDay = toDay
                     days_hist_written = False
 
                     if (not os.path.exists(strFolder)):
                         os.mkdir(strFolder)
 
+                    onceMore = True
                     csvStream = self._prepare_Csv_Header(toDay)
-                    self._write_File(strFile, csvStream, "wt")
+                    self._write_File(strFile, csvStream, "w")
 
             ## Tagsüber oder nachts
                 AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
@@ -323,23 +341,28 @@ class ExportDataFromInflux(object):
                 for sensor_data in sensor_data_list:
                     retVal = self.influxHdlr._send_sensor_data_to_influxdb(sensor_data)
                     if (retVal == False):
-                        log.warning("Fehler beim schreiben von {}".format(sensor_data))
+                        self.log.warning("Fehler beim schreiben von {}".format(sensor_data))
 
             ## Aktuelle Gesamtleistung je Phase, sowie einzel Spannung und Strom
-                Piko_U1, Ges_I1, Ges_P1, Piko_U2, Ges_I2, Ges_P2, Piko_U3, Ges_I3, Ges_P3, PAC = self._get_PUI()
+                Pv_U1, Ges_I1, Ges_P1, Pv_U2, Ges_I2, Ges_P2, Pv_U3, Ges_I3, Ges_P3, PAC = self._get_PUI()
                 if (PacMax < PAC):
                     PacMax = PAC
 
             ## Dc Werte müssen evtl gefaket werden, wenn Werte in der Csv nötig sein sollten
                 #
 
-            ## Csv Stream in Datei schreiben
-                datStream = "{:02d}:{:02d}:{:02d};1;0;0;0;0;0;0;0;0;0;{};{};{};{};{};{};{};{};{};0;0;0;0;{};{};0;0;0;0;\n". \
-                            format(Zeit.hour, Zeit.minute, Zeit.second, Piko_U1, Ges_I1, Ges_P1, Piko_U2, Ges_I2, Ges_P2, Piko_U3, Ges_I3, Ges_P3, round(PvInvertersAcEnergyForwardPerDay), round(PvInvertersAcEnergyForwardTotal))
-                self._write_File(strFile, datStream, "at")
+            ## Wenn eine Spannung > 0 ist, die Daten rausloggen
+                if (Pv_U1 > 0) or (Pv_U2 > 0) or (Pv_U3 > 0) or (onceMore == True):
+                ## Csv Stream in Datei schreiben
+                    datStream = "{:02d}:{:02d}:{:02d};1;0;0;0;0;0;0;0;0;0;{};{};{};{};{};{};{};{};{};0;0;0;0;{:.3f};{:.3f};0.000;0.000;0.000;0.000;\n". \
+                                format(Zeit.hour, Zeit.minute, Zeit.second, Pv_U1, Ges_I1, Ges_P1, Pv_U2, Ges_I2, Ges_P2, Pv_U3, Ges_I3, Ges_P3, PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal)
+                    self._write_File(strFile, datStream, "a")
 
-            ## days.js
-                self._write_File(_conf.EXPORT_FILEPATH + "days.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.day, Zeit.month, Zeit.year, round(PvInvertersAcEnergyForwardPerDay*1000), PacMax), "wt")
+                ## days.js
+                    self._write_File(_conf.EXPORT_FILEPATH + "days.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.day, Zeit.month, Zeit.year, int(round(PvInvertersAcEnergyForwardPerDay*1000)), PacMax), "wt")
+
+                    if (Pv_U1 == 0) and (Pv_U2 == 0) and (Pv_U3 == 0):
+                        onceMore = False
 
             ## days_hist.js
                 ShutDowntime = datetime.time(UMh, UMm - 5, 00)  # 5 min vor Sonnenuntergang
@@ -350,31 +373,41 @@ class ExportDataFromInflux(object):
                     for sensor_data in sensor_data_day_list:
                         retVal = self.influxHdlr._send_sensor_data_to_influxdb(sensor_data)
                         if (retVal == False):
-                            log.warning("Fehler beim schreiben von {}".format(sensor_data))
+                            self.log.warning("Fehler beim schreiben von {}".format(sensor_data))
 
                     days_hist_written = True
-                    days_hist = ('da[dx++]="{}.{}.{}|{};{}"\n'.format(Zeit.day, Zeit.month, Zeit.year, round(PvInvertersAcEnergyForwardPerDay)*1000, PacMax))
+                    days_hist = ('da[dx++]="{:02d}.{:02d}.{:02d}|{};{}"\n'.format(Zeit.day, Zeit.month, Zeit.year, int(round(PvInvertersAcEnergyForwardPerDay*1000)), PacMax))
 
-                    with open(_conf.EXPORT_FILEPATH + "days_hist.js", "wt+") as f:
-                        days_hist = days_hist + f.read()
+                    dataRead = ''
+                    with open(_conf.EXPORT_FILEPATH + "days_hist.js", "r") as f:
+                        dataRead = f.read()
+
+                    f.close()
+
+                    with open(_conf.EXPORT_FILEPATH + "days_hist.js", "w") as f:
+                        days_hist = "{}\n{}".format(days_hist, dataRead)
+                        self.log.info("Vorher {} :".format(dataRead))
+                        self.log.info("Nachher {} :".format(days_hist))
                         f.write (days_hist)
-                        f.close()
+                        f.flush()
+
+                    f.close()
 
             ## Warten bis die Zeit vergeht
                 time.sleep(interval)
 
         ##### Fehlerbehandlung #####################################################
         except ImportError as e:
-            log.error('Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e))
+            self.log.error('Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e))
             print 'Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e)
 
         except IOError as e:
-            log.error("IOError: {}".format(e.msg))
+            self.log.error("IOError: {}".format(e.msg))
             print 'IOError'
 
         except:
             for info in sys.exc_info():
-                log.error("Fehler: {}".format(info))
+                self.log.error("Fehler: {}".format(info))
                 print ("Fehler: {}".format(info))
 
 # # Ende Funktion: ' _main' #######################################################################

@@ -21,14 +21,11 @@
 # # Python Imports (Standard Library)
 # #################################################################################################
 import sys
-#import os
-#import string
-#import codecs
-#import time
-#import threading
 import json
 import ssl
 import logging
+from logging.config import fileConfig
+#from logging.handlers import RotatingFileHandler
 from datetime import datetime
 import paho.mqtt.client as mqtt
 from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
@@ -61,14 +58,15 @@ except:
 # #################################################################################################
 # # Logging
 # #################################################################################################
+fileConfig('/mnt/dietpi_userdata/EnergieAnzeige/logging_config.ini')
 log = logging.getLogger('VrmGetData')
-log.setLevel(_conf.LOG_LEVEL)
-fh = logging.FileHandler(_conf.LOG_FILEPATH)
-fh.setLevel(logging.DEBUG)
-log.addHandler(fh)
-formatter = logging.Formatter(_conf.LOG_FORMAT)
-fh.setFormatter(formatter)
-log.addHandler(fh)
+#~ log.setLevel(_conf.LOG_LEVEL)
+#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
+#~ fh.setLevel(logging.DEBUG)
+#~ log.addHandler(fh)
+#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
+#~ fh.setFormatter(formatter)
+#~ log.addHandler(fh)
 
 #log.debug('Debug-Nachricht')
 #log.info('Info-Nachricht')
@@ -130,6 +128,20 @@ def on_disconnect(client, userdata, rc):
 # # Ende Funktion: 'on_disconnect ' ###############################################################
 
 # #################################################################################################
+# #  Funktion: ' on_message_fallback'
+## \details         This function is called everytime the topic is published to.
+#   \param[in]     mosq
+#   \param[in]     obj
+#   \param[in]     msg
+#   \return         -
+# #################################################################################################
+def on_message_fallback(client, userdata, message):
+
+    log.info ("Msg.Payload: {}\n\t\t\t\t\t\t- Msg.Topic: {}\n\t\t\t\t\t\t- Msg.qos: {}\n\t\t\t\t\t\t- Userdata: {}".format(message.payload, message.topic, message.qos, userdata))
+
+# # Ende Funktion: ' on_message_fallback' ##################################################################
+
+# #################################################################################################
 # #  Funktion: ' on_message'
 ## \details         This function is called everytime the topic is published to.
 #   \param[in]     mosq
@@ -137,14 +149,14 @@ def on_disconnect(client, userdata, rc):
 #   \param[in]     msg
 #   \return         -
 # #################################################################################################
-def on_message(mosq, obj, msg):
+def on_message(client, userdata, message):
 
     timestamp = datetime.utcnow()
-    myVal = _checkPayload(msg)
+    myVal = _checkPayload(client, userdata, message)
     if (myVal is None):
         return
 
-    _extract_Data(msg, myVal, timestamp)
+    _extract_Data(message, myVal, timestamp)
 
 # # Ende Funktion: ' on_message' ##################################################################
 
@@ -302,9 +314,9 @@ def _get_Total_Power(device, query, otherPower, timestamp):
 # #################################################################################################
 def _get_Total_Consumption(instance, timestamp):
 
-    ConsPower1, ConsPower2, ConsPower3 = influxHdlr._Query_influxDb([_conf.LastL1, _conf.LastL2, _conf.LastL3], Grid.RegEx, 'last')
+    ConsPower1, ConsPower2, ConsPower3 = influxHdlr._Query_influxDb([_conf.LastL1, _conf.LastL2, _conf.LastL3], System.RegEx, 'last')
     AcConsumptionOnInputPower = _check_Data_Type(ConsPower1 + ConsPower2 + ConsPower3)
-    sensor_data = SensorData(Grid.RegEx, instance, ["AcConsumptionOnInputPower",], [AcConsumptionOnInputPower,], timestamp)
+    sensor_data = SensorData(System.RegEx, instance, ["AcConsumptionOnInputPower",], [AcConsumptionOnInputPower,], timestamp)
 
     return sensor_data
 
@@ -339,27 +351,34 @@ def _check_Data_Type(myVal):
 #   \param[in]     msg
 #   \return
 # #################################################################################################
-def _checkPayload(msg):
+def _checkPayload(client, userdata, message):
 
     myDict = []
     retVal = None
     try:
-        payload = msg.payload.decode('utf-8')
+        if not (message.payload):
+            log.error ("Msg.Topic: {}".format(message.topic))
+            log.error ("Msg.Payload: {}".format(message.payload))
+            return retVal
+
+        payload = message.payload.decode('utf-8')
         # ConvertBytearry to dictonary
         myDict=json.loads(payload)
         retVal = myDict['value']
 
     except ValueError as e:
-            log.error("ValueError in '_checkPayload': {}".format(e))
-            log.error ("Msg: {}".format(msg))
+        log.error("ValueError in '_checkPayload': {}".format(e))
+        log.error ("Msg.Payload: {}".format(message.payload))
+        log.error ("Msg.Topic: {}".format(message.topic))
+        log.error ("Userdata: {}".format(userdata))
 
     except:
         for info in sys.exc_info():
             log.error("Fehler in '_checkPayload': {}".format(info))
             print ("Fehler in '_checkPayload': {}".format(info))
 
-        print ("Msg: {}".format(msg))
-        log.error ("Msg: {}".format(msg))
+        print ("Msg: {}".format(message))
+        log.error ("Msg: {}".format(message))
 
     return retVal
 
@@ -450,14 +469,14 @@ def _main(argv):
         _MqttPort = _conf.MQTT_PORT
 
         ## Database initialisieren
-        influxHdlr = influxIO(_host = _conf.INFLUXDB_ADDRESS, _port = _conf.INFLUXDB_PORT, _username = _conf.INFLUXDB_USER, _password = _conf.INFLUXDB_PASSWORD, _database = None, _gzip = _conf.INFLUXDB_ZIPPED)
+        influxHdlr = influxIO(_host = _conf.INFLUXDB_ADDRESS, _port = _conf.INFLUXDB_PORT, _username = _conf.INFLUXDB_USER, _password = _conf.INFLUXDB_PASSWORD, _database = None, _gzip = _conf.INFLUXDB_ZIPPED, logger = logging)
         influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
 
         ## Client instanzieren
         mqttClient = mqtt.Client(_conf.CLIENT_ID, protocol=mqtt.MQTTv311)
 
         ## Background KeepAlive
-        KeepAlive(_conf.SCHED_INTERVAL, mqttClient, _conf.PORTAL_ID)
+        KeepAlive(_conf.SCHED_INTERVAL, mqttClient, _conf.PORTAL_ID, logging)
 
         ## Extended Logging
         #mqttClient.enable_logger(log)
@@ -471,6 +490,7 @@ def _main(argv):
 
         ## Callbacks on connecting, and on receiving a message
         mqttClient.on_connect = on_connect
+        #mqttClient.on_message = on_message_fallback
 
         ## Grid
         for topic in Grid.Topics:
@@ -507,10 +527,10 @@ def _main(argv):
         log.debug(connac)
 
         ## auslesen der Raspi Temperatur
-        Raspi_CallBack(_conf.HOST_INTERVAL, on_Raspi)
+        Raspi_CallBack(_conf.HOST_INTERVAL, on_Raspi, logging)
 
         ## Daten zu csv und SolarLog exportieren
-        ExportDataFromInflux(_conf.EXPORT_INTERVAL)
+        ExportDataFromInflux(_conf.EXPORT_INTERVAL, logging)
 
         ## Once we have told the client to connect, let the client object run itself
         mqttClient.loop_forever()

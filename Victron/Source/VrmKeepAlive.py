@@ -22,7 +22,9 @@
 #import os
 import time
 import threading
-import logging
+#import logging
+#from logging.config import fileConfig
+#from logging.handlers import RotatingFileHandler
 from configuration import Global as _conf
 
 #reload(sys)
@@ -43,14 +45,15 @@ from configuration import Global as _conf
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
 # #################################################################################################
-log = logging.getLogger('VrmKeepAlive')
-log.setLevel(_conf.LOG_LEVEL)
-fh = logging.FileHandler(_conf.LOG_FILEPATH)
-fh.setLevel(logging.DEBUG)
-log.addHandler(fh)
-formatter = logging.Formatter(_conf.LOG_FORMAT)
-fh.setFormatter(formatter)
-log.addHandler(fh)
+#fileConfig('logging_config.ini')
+#~ log = logging.getLogger('VrmKeepAlive')
+#~ log.setLevel(_conf.LOG_LEVEL)
+#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
+#~ fh.setLevel(logging.DEBUG)
+#~ log.addHandler(fh)
+#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
+#~ fh.setFormatter(formatter)
+#~ log.addHandler(fh)
 
 #log.debug('Debug-Nachricht')
 #log.info('Info-Nachricht')
@@ -79,17 +82,18 @@ class KeepAlive(object):
 #   \param[in] portal_id
 #   \return -
 # #################################################################################################
-    def __init__(self, interval, mqttClient, portal_id):
+    def __init__(self, interval, mqttClient, portal_id, logger):
         #self.interval = interval
         #self.mqttClient = mqttClient
         #self.portal_id = portal_id
 
+        self.log = logger.getLogger('VrmKeepAlive')
         thread = threading.Thread(target=self.run, args=(interval, mqttClient, portal_id))
         thread.daemon = True
         thread.start()
 
     def run(self, interval, mqttClient, portal_id):
-        log.info('Starte Alive Ping')
+        self.log.info('Starte Alive Ping')
         while True:
             mqttClient.publish("R/%s/system/0/Serial" % portal_id)
 
