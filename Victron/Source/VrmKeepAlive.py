@@ -18,17 +18,13 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-#import sys
-#import os
-import time
-import threading
-#import logging
-#from logging.config import fileConfig
-#from logging.handlers import RotatingFileHandler
-from configuration import Global as _conf
+try:
+    import time
+    import threading
+    from configuration import Global as _conf
 
-#reload(sys)
-#sys.setdefaultencoding("utf-8")
+except:
+    raise
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -45,21 +41,6 @@ from configuration import Global as _conf
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
 # #################################################################################################
-#fileConfig('logging_config.ini')
-#~ log = logging.getLogger('VrmKeepAlive')
-#~ log.setLevel(_conf.LOG_LEVEL)
-#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
-#~ fh.setLevel(logging.DEBUG)
-#~ log.addHandler(fh)
-#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
-#~ fh.setFormatter(formatter)
-#~ log.addHandler(fh)
-
-#log.debug('Debug-Nachricht')
-#log.info('Info-Nachricht')
-#log.warning('Warnhinweis')
-#log.error('Fehlermeldung')
-#log.critical('Schwerer Fehler')
 
 # #################################################################################################
 # # Funktionen
@@ -83,9 +64,6 @@ class KeepAlive(object):
 #   \return -
 # #################################################################################################
     def __init__(self, interval, mqttClient, portal_id, logger):
-        #self.interval = interval
-        #self.mqttClient = mqttClient
-        #self.portal_id = portal_id
 
         self.log = logger.getLogger('VrmKeepAlive')
         thread = threading.Thread(target=self.run, args=(interval, mqttClient, portal_id))

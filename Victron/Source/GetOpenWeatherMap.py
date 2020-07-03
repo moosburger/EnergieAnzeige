@@ -18,18 +18,21 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-import sys
-import os
-import threading
-import datetime
-import time
-import json
-#from influxHandler import influxIO, _SensorData as SensorData
-import requests
-from subprocess import check_output
-from configuration import Global as _conf
+try:
+    import sys
+    import os
+    import threading
+    import datetime
+    import time
+    import json
+    #from influxHandler import influxIO, _SensorData as SensorData
+    import requests
+    from subprocess import check_output
+    from configuration import Global as _conf
+    from collections import namedtuple as NamedTuple
 
-from collections import namedtuple as NamedTuple
+except:
+    raise
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -45,11 +48,6 @@ sys.setdefaultencoding("utf-8")
 # #################################################################################################
 # # UmgebungsVariablen / Globals
 # #################################################################################################
-openweathermap_api_key = '19752eafbc22eeb16e376c53fe811fa1'#os.getenv("OPENWEATHERMAP_API_KEY")
-lat = 48.4667
-lon = 11.9333
-city_code = '2869449'
-city_name = 'Moosburg'
 
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
@@ -125,7 +123,7 @@ class OpenWeatherMap(object):
 
 # #################################################################################################
 # #  Funktion: 'get_weather_conditions '
-## \details
+## \details     https://openweathermap.org/weather-conditions
 #   \param[in] weather
 #   \return condition
 # #################################################################################################
@@ -155,20 +153,22 @@ class OpenWeatherMap(object):
 
                 elif w['main'] == 'Clear':
                     if ('n' in w['icon']):
-                        condition = 'klarer Himmel'
+                        condition = 'klar'
                     else:
                         condition = 'sonnig'
 
                 elif w['main'] == 'Clouds':
-                    if w['id'] == 801:
-                        condition = 'heiter'
+                    if (w['id'] == 801):
+                        if ('n' in w['icon']):
+                            condition = 'leicht bewoelkt'
+                        else:
+                            condition = 'heiter'
                     elif w['id'] == 802:
                         condition = 'wolkig'
                     elif w['id'] == 803:
                         condition = 'bewoelkt'
                     else:
                         condition = 'bedeckt'
-
             #~ 800  01d.png  01n.png  klarer Himmel
             #~ 801  02d.png  02n.png  heiter   1-2 / 8
             #~ 802  03d.png  03n.png  wolkig 3 - 4 /8
@@ -208,7 +208,7 @@ class OpenWeatherMap(object):
 
         data = {}
         r = requests.get(
-            "http://api.openweathermap.org/data/2.5/weather?id={}&appid={}&units=metric".format(city_code, openweathermap_api_key))
+            "http://api.openweathermap.org/data/2.5/weather?id={}&appid={}&units=metric".format(_conf.CITY_CODE, _conf.OPENWEATHERMAP_API_KEY))
 
         if r.status_code == 200:
             current_data = r.json()
@@ -220,32 +220,18 @@ class OpenWeatherMap(object):
             data['weather']['condition'] = condition
             data['weather']['w_speed'] = current_data['wind']['speed']
             data['weather']['w_deg'] = current_data['wind']['deg']
+            data['weather']['dt'] = current_data['dt']
             del data['weather']['temp_max']
             del data['weather']['temp_min']
             del data['weather']['feels_like']
 
-##
-#~ {u'clouds': {u'all': 52},
-#~ u'name': u'Moosburg',
-#~ u'visibility': 10000,
-#~ u'sys': {u'country': u'DE', u'type': 1, u'id': 1267, u'sunrise': 1592795447, u'sunset': 1592853469},
-#~ u'weather': [{u'main': u'Clouds', u'id': 803, u'icon': u'04d', u'description': u'broken clouds'}],
-#~ u'coord': {u'lat': 48.47, u'lon': 11.93},
-#~ u'base': u'stations',
-#~ u'timezone': 7200, u'dt': 1592804232,
-#~ u'main': {u'temp': 15.29, u'temp_max': 16.11, 'rain_level': 0, 'rain': False, u'humidity': 87, u'pressure': 1023, u'temp_min': 13.89, u'feels_like': 14.45},
-#~ u'id': 2869449,
-#~ u'wind': {u'speed': 2.6, u'deg': 260},
-#~ u'cod': 200}
-
-        #~ #print ("http://api.openweathermap.org/data/2.5/forecast?id={}&appid={}&units=metric".format(city_name,openweathermap_api_key))
         r2 = requests.get(
-            "http://api.openweathermap.org/data/2.5/uvi?lat={}&lon={}&appid={}".format(lat, lon, openweathermap_api_key))
+            "http://api.openweathermap.org/data/2.5/uvi?lat={}&lon={}&appid={}".format(_conf.LAT, _conf.LON, _conf.OPENWEATHERMAP_API_KEY))
         if r2.status_code == 200:
             data['uvi'] = r2.json()
 
         r3 = requests.get(
-            "http://api.openweathermap.org/data/2.5/forecast?id={}&appid={}&units=metric".format(city_code, openweathermap_api_key))
+            "http://api.openweathermap.org/data/2.5/forecast?id={}&appid={}&units=metric".format(_conf.CITY_CODE, _conf.OPENWEATHERMAP_API_KEY))
 
         if r3.status_code == 200:
             forecast = r3.json()['list']
@@ -253,8 +239,6 @@ class OpenWeatherMap(object):
             for f in forecast:
                 rain, rain_level = self.get_rain_level_from_weather(f['weather'])
                 condition = self.get_weather_conditions(f['weather'])
-
-                #print time.gmtime(f['dt'])
 
                 data['forecast'].append({
                     "dt": f['dt'],
@@ -278,11 +262,12 @@ class OpenWeatherMap(object):
 #   \param[in]     -
 #   \return          -
 # #################################################################################################
-    def out_sensors(self):
+    def get_Weather(self):
 
         try:
             out_info = self.call_api()
-            timestamp = datetime.datetime.utcnow()
+            #timestamp = datetime.datetime.utcnow()
+            timestamp = datetime.datetime.utcfromtimestamp(out_info['weather']['dt']).isoformat()
 
             sensor_data = SensorData('WEATHER', 'Current', ['Condition', 'W_Speed', 'W_Deg', 'Pressure', 'Humidity', 'Temp'], [ out_info['weather']['condition'], out_info['weather']['w_speed'], out_info['weather']['w_deg'], out_info['weather']['pressure'], out_info['weather']['humidity'], out_info['weather']['temp'] ], timestamp)
             self.log.info(sensor_data)
@@ -305,7 +290,11 @@ class OpenWeatherMap(object):
     def main(self, interval):
 
         self.log.info("Starte")
-        self.out_sensors()
+
+        while True:
+            self.get_Weather()
+            #Updates kommen ca alle 10 min
+            time.sleep(interval)
 
 # # Ende Funktion: ' _main' #######################################################################
 

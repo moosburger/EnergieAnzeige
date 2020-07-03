@@ -277,7 +277,20 @@
           },
           "unit": "watt"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ertrag"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kwatth"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 7,
@@ -469,6 +482,57 @@
               "key": "instance",
               "operator": "=",
               "value": "Gateway"
+            }
+          ]
+        },
+        {
+          "alias": "Ertrag",
+          "groupBy": [
+            {
+              "params": [
+                "1d"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT max(\"PvInvertersAcEnergyForwardDay\") FROM \"system\" WHERE (\"instance\" = 'Gateway' AND \"PvInvertersAcEnergyForwardDay\" > 0 AND \"time\" > now()-1h) AND $timeFilter GROUP BY time(1d) fill(0)",
+          "rawQuery": false,
+          "refId": "E",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "PvInvertersAcEnergyForwardDay"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "max"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            },
+            {
+              "condition": "AND",
+              "key": "time",
+              "operator": ">",
+              "value": "now()-1h"
             }
           ]
         }
@@ -910,5 +974,5 @@
   "timezone": "",
   "title": "Mobile",
   "uid": "-4-D38mRk",
-  "version": 36
+  "version": 40
 }

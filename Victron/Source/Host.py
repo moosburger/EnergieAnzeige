@@ -18,16 +18,15 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-#import string
-import threading
-import time
-#import logging
-#from logging.config import fileConfig
-#from logging.handlers import RotatingFileHandler
-from datetime import datetime
-import psutil
-from collections import namedtuple as NamedTuple
-from configuration import Global as _conf
+try:
+    import threading
+    import time
+    from datetime import datetime
+    import psutil
+    from collections import namedtuple as NamedTuple
+
+except:
+    raise
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -36,7 +35,12 @@ from configuration import Global as _conf
 # #################################################################################################
 # # private Imports
 # #################################################################################################
-import Error
+try:
+    import Error
+    from configuration import Global as _conf
+
+except:
+    raise
 
 # #################################################################################################
 # # UmgebungsVariablen / Globals
@@ -47,21 +51,6 @@ CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp cores
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
 # #################################################################################################
-#fileConfig('logging_config.ini')
-#~ log = logging.getLogger('Host')
-#~ log.setLevel(_conf.LOG_LEVEL)
-#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
-#~ fh.setLevel(logging.DEBUG)
-#~ log.addHandler(fh)
-#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
-#~ fh.setFormatter(formatter)
-#~ log.addHandler(fh)
-
-#log.debug('Debug-Nachricht')
-#log.info('Info-Nachricht')
-#log.warning('Warnhinweis')
-#log.error('Fehlermeldung')
-#log.critical('Schwerer Fehler')
 
 # #################################################################################################
 # # Funktionen

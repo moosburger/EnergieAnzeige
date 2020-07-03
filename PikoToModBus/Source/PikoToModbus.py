@@ -38,6 +38,7 @@ from twisted.internet.task import LoopingCall
 # import the logging libraries we need
 # --------------------------------------------------------------------------- #
 import logging
+from logging.config import fileConfig
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -59,15 +60,14 @@ except:
     PrivateImport = False
 
 # #################################################################################################
-# # UmgebungsVariablen
+# # UmgebungsVariablen / Globals
 # #################################################################################################
 
-# --------------------------------------------------------------------------- #
-# configure the service logging
-# --------------------------------------------------------------------------- #
-logging.basicConfig()
-log = logging.getLogger()
-log.setLevel(_conf.LOG_LEVEL) # Levels: NONE, FATAL, ERROR, NOTICE, DEBUG
+# #################################################################################################
+# # Logging
+# #################################################################################################
+fileConfig('/mnt/dietpi_userdata/PikoToModBus/logging_config.ini')
+log = logging.getLogger('PikoToModbus')
 
 # #################################################################################################
 # # Funktionen
@@ -196,9 +196,11 @@ def _main(argv):
 
     _FirstRun = True
     try:
+        self.log.info("gestartet")
+
         # # Mit dem Piko instanzieren ####################################
-        _Piko = PikoWebRead(False, _conf.PIKO_IP, '3edcCFT&')
-        _data = PrepareData()
+        _Piko = PikoWebRead(_conf.PIKO_IP, _conf.PIKO_PASSWORD, log)
+        _data = PrepareData(log)
 
         # Daten vom Piko holen
         #~retStat = _Piko.FetchData(Timers=True, Portal=True, Header=True, Data=True)
@@ -223,7 +225,8 @@ def _main(argv):
 
     except:
         for info in sys.exc_info():
-            print ("Fehler:", info)
+            log.error("Fehler: {}".format(info))
+            print ("Fehler: {}".format(info))
 
 # # Ende Funktion: ' _main' ###########################################################################
 

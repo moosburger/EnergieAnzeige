@@ -18,9 +18,12 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-import sys
-import os
-import re
+try:
+    import sys
+    import os
+    import re
+    import datetime
+    import calendar
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -29,7 +32,9 @@ import re
 # #################################################################################################
 # # private Imports
 # #################################################################################################
-import Error
+    import Error
+except:
+    raise
 
 # #################################################################################################
 # # UmgebungsVariablen
@@ -196,5 +201,26 @@ def Printable(Stream):
     return ErzeugeUmlaute(str)
 
 # # Ende Funktion: ' Printable ' ############################################################################
+
+# #################################################################################################
+# # Anfang Funktion: ' monthdelta '
+## \details Berechnet aus dem Monats Delta den Monat und gibt die Anzahl der Tage dieses Monats zurueck
+#   \param[in]  date
+#   \param[in]  delta
+#   \return Day, Month, Year
+# #################################################################################################
+def monthdelta(date, delta, asDateObject):
+
+    m, y = (date.month+delta) % 12, date.year + ((date.month)+delta-1) // 12
+    if not m: m = 12
+    d = min(date.day, calendar.monthrange(y, m)[1])
+    d_m = calendar.monthrange(y, m)[1]
+
+    if (asDateObject):
+        return date.replace(day=d,month=m, year=y)
+    else:
+        return [d,m,y,d_m]
+
+# # Ende Funktion: ' monthdelta ' ############################################################################
 
 # # DateiEnde ##########################################################################################

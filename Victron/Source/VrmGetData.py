@@ -20,15 +20,20 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-import sys
-import json
-import ssl
-import logging
-from logging.config import fileConfig
-#from logging.handlers import RotatingFileHandler
-from datetime import datetime
-import paho.mqtt.client as mqtt
-from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
+try:
+    PublicImport = True
+    import sys
+    import json
+    import ssl
+    import logging
+    from logging.config import fileConfig
+    from datetime import datetime
+    import paho.mqtt.client as mqtt
+    from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
+
+except ImportError as e:
+    PublicImport = False
+    ErrorMsg = e
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -48,8 +53,10 @@ try:
     from Host import Raspi_CallBack
     from influxHandler import influxIO, _SensorData as SensorData
     from dataExport import ExportDataFromInflux
-except:
+
+except ImportError as e:
     PrivateImport = False
+    ErrorMsg = e
 
 # #################################################################################################
 # # UmgebungsVariablen / Globals
@@ -60,19 +67,6 @@ except:
 # #################################################################################################
 fileConfig('/mnt/dietpi_userdata/EnergieAnzeige/logging_config.ini')
 log = logging.getLogger('VrmGetData')
-#~ log.setLevel(_conf.LOG_LEVEL)
-#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
-#~ fh.setLevel(logging.DEBUG)
-#~ log.addHandler(fh)
-#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
-#~ fh.setFormatter(formatter)
-#~ log.addHandler(fh)
-
-#log.debug('Debug-Nachricht')
-#log.info('Info-Nachricht')
-#log.warning('Warnhinweis')
-#log.error('Fehlermeldung')
-#log.critical('Schwerer Fehler')
 
 # #################################################################################################
 # # Funktionen
@@ -357,8 +351,8 @@ def _checkPayload(client, userdata, message):
     retVal = None
     try:
         if not (message.payload):
-            log.error ("Msg.Topic: {}".format(message.topic))
-            log.error ("Msg.Payload: {}".format(message.payload))
+            log.warning ("Msg.Topic: {}".format(message.topic))
+            log.warning ("Msg.Payload: {}".format(message.payload))
             return retVal
 
         payload = message.payload.decode('utf-8')
@@ -367,10 +361,10 @@ def _checkPayload(client, userdata, message):
         retVal = myDict['value']
 
     except ValueError as e:
-        log.error("ValueError in '_checkPayload': {}".format(e))
-        log.error ("Msg.Payload: {}".format(message.payload))
-        log.error ("Msg.Topic: {}".format(message.topic))
-        log.error ("Userdata: {}".format(userdata))
+        log.warning("ValueError in '_checkPayload': {}".format(e))
+        log.warning ("Msg.Payload: {}".format(message.payload))
+        log.warning ("Msg.Topic: {}".format(message.topic))
+        log.warning ("Userdata: {}".format(userdata))
 
     except:
         for info in sys.exc_info():
@@ -460,7 +454,7 @@ def _main(argv):
     log.info('VrmGetData started')
     try:
         ## Import fehlgeschlagen
-        if (PrivateImport == False):
+        if (PrivateImport == False) or (PublicImport == False):
             raise ImportError
 
         #raise Error.AllgBuild('Übergebens Argument (Pfad) ist leer!')
@@ -538,8 +532,8 @@ def _main(argv):
 
     ##### Fehlerbehandlung #####################################################
     except ImportError as e:
-        log.error('Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e))
-        print 'Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e)
+        log.error('Eine der Bibliotheken konnte nicht geladen werden!\n{}\n'.format(e))
+        print 'Eine der Bibliotheken konnte nicht geladen werden!\n{}\n'.format(e)
 
     except IOError as e:
         log.error("IOError: {}".format(e.msg))

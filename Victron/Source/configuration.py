@@ -36,19 +36,12 @@ class Global():
     MQTT_TSL_PORT = 8883
 
     SCHED_INTERVAL = 30          #  seconds delay
-    #LOG_LEVEL = logging.INFO
-    """
-        Levels:
-        DEBUG       -> alle Level werden ausgegeben
-        INFO        -> Info, Warning, Error, Critical
-        WARNING     -> Warning, Error, Critical
-        ERROR       -> Error, Critical
-        CRITITCAL   -> Critical
-    """
-    #LOG_FORMAT = '%(asctime)s - %(levelname)8s - %(name)15s - %(message)s'
-    #LOG_FILEPATH = '/mnt/dietpi_userdata/EnergieAnzeige/LogFile.log'
-    #LOG_SIZE = 20000
-    #LOG_BACKUP = 10
+
+    OPENWEATHERMAP_API_KEY = 'Vour Api Key'
+    LAT = 45.4567
+    LON = 15.9533
+    CITY_CODE = '123456'
+    CITY_NAME = 'Stadt'
 
     EXPORT_INTERVAL = 120
     EXPORT_FILEPATH = '/mnt/dietpi_userdata/SolarExport/'
@@ -133,6 +126,8 @@ class PvInverter():
         AcEnergyForwardTotal
         AcEnergyForwardDay
         AcEnergyForwardPerDay
+        AcEnergyForwardPerMonth
+        AcEnergyForwardPerYear
         Connected	                {"value": 1}
         CustomName	                {"value": ""}
         DeviceInstance	            {"value": 24}
@@ -345,7 +340,10 @@ class System():
         system/0/Mgmt/ProcessVersion	                {"value": "2.28"}
         system/0/PvInvertersProductIds	                {"value": [41283, 41284]}
         PvInvertersAcEnergyForwardTotal
+        PvInvertersAcEnergyForwardDay
         PvInvertersAcEnergyForwardPerDay
+        PvInvertersAcEnergyForwardPerMonth
+        PvInvertersAcEnergyForwardPerYear
         system/0/Relay/0/State	                        {"value": 0}
         system/0/Relay/1/State	                        {"value": 0}
         system/0/Serial	                                {"value": "0479b7f1e15c"}

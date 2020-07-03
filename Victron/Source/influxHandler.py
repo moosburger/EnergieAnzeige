@@ -18,13 +18,14 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-import sys
-#import logging
-import json
-#from logging.config import fileConfig
-#from logging.handlers import RotatingFileHandler
-from influxdb import InfluxDBClient
-from collections import namedtuple as NamedTuple
+try:
+    import sys
+    import json
+    from collections import namedtuple as NamedTuple
+    from influxdb import InfluxDBClient
+
+except:
+    raise
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -38,12 +39,12 @@ _SensorData = NamedTuple('SensorData', 'device instance type value timestamp')
 # # private Imports
 # #################################################################################################
 try:
-    PrivateImport = True
     import Error
     import Utils
     from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
+
 except:
-    PrivateImport = False
+    raise
 
 # #################################################################################################
 # # UmgebungsVariablen
@@ -52,21 +53,7 @@ except:
 # #################################################################################################
 # # Logging
 # #################################################################################################
-#fileConfig('logging_config.ini')
-#~ log = logging.getLogger('InfluxHandler')
-#~ log.setLevel(_conf.LOG_LEVEL)
-#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
-#~ fh.setLevel(logging.DEBUG)
-#~ log.addHandler(fh)
-#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
-#~ fh.setFormatter(formatter)
-#~ log.addHandler(fh)
 
-#log.debug('Debug-Nachricht')
-#log.info('Info-Nachricht')
-#log.warning('Warnhinweis')
-#log.error('Fehlermeldung')
-#log.critical('Schwerer Fehler')
 # #################################################################################################
 # # Classes: influxHandler
 ## \details Alles rund um die Datenbank
@@ -181,20 +168,25 @@ class influxIO(object):
 #   \param[in]     -
 #   \return          -
 # #################################################################################################
-    def _Query_influxDb(self, queries, mesurement, what):
+    def _Query_influxDb(self, queries, measurement, searchFor):
 
         results = []
         for query in queries:
-            results.append(self.influxdb_client.query(query))
+            result = self.influxdb_client.query(query)
+            results.append(result)
 
         points = []
         for result in results:
-            points.append(list(result.get_points(mesurement)))
+            point = list(result.get_points(measurement))
+            points.append(point)
 
         retVal = []
         for point in points:
-            if len(point) > 0:
-                retVal.append(point[0][what])
+            if (len(point) > 1):
+                for k in range (0, len(point)):
+                    retVal.append(point[k][searchFor])
+            elif (len(point) > 0):
+                retVal.append(point[0][searchFor])
             else:
                 retVal.append(0)
 

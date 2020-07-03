@@ -18,16 +18,17 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-import sys
-import os
-import threading
-import time
-#import logging
-#from logging.config import fileConfig
-#from logging.handlers import RotatingFileHandler
-import datetime
-from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
-from influxHandler import influxIO, _SensorData as SensorData
+try:
+    import sys
+    import os
+    import threading
+    import time
+    import datetime
+    from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
+    from influxHandler import influxIO, _SensorData as SensorData
+
+except:
+    raise
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -44,8 +45,9 @@ try:
     import Error
     import Utils
     import SunRiseSet
-except:
-    PrivateImport = False
+
+except ImportError as e:
+    raise
 
 # #################################################################################################
 # # UmgebungsVariablen / Globals
@@ -54,21 +56,6 @@ except:
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
 # #################################################################################################
-#fileConfig('logging_config.ini')
-#~ log = logging.getLogger('ExportData')
-#~ log.setLevel(_conf.LOG_LEVEL)
-#~ fh = RotatingFileHandler(_conf.LOG_FILEPATH, maxBytes=_conf.LOG_SIZE, backupCount=_conf.LOG_BACKUP)
-#~ fh.setLevel(logging.DEBUG)
-#~ log.addHandler(fh)
-#~ formatter = logging.Formatter(_conf.LOG_FORMAT)
-#~ fh.setFormatter(formatter)
-#~ log.addHandler(fh)
-
-#log.debug('Debug-Nachricht')
-#log.info('Info-Nachricht')
-#log.warning('Warnhinweis')
-#log.error('Fehlermeldung')
-#log.critical('Schwerer Fehler')
 
 # #################################################################################################
 # # Funktionen
@@ -84,11 +71,10 @@ class ExportDataFromInflux(object):
 
 # #################################################################################################
 # # Funktion: ' Constructor '
-## \details Die Initialisierung der Klasse KeepAlive
+##  \details 	Die Initialisierung der Klasse KeepAlive
 #   \param[in]  self der Objectpointer
 #   \param[in]  interval
-#   \param[in]  mqttClient
-#   \param[in] portal_id
+#   \param[in] 	logger
 #   \return -
 # #################################################################################################
     def __init__(self, interval, logger):
@@ -110,9 +96,9 @@ class ExportDataFromInflux(object):
 
 # #################################################################################################
 # #  Funktion: '_Get_Energy_Piko '
-## \details
+## 	\details
 #   \param[in]
-#   \return
+#   \return 	PikoEn
 # #################################################################################################
     def _Get_Energy_Piko(self):
 
@@ -121,13 +107,13 @@ class ExportDataFromInflux(object):
 
         return PikoEn
 
-# # Ende Funktion: '_Get_Energy_Piko ' ######################################################################
+# # Ende Funktion: '_Get_Energy_Piko ' ############################################################
 
 # #################################################################################################
 # #  Funktion: '_Get_Energy_Sma '
-## \details
+## 	\details
 #   \param[in]
-#   \return
+#   \return 	SmaEn
 # #################################################################################################
     def _Get_Energy_Sma(self):
 
@@ -136,12 +122,13 @@ class ExportDataFromInflux(object):
 
         return SmaEn
 
-# # Ende Funktion: '_Get_Energy_Sma ' ######################################################################
+# # Ende Funktion: '_Get_Energy_Sma ' #############################################################
 
 # #################################################################################################
 # #  Funktion: '_check_Data_Type '
-## \details     -
-#   \return
+## 	\details    -
+#   \param[in] 	myVal
+#   \return 	myVal
 # #################################################################################################
     def _check_Data_Type(self, myVal):
 
@@ -159,12 +146,134 @@ class ExportDataFromInflux(object):
 
         return myVal
 
-# # Ende Funktion: '_check_Data_Type ' ######################################################################
+# # Ende Funktion: '_check_Data_Type ' ############################################################
+
+# #################################################################################################
+# #  Funktion: '_EnergyPerDay '
+## 	\details    Abhaengig von den Parametern die Summe des letzten monats oder des letzten Jahres
+#   \param[in] 	sensor_data_day_list
+#   \return 	-
+# #################################################################################################
+    def _WriteEnergyToDb(self, sensor_data_day_list):
+
+        for sensor_data in sensor_data_day_list:
+            retVal = self.influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+            if (retVal == False):
+                self.log.warning("Fehler beim schreiben von {}".format(sensor_data))
+
+# # Ende Funktion: '_EnergyPerDay ' ###############################################################
+
+# #################################################################################################
+# #  Funktion: '_EnergyPerMonth '
+## 	\details	Abhaengig von den Parametern die Summe des letzten monats oder des letzten Jahres
+#   \param[in] 	toDay
+#   \param[in] 	sensor_data
+#   \return 	sensor_data
+# #################################################################################################
+    def _EnergyPerMonth(self, toDay, sensor_data):
+
+        sensor_data = []
+        Tage, Monat, Jahr, TageMonat = Utils.monthdelta(toDay, -1, False)      # Am 1. Januar ist das Monats Delta 1 um ins alte Jahr zu kommen
+        timeRange = "time > '{0}-{1:02d}-01T00:00:00.0Z' and time < '{0}-{1:02d}-{2:02d}T23:59:59.9Z'".format(Jahr, Monat, TageMonat)
+        PvQuery = 'AcEnergyForwardPerDay'
+        PvTarget = 'AcEnergyForwardPerMonth'
+        SystemQuery = 'PvInvertersAcEnergyForwardPerDay'
+        SystemTarget = 'PvInvertersAcEnergyForwardPerMonth'
+
+        sensor_data.extend(self._EnergySum(timeRange, PvQuery, PvTarget, SystemQuery, SystemTarget, Jahr, Monat, Monat, TageMonat))
+        return sensor_data
+
+# # Ende Funktion: '_EnergyPerMonth ' #############################################################
+
+# #################################################################################################
+# #  Funktion: '_EnergyPerYear '
+## 	\details    Abhaengig von den Parametern die Summe des letzten monats oder des letzten Jahres
+#   \param[in] 	toDay
+#   \param[in] 	sensor_data
+#   \return 	sensor_data
+# #################################################################################################
+    def _EnergyPerYear(self, toDay, sensor_data):
+
+        Tage, Monat, Jahr, TageMonat = Utils.monthdelta(toDay, -1, False)      # Am 1. Januar ist das Monats Delta 1 um ins alte Jahr zu kommen
+        timeRange = "time > '{0}-01-01T00:00:00.0Z' and time < '{0}-{1:02d}-{2:02d}T23:59:59.9Z'".format(Jahr, Monat, TageMonat)
+        PvQuery = 'AcEnergyForwardPerMonth'
+        PvTarget = 'AcEnergyForwardPerYear'
+        SystemQuery = 'PvInvertersAcEnergyForwardPerMonth'
+        SystemTarget = 'PvInvertersAcEnergyForwardPerYear'
+        EndMonat = 12
+        Monat = 01
+
+        sensor_data.extend(self._EnergySum(timeRange, PvQuery, PvTarget, SystemQuery, SystemTarget, Jahr, Monat, EndMonat, TageMonat))
+        return sensor_data
+
+# # Ende Funktion: '_EnergyPerYear ' ##############################################################
+
+# #################################################################################################
+# #  Funktion: '_EnergySum '
+## 	\details 	Abhaengig von den Parametern die Summe des letzten monats oder des letzten Jahres
+#   \param[in] 	toDay
+#   \param[in] 	timeRange
+#   \param[in] 	PvQuery
+#   \param[in] 	PvTarget
+#   \param[in] 	SystemQuery
+#   \param[in] 	SystemTarget
+#   \param[in] 	Jahr
+#   \param[in] 	Monat
+#   \param[in] 	TageMonat
+#   \return 	sensor_data
+# #################################################################################################
+    def _EnergySum(self, timeRange, PvQuery, PvTarget, SystemQuery, SystemTarget, Jahr, Monat, EndMonat, TageMonat):
+
+        sensor_data = []
+        print timeRange
+        starttimestamp = "'{0}-{1:02d}-01T01:00:00.0Z'".format(Jahr, Monat)
+        endtimestamp = "'{0}-{1:02d}-{2:02d}T21:00:00.0Z'".format(Jahr, Monat, EndMonat, TageMonat)
+        SMA_ENERGY = "SELECT ({}) FROM pvinverter where instance='{}' and {}".format(PvQuery, PvInv.Label1, timeRange)
+        PIKO_ENERGY = "SELECT ({}) FROM pvinverter where instance='{}' and {}".format(PvQuery, PvInv.Label2, timeRange)
+
+        SmaList  = self.influxHdlr._Query_influxDb([SMA_ENERGY,], PvInv.RegEx, PvQuery)
+        PikoList = self.influxHdlr._Query_influxDb([PIKO_ENERGY,], PvInv.RegEx, PvQuery)
+
+        PikoTotal = 0.0
+        step = len(PikoList)/12
+        if (step < 1):
+            step = 1
+        for PikoEnergy in PikoList[::step]:
+            PikoTotal = PikoTotal + float(PikoEnergy)
+
+        SmaTotal = 0.0
+        step = len(SmaList)/12
+        if (step < 1):
+            step = 1
+        for SmaEnergy in SmaList[::step]:
+            SmaTotal = SmaTotal + float(SmaEnergy)
+
+        sensor_data.append(SensorData(PvInv.RegEx, PvInv.Label2, [PvTarget,], [round(PikoTotal),], starttimestamp))
+        sensor_data.append(SensorData(PvInv.RegEx, PvInv.Label2, [PvTarget,], [round(PikoTotal),], endtimestamp))
+        sensor_data.append(SensorData(PvInv.RegEx, PvInv.Label1, [PvTarget,], [round(SmaTotal),], starttimestamp))
+        sensor_data.append(SensorData(PvInv.RegEx, PvInv.Label1, [PvTarget,], [round(SmaTotal),], endtimestamp))
+
+        PV_TOTAL_ENERGY = "SELECT ({}) FROM system where instance='{}' and {}".format(SystemQuery, System.Label1, timeRange)
+        PvInverterList = self.influxHdlr._Query_influxDb([PV_TOTAL_ENERGY,], System.RegEx, SystemQuery)
+
+        Total = 0.0
+        step = len(PvInverterList)/12
+        if (step < 1):
+            step = 1
+        for Energy in PvInverterList[::step]:
+            Total = Total + float(Energy)
+
+        sensor_data.append(SensorData(System.RegEx, System.Label1, [SystemTarget,], [round(Total),], starttimestamp))
+        sensor_data.append(SensorData(System.RegEx, System.Label1, [SystemTarget,], [round(Total),], endtimestamp))
+
+        return sensor_data
+
+# # Ende Funktion: '_check_Data_Type ' ############################################################
 
 # #################################################################################################
 # #  Funktion: '_get_Enery '
-## \details
-#   \param[in]     -
+## 	\details
+#   \param[in] 	timestamp
 #   \return          -
 # #################################################################################################
     def _get_Enery(self):
@@ -217,9 +326,9 @@ class ExportDataFromInflux(object):
 
 # #################################################################################################
 # #  Funktion: '_get_PUI '
-## \details
-#   \param[in]     -
-#   \return          -
+## 	\details
+#   \param[in]	-
+#   \return     -
 # #################################################################################################
     def _get_PUI(self):
 
@@ -244,13 +353,134 @@ class ExportDataFromInflux(object):
 
         return [int(round(U1)), Ges_I1, int(round(Ges_P1)), int(round(U2)), Ges_I2, int(round(Ges_P2)), int(round(U3)), Ges_I3, int(round(Ges_P3)), PAC]
 
-# # Ende Funktion: ' _get_PUI ' #################################################################
+# # Ende Funktion: ' _get_PUI ' ###################################################################
+
+# #################################################################################################
+# #  Funktion: '_calcPercentagey '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
+    def _calcPercentage(self):
+
+        timestamp = datetime.datetime.utcnow()
+        AcConsumptionOnInputPower, AcBatt, AcPvOnGridPower, GridAcPower = self._getPowerForPercentage()
+        self._calcConsumptionPercentage(AcPvOnGridPower, GridAcPower, AcBatt, timestamp)
+        self._calcSolarPercentage(AcConsumptionOnInputPower, AcPvOnGridPower, GridAcPower, AcBatt, timestamp)
+
+# # Ende Funktion: ' _calcPercentagey ' #####################################################
+
+# #################################################################################################
+# #  Funktion: '_getPowerForPercentage '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
+    def _getPowerForPercentage(self):
+
+        ConsPower1, ConsPower2, ConsPower3 = self.influxHdlr._Query_influxDb([_conf.LastL1, _conf.LastL2, _conf.LastL3], System.RegEx, 'last')
+        AcConsumptionOnInputPower = self._check_Data_Type(ConsPower1 + ConsPower2 + ConsPower3)
+        AcBatt, = self.influxHdlr._Query_influxDb([_conf.AcBattPower,], VeBus.RegEx, 'last')
+        AcPvOnGridPower, = self.influxHdlr._Query_influxDb(["SELECT last(AcPvOnGridPower) FROM system where instance='Gateway'",], System.RegEx, 'last')
+        GridAcPower, = self.influxHdlr._Query_influxDb([_conf.AllPower,], Grid.RegEx, 'last')
+
+        return [AcConsumptionOnInputPower, AcBatt, AcPvOnGridPower, GridAcPower]
+
+# # Ende Funktion: ' _getPowerForPercentage ' #####################################################
+
+# #################################################################################################
+# #  Funktion: '_calcConsumptionPercentage '
+## 	\details 	Aufteilung Stromverbrauch nach Solar, Batterie, Netz
+#   \param[in]  AcPvOnGridPower
+#   \param[in]  GridAcPower
+#   \param[in]  AcBatt
+#   \param[in]  timestamp
+#   \return     -
+# #################################################################################################
+    def _calcConsumptionPercentage(self, AcPvOnGridPower, GridAcPower, AcBatt, timestamp):
+        # Wenn Netz negativ wird eingespeist, aus Batterie oder Solar
+        # Netz positiv, Strom wird gekauft
+
+        GesamtPower = AcPvOnGridPower
+        if (GridAcPower >= 0):
+            GesamtPower = GesamtPower + GridAcPower
+
+        if (AcBatt < 0):
+            GesamtPower = GesamtPower + abs(AcBatt)
+
+        if (GesamtPower > 0):
+            AcConsumptionFromPv = int(round(AcPvOnGridPower/GesamtPower*100))
+            AcConsumptionFromGrid = 0
+            if (GridAcPower >= 0):
+                AcConsumptionFromGrid = int(round(abs(GridAcPower)/GesamtPower*100))
+
+            AcConsumptionFromBatt = 0
+            if (AcBatt < 0):    # Damit die prozentuale Aufteilng stimmt, da die BatteriePower immer mit Wirkungsgradverlusten behaftet ist
+                AcConsumptionFromBatt = int(round(abs(AcBatt)/GesamtPower*100))
+
+        else:
+            AcConsumptionFromPv = 0
+            AcConsumptionFromBatt = 0
+            AcConsumptionFromGrid = 0
+
+        #self.log.info ("Gesamt Last Calc: {} (AcBatt:{} + PvGesamt:{} + GridSumme:{})".format(GesamtPower, AcBatt, AcPvOnGridPower, GridAcPower))
+        #self.log.info ("Solar: {}%".format(AcConsumptionFromPv))
+        #self.log.info ("Batterie:{}%".format(AcConsumptionFromBatt))
+        #self.log.info ("Netz: {}%\n".format(AcConsumptionFromGrid))
+
+        sensor_data = []
+        sensor_data.append(SensorData(System.RegEx, System.Label1, ['AcConsumptionFromPv',], [AcConsumptionFromPv,], timestamp))
+        sensor_data.append(SensorData(System.RegEx, System.Label1, ['AcConsumptionFromBatt',], [AcConsumptionFromBatt,], timestamp))
+        sensor_data.append(SensorData(System.RegEx, System.Label1, ['AcConsumptionFromGrid',], [AcConsumptionFromGrid,], timestamp))
+
+        self._WriteEnergyToDb(sensor_data)
+
+# # Ende Funktion: ' _calcConsumptionPercentage ' #################################################
+
+# #################################################################################################
+# #  Funktion: '_calcSolarPercentage '
+## 	\details 	Aufteilung des Solarertrages nach Direktvebrauch, Batterieladen, einspeisen ins Netz
+#   \param[in]  AcConsumptionOnInputPower
+#   \param[in]  AcPvOnGridPower
+#   \param[in]  GridAcPower
+#   \param[in]  AcBatt
+#   \param[in]  timestamp
+#   \return     -
+# #################################################################################################
+    def _calcSolarPercentage(self, AcConsumptionOnInputPower, AcPvOnGridPower, GridAcPower, AcBatt, timestamp):
+
+        # Wenn Solarertrag > Gesamtverbrauch, und Batterie lädt, bzw. nicht entladen wird, kann aufgeteilt werden
+        PvPowerToLoad = 0
+        PvPowerToBattery = 0
+        PvPowerToGrid = 0
+        if (AcPvOnGridPower > AcConsumptionOnInputPower) and (AcBatt >= 0):
+            PvPowerToLoad = int(round(abs(AcConsumptionOnInputPower/AcPvOnGridPower*100)))
+            PvPowerToBattery = int(round(abs(AcBatt/AcPvOnGridPower*100)))
+            PvPowerToGrid = int(round(abs(GridAcPower/AcPvOnGridPower*100)))
+
+        # Solarertrag < Gesamtverbrauch und Batterie entlädt, 100% Direktverbrauch
+        elif (AcPvOnGridPower < AcConsumptionOnInputPower) and (AcPvOnGridPower > 1):
+            PvPowerToLoad = 100
+
+        #self.log.info ("Solarertrag: {}\nAcBatt:{}\nNetzLast:{}\nGridSumme:{}\n\n".format(AcPvOnGridPower, AcBatt, AcConsumptionOnInputPower, GridAcPower))
+        #self.log.info ("Direkt: {}%".format(PvPowerToLoad))
+        #self.log.info ("Batterie:{}%%".format(PvPowerToBattery))
+        #self.log.info ("Netz: {}%\n".format(PvPowerToGrid))
+
+        sensor_data = []
+        sensor_data.append(SensorData(System.RegEx, System.Label1, ['PvPowerToLoad',], [PvPowerToLoad,], timestamp))
+        sensor_data.append(SensorData(System.RegEx, System.Label1, ['PvPowerToBattery',], [PvPowerToBattery,], timestamp))
+        sensor_data.append(SensorData(System.RegEx, System.Label1, ['PvPowerToGrid',], [PvPowerToGrid,], timestamp))
+
+        self._WriteEnergyToDb(sensor_data)
+
+# # Ende Funktion: ' _calcSolarPercentage ' #######################################################
 
 # #################################################################################################
 # #  Funktion: '_prepare_Csv_Header '
-## \details
-#   \param[in]     toDay
-#   \return          -
+## 	\details
+#   \param[in]	toDay
+#   \return     -
 # #################################################################################################
     def _prepare_Csv_Header(self, toDay):
 
@@ -262,13 +492,41 @@ class ExportDataFromInflux(object):
 
         return csvStream
 
-# # Ende Funktion: ' _prepare_Csv_Header ' #################################################################
+# # Ende Funktion: ' _prepare_Csv_Header ' ########################################################
+
+# #################################################################################################
+# #  Funktion: '_write_days_hist '
+## 	\details
+#   \param[in] 	Zeit
+#   \param[in]  PvInvertersAcEnergyForwardPerDay
+#   \return     -
+# #################################################################################################
+    def _write_days_hist(self, Zeit, PacMax, PvInvertersAcEnergyForwardPerDay):
+
+        days_hist = ('da[dx++]="{}.{}.{}|{};{}"\r\n'.format(Zeit.strftime("%d"), Zeit.strftime("%m"), Zeit.strftime("%y"), int(round(PvInvertersAcEnergyForwardPerDay*1000)), PacMax))
+
+        dataRead = ''
+        with open(_conf.EXPORT_FILEPATH + "days_hist.js", "r") as f:
+            dataRead = f.read()
+
+        f.close()
+
+        with open(_conf.EXPORT_FILEPATH + "days_hist.js", "w") as f:
+            days_hist = "{}{}".format(days_hist, dataRead)
+            f.write (days_hist)
+            f.flush()
+
+        f.close()
+
+# # Ende Funktion: ' _write_days_hist ' ###########################################################
 
 # #################################################################################################
 # #  Funktion: '_write_File '
-## \details
-#   \param[in]     -
-#   \return          -
+## 	\details
+#   \param[in] 	strFile
+#   \param[in]  txtStream
+#   \param[in]  oType
+#   \return     -
 # #################################################################################################
     def _write_File(self, strFile, txtStream, oType):
 
@@ -278,137 +536,152 @@ class ExportDataFromInflux(object):
 
         f.close()
 
-# # Ende Funktion: ' _write_File ' #################################################################
+# # Ende Funktion: ' _write_File ' ################################################################
 
 # #################################################################################################
 # #  Funktion: ' _main '
-## \details         Die Einsprungsfunktion, ruft alle Funktionen und Klassen auf.
-#   \return            -
+## 	\details 	Die Einsprungsfunktion, ruft alle Funktionen und Klassen auf.
+#   \return     -
 # #################################################################################################
     def main(self, interval):
 
-        try:
-            self.log.info("ExportPfad: {} Intervall {} sek.".format(_conf.EXPORT_FILEPATH, interval))
+        while True:
 
-            ## Import fehlgeschlagen
-            if (PrivateImport == False):
-                raise ImportError
+            try:
+                ## Import fehlgeschlagen
+                if (PrivateImport == False):
+                    raise ImportError
 
-        ## Database initialisieren
-            self.influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
+                self.log.info("ExportPfad: {} Intervall {} sek.".format(_conf.EXPORT_FILEPATH, interval))
 
-            # Datum initialisieren
-            yesterDay = datetime.date(2000,1,2)
-            PacMax = 0
-            days_hist_written = False
+            ## Database initialisieren
+                self.influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
 
-            # Programm
-            while True:
-                Zeit = datetime.datetime.now()
-            ## Csv Stream zusammenbauen
-                toDay = datetime.date.today()
+                # Datum initialisieren
+                yesterDay = datetime.date(2000,1,2)
+                PacMax = 0
+                bFirstRun = True
+                bDays_hist_written = False
+                bOnceMore = True
+                bMonat = False
+                bYear = False
 
-                FolderYear = toDay.strftime('[%Y]')
-                strFolder = os.path.join(_conf.EXPORT_FILEPATH, FolderYear)
-                csvFile = toDay.strftime('%Y%m%d.csv')
-                strFile = os.path.join(strFolder, csvFile)
+                # Programm
+                while True:
+                    toDay = datetime.date.today()
 
-                if (yesterDay < toDay) and (not os.path.exists(strFile)):
-                    yesterDay = toDay
-                    days_hist_written = False
+                    FolderYear = toDay.strftime('[%Y]')
+                    strFolder = os.path.join(_conf.EXPORT_FILEPATH, FolderYear)
+                    csvFile = toDay.strftime('%Y%m%d.csv')
+                    strFile = os.path.join(strFolder, csvFile)
+                    PacMax = 0
 
-                    if (not os.path.exists(strFolder)):
-                        os.mkdir(strFolder)
+                    # Neues Jahr
+                    if (yesterDay.year < toDay.year) and (bFirstRun == True):
+                        bYear = True
 
-                    onceMore = True
-                    csvStream = self._prepare_Csv_Header(toDay)
-                    self._write_File(strFile, csvStream, "w")
+                    # Neuer Monat
+                    if (yesterDay.month < toDay.month) and (bFirstRun == True):
+                        bMonat = True
 
-            ## Tagsüber oder nachts
-                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
-                sunRise = AMh  * 60 + AMm
-                sunSet  = UMh  * 60 + UMm
-                localNow  = lt_h * 60 + lt_m
+                    # Neuer Tag
+                    if (yesterDay < toDay) and (not os.path.exists(strFile)):
+                        yesterDay = toDay
+                        bDays_hist_written = False
+                        bOnceMore = True
 
-                if ((localNow < sunRise) or (localNow > sunSet)) and (days_hist_written == True):
-                    # Ausrechnen wie lange in den Sleep zu schicken bis morgen SunRise ( da nehmen wir den heutigen Wert zum Rechnen)
-                    #  Tag hat 86400 sek.
-                    time.sleep(86400 - localNow * 60 + sunRise * 60)
-                    continue
+                        if (not os.path.exists(strFolder)):
+                            os.mkdir(strFolder)
 
-            ## Aktuelle Tages und Gesamteenergieen
-                PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal, sensor_data_list, sensor_data_day_list = self._get_Enery()
-                for sensor_data in sensor_data_list:
-                    retVal = self.influxHdlr._send_sensor_data_to_influxdb(sensor_data)
-                    if (retVal == False):
-                        self.log.warning("Fehler beim schreiben von {}".format(sensor_data))
+                    ## Csv Stream zusammenbauen
+                        csvStream = self._prepare_Csv_Header(toDay)
+                        self._write_File(strFile, csvStream, "w")
 
-            ## Aktuelle Gesamtleistung je Phase, sowie einzel Spannung und Strom
-                Pv_U1, Ges_I1, Ges_P1, Pv_U2, Ges_I2, Ges_P2, Pv_U3, Ges_I3, Ges_P3, PAC = self._get_PUI()
-                if (PacMax < PAC):
-                    PacMax = PAC
+            ##### Prozentuale Aufteilung des Verbrauches und des Solarertrages #############
+                    self._calcPercentage()
 
-            ## Dc Werte müssen evtl gefaket werden, wenn Werte in der Csv nötig sein sollten
-                #
+            ##### Warten bis die Zeit vergeht ##############################################
+                    time.sleep(int(interval/2))    # das Intervall ist 120 sek. die prozentuale aufteilung dann alle 60
+            ##### Warten bis die Zeit vergeht ##############################################
 
-            ## Wenn eine Spannung > 0 ist, die Daten rausloggen
-                if (Pv_U1 > 0) or (Pv_U2 > 0) or (Pv_U3 > 0) or (onceMore == True):
-                ## Csv Stream in Datei schreiben
-                    datStream = "{:02d}:{:02d}:{:02d};1;0;0;0;0;0;0;0;0;0;{};{};{};{};{};{};{};{};{};0;0;0;0;{:.3f};{:.3f};0.000;0.000;0.000;0.000;\n". \
-                                format(Zeit.hour, Zeit.minute, Zeit.second, Pv_U1, Ges_I1, Ges_P1, Pv_U2, Ges_I2, Ges_P2, Pv_U3, Ges_I3, Ges_P3, PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal)
-                    self._write_File(strFile, datStream, "a")
+            ##### Prozentuale Aufteilung des Verbrauches und des Solarertrages #############
+                    self._calcPercentage()
 
-                ## days.js
-                    self._write_File(_conf.EXPORT_FILEPATH + "days.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.day, Zeit.month, Zeit.year, int(round(PvInvertersAcEnergyForwardPerDay*1000)), PacMax), "wt")
+            ##### Tagsueber oder nachts ####################################################
+                    AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
+                    sunRise = AMh  * 60 + AMm
+                    sunSet  = UMh  * 60 + UMm
+                    localNow  = lt_h * 60 + lt_m
+                    if ((localNow < sunRise) or (localNow > sunSet)) and (bDays_hist_written == True) and (bOnceMore == False):
+                        # Ausrechnen wie lange in den Sleep zu schicken bis morgen SunRise ( da nehmen wir den heutigen Wert zum Rechnen)
+                        #  Tag hat 86400 sek.
+                        #time.sleep(86400 - localNow * 60 + sunRise * 60)
+                        continue
+            ################################################################################
 
-                    if (Pv_U1 == 0) and (Pv_U2 == 0) and (Pv_U3 == 0):
-                        onceMore = False
+                ## Aktuelle Tages und Gesamtenergieen
+                    PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal, sensor_data_list, sensor_data_day_list = self._get_Enery()
+                    self._WriteEnergyToDb(sensor_data_list)
 
-            ## days_hist.js
-                ShutDowntime = datetime.time(UMh, UMm - 5, 00)  # 5 min vor Sonnenuntergang
-                actTime = datetime.time(Zeit.hour, Zeit.minute, Zeit.second)
-                ##  /Ac/Energy/Forward täglich um 21h abspeichern, dann differenz zum diesem Wert ist tägliche Energie. um 23h abspeichern, dann Monat (30Tage evtl), dann Jahr
-                ## Die Zeit ist UTC also 21 entspricht 23 MEZ Berlin
-                if ((actTime > ShutDowntime) and (days_hist_written == False)):
-                    for sensor_data in sensor_data_day_list:
-                        retVal = self.influxHdlr._send_sensor_data_to_influxdb(sensor_data)
-                        if (retVal == False):
-                            self.log.warning("Fehler beim schreiben von {}".format(sensor_data))
+                ## Aktuelle Gesamtleistung je Phase, sowie einzel Spannung und Strom
+                    Pv_U1, Ges_I1, Ges_P1, Pv_U2, Ges_I2, Ges_P2, Pv_U3, Ges_I3, Ges_P3, PAC = self._get_PUI()
+                    if (PacMax < PAC):
+                        PacMax = PAC
 
-                    days_hist_written = True
-                    days_hist = ('da[dx++]="{:02d}.{:02d}.{:02d}|{};{}"\n'.format(Zeit.day, Zeit.month, Zeit.year, int(round(PvInvertersAcEnergyForwardPerDay*1000)), PacMax))
+                ## Dc Werte müssen evtl gefaket werden, wenn Werte in der Csv nötig sein sollten
+                    ##
 
-                    dataRead = ''
-                    with open(_conf.EXPORT_FILEPATH + "days_hist.js", "r") as f:
-                        dataRead = f.read()
+            ##### Logging der Daten ####################################################
+                    Zeit = datetime.datetime.now()
+                ## Wenn eine Spannung > 0 ist, die Daten rausloggen
+                    if (Pv_U1 > 0) or (Pv_U2 > 0) or (Pv_U3 > 0) or (Ges_P1 > 0) or (Ges_P2 > 0) or (Ges_P3 > 0) or (bOnceMore == True):
+                    ## Csv Stream in Datei schreiben
+                        datStream = "{:02d}:{:02d}:{:02d};1;0;0;0;0;0;0;0;0;0;{};{};{};{};{};{};{};{};{};0;0;0;0;{:.3f};{:.3f};0.000;0.000;0.000;0.000;\n". \
+                                    format(Zeit.hour, Zeit.minute, Zeit.second, Pv_U1, Ges_I1, Ges_P1, Pv_U2, Ges_I2, Ges_P2, Pv_U3, Ges_I3, Ges_P3, PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal)
+                        self._write_File(strFile, datStream, "a")
 
-                    f.close()
+                    ## days.js
+                        self._write_File(_conf.EXPORT_FILEPATH + "days.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.day, Zeit.month, Zeit.year, int(round(PvInvertersAcEnergyForwardPerDay*1000)), PacMax), "wt")
 
-                    with open(_conf.EXPORT_FILEPATH + "days_hist.js", "w") as f:
-                        days_hist = "{}\n{}".format(days_hist, dataRead)
-                        self.log.info("Vorher {} :".format(dataRead))
-                        self.log.info("Nachher {} :".format(days_hist))
-                        f.write (days_hist)
-                        f.flush()
+                        if (Pv_U1 == 0) and (Pv_U2 == 0) and (Pv_U3 == 0):
+                            bOnceMore = False
 
-                    f.close()
+                ## days_hist.js
+                    ShutDowntime = datetime.time(UMh, UMm - 5, 00)  # 5 min vor Sonnenuntergang
+                    actTime = datetime.time(Zeit.hour, Zeit.minute, Zeit.second)
+                    ## Die Zeit ist UTC also 21 entspricht 23 MEZ Berlin
+                    if ((actTime > ShutDowntime) and (bDays_hist_written == False)):
+                    ## Die Tagesenergie aufsummiern zu Monat
+                        if (bMonat):
+                            bMonat = False
+                            self.log.info("Monatswerte")
+                            sensor_data_day_list.extend(self._EnergyPerMonth(toDay, sensor_data_day_list))
 
-            ## Warten bis die Zeit vergeht
-                time.sleep(interval)
+                    ## Die Monatsenergien zum Jahr
+                        if (bYear):
+                            bYear = False
+                            self.log.info("Jahreswerte")
+                            sensor_data_day_list.extend(self._EnergyPerYear(toDay, sensor_data_day_list))
 
-        ##### Fehlerbehandlung #####################################################
-        except ImportError as e:
-            self.log.error('Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e))
-            print 'Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e)
+                    ## Die Tagesenergie
+                        self._WriteEnergyToDb(sensor_data_day_list)
+                        bDays_hist_written = True
+                        self._write_days_hist(Zeit, PacMax, PvInvertersAcEnergyForwardPerDay)
 
-        except IOError as e:
-            self.log.error("IOError: {}".format(e.msg))
-            print 'IOError'
+                    bFirstRun = False
 
-        except:
-            for info in sys.exc_info():
-                self.log.error("Fehler: {}".format(info))
-                print ("Fehler: {}".format(info))
+            ##### Fehlerbehandlung #####################################################
+            except NameError as e:
+                self.log.error("VariablenFehler: {}".format(e))
+
+            except IOError as e:
+                self.log.error("IOError: {}".format(e))
+                #print 'IOError'
+
+            except:
+                for info in sys.exc_info():
+                    self.log.error("Fehler: {}".format(info))
+                    #print ("Fehler: {}".format(info))
 
 # # Ende Funktion: ' _main' #######################################################################
 

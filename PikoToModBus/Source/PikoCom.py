@@ -100,18 +100,21 @@ class PikoWebRead:
 #   \param[in]
 #   \return -
 # #################################################################################################
-  def __init__(self, bDbg, Inv_Host, InvPwd):
+  def __init__(self, Inv_Host, InvPwd, logger):
 
     self.SocketStream = 0
 
     self.Opt = {}
 
+    self.log = logger.getLogger('PrepareData')
+    self.log.info("gestartet")
+
+    self.FirstRun = True
+
     #HostGroup.add_option("", "--id", help="RS485 bus address", type=int, dest="Addr", metavar="255", default="255")
     self.Opt['Addr'] = 255
     #HostGroup.add_option("", "--tref", help="Temp reference", dest="TRef", metavar="c800", default="0")
     self.Opt['TRef'] = '0'
-    #HostGroup.add_option("", "--debug", help="Show data frames", dest="Dbg", action="store_true", default=False)
-    self.Opt['Dbg'] = bDbg
 
     #HistGroup.add_option("", "--user", help="http username", dest="InvUser", metavar="USERNAME", default="pvserver")
     self.Opt['InvUser'] = 'pvserver',
@@ -460,6 +463,11 @@ class PikoWebRead:
   #   \return          -
   # #################################################################################################
   def GetFetchedData(self):
+
+    if (self.FirstRun == True):
+      self.DbgPrintOut()
+      self.FirstRun = False
+
     return self.Data
 
   # #################################################################################################
@@ -471,36 +479,36 @@ class PikoWebRead:
   # #################################################################################################
   def DbgPrintOut(self):
 
-    print "TimeStamp       : {:%m/%d/%y %H:%M %S}".format(self.Data['Now'])
-    print "Comm software   : Piko v%s - %s" % (self.Data['RelVer'], self.Data['RelDate'])
-    print "Comm host       : %s" % self.Data['host']
-    print "Comm port       : %d" % self.Data['port']
-    print "Comm status     : %s\n" % self.Data['NetStatus']
-    print "Inverter Status : %d (%s)" % (self.Data['Status'], self.Data['StatusTxt'])
-    print "Inverter Error  : %s" % self.Data['ErrorCode']
-    print "Inverter Name   : %s" % self.Data['InvName']
-    print "Inverter SN     : %s" % self.Data['InvSN']
-    print "Inverter Ref    : %s" % self.Data['InvRef']
-    print "Inverter Version: %s" % self.Data['InvVer']
-    print "Inverter Model  : %s" % self.Data['InvModel']
-    print "Inverter String : %d" % self.Data['InvString']
-    print "Inverter Phase  : %d\n" % self.Data['InvPhase']
-    print "Total Time      : %s (%d j)" % (self._DspTimer("", self.Data['InvInstTime'], 1), self.Data['InvInstTime']//86400)
-    print "Running Time    : %s" % self._DspTimer("", self.Data['InvRunTime'], 1)
-    print "Last Port. upld : %s" % self._DspTimer("", self.Data['InvPortalTime'], 1)
-    print "Last Hist. updt : %s" % self._DspTimer("", self.Data['InvHistTime'], 1)
-    print "Hist. updt step : %s\n" % self._DspTimer("", self.Data['InvHistStep'], 1)
-    print "Total energy    : %d Wh" % self.Data['TotalWh']
-    print "Today energy    : %d Wh" % self.Data['TodayWh']
-    print "DC Power        : %5d W\nAC Power        : %5d W\nEfficiency      : %5.1f %%\n" % (self.Data['CC_P'], self.Data['CA_P'], self.Data['Eff'])
+    self.log.info("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(self.Data['Now']))
+    self.log.info("Comm software   : Piko v%s - %s" % (self.Data['RelVer'], self.Data['RelDate']))
+    self.log.info("Comm host       : %s" % self.Data['host'])
+    self.log.info("Comm port       : %d" % self.Data['port'])
+    self.log.info("Comm status     : %s\n" % self.Data['NetStatus'])
+    self.log.info("Inverter Status : %d (%s)" % (self.Data['Status'], self.Data['StatusTxt']))
+    self.log.info("Inverter Error  : %s" % self.Data['ErrorCode'])
+    self.log.info("Inverter Name   : %s" % self.Data['InvName'])
+    self.log.info("Inverter SN     : %s" % self.Data['InvSN'])
+    self.log.info("Inverter Ref    : %s" % self.Data['InvRef'])
+    self.log.info("Inverter Version: %s" % self.Data['InvVer'])
+    self.log.info("Inverter Model  : %s" % self.Data['InvModel'])
+    self.log.info("Inverter String : %d" % self.Data['InvString'])
+    self.log.info("Inverter Phase  : %d\n" % self.Data['InvPhase'])
+    self.log.info("Total Time      : %s (%d j)" % (self._DspTimer("", self.Data['InvInstTime'], 1), self.Data['InvInstTime']//86400))
+    self.log.info("Running Time    : %s" % self._DspTimer("", self.Data['InvRunTime'], 1))
+    self.log.info("Last Port. upld : %s" % self._DspTimer("", self.Data['InvPortalTime'], 1))
+    self.log.info("Last Hist. updt : %s" % self._DspTimer("", self.Data['InvHistTime'], 1))
+    self.log.info("Hist. updt step : %s\n" % self._DspTimer("", self.Data['InvHistStep'], 1))
+    self.log.info("Total energy    : %d Wh" % self.Data['TotalWh'])
+    self.log.info("Today energy    : %d Wh" % self.Data['TodayWh'])
+    self.log.info("DC Power        : %5d W\nAC Power        : %5d W\nEfficiency      : %5.1f %%\n" % (self.Data['CC_P'], self.Data['CA_P'], self.Data['Eff']))
 
-    print 'DC String 1     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC1_U'], self.Data['CC1_I'], self.Data['CC1_P'], self.Data['CC1_T'], self._CnvTemp(self.Data['CC1_T']), self.Data['CC1_S'])
-    print 'DC String 2     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC2_U'], self.Data['CC2_I'], self.Data['CC2_P'], self.Data['CC2_T'], self._CnvTemp(self.Data['CC2_T']), self.Data['CC2_S'])
-    print 'DC String 3     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC3_U'], self.Data['CC3_I'], self.Data['CC3_P'], self.Data['CC3_T'], self._CnvTemp(self.Data['CC3_T']), self.Data['CC3_S'])
-    print 'AC Status       : %d (%04x %s)' % (self.Data['CA_S'], self.Data['CA_S'], self._CnvCA_S(self.Data['CA_S']))
-    print 'AC Phase 1      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA1_U'], self.Data['CA1_I'], self.Data['CA1_P'], self.Data['CA1_T'], self._CnvTemp(self.Data['CA1_T']))
-    print 'AC Phase 2      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA2_U'], self.Data['CA2_I'], self.Data['CA2_P'], self.Data['CA2_T'], self._CnvTemp(self.Data['CA2_T']))
-    print 'AC Phase 3      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA3_U'], self.Data['CA3_I'], self.Data['CA3_P'], self.Data['CA3_T'], self._CnvTemp(self.Data['CA3_T']))
+    self.log.info('DC String 1     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC1_U'], self.Data['CC1_I'], self.Data['CC1_P'], self.Data['CC1_T'], self._CnvTemp(self.Data['CC1_T']), self.Data['CC1_S']))
+    self.log.info('DC String 2     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC2_U'], self.Data['CC2_I'], self.Data['CC2_P'], self.Data['CC2_T'], self._CnvTemp(self.Data['CC2_T']), self.Data['CC2_S']))
+    self.log.info('DC String 3     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC3_U'], self.Data['CC3_I'], self.Data['CC3_P'], self.Data['CC3_T'], self._CnvTemp(self.Data['CC3_T']), self.Data['CC3_S']))
+    self.log.info('AC Status       : %d (%04x %s)' % (self.Data['CA_S'], self.Data['CA_S'], self._CnvCA_S(self.Data['CA_S'])))
+    self.log.info('AC Phase 1      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA1_U'], self.Data['CA1_I'], self.Data['CA1_P'], self.Data['CA1_T'], self._CnvTemp(self.Data['CA1_T'])))
+    self.log.info('AC Phase 2      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA2_U'], self.Data['CA2_I'], self.Data['CA2_P'], self.Data['CA2_T'], self._CnvTemp(self.Data['CA2_T'])))
+    self.log.info('AC Phase 3      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA3_U'], self.Data['CA3_I'], self.Data['CA3_P'], self.Data['CA3_T'], self._CnvTemp(self.Data['CA3_T'])))
 
   # #################################################################################################
   # #  Funktion: ' _GetPikoTimes '
@@ -720,7 +728,6 @@ class PikoWebRead:
     # Get Inverter Status (0=Stop; 1=dry-run; 3..5=running)
     Status = -1; self.Data['ErrorCode'] = 0;
     if self.Data['NetStatus'] == 0:
-      if self.Opt['Dbg']: print "- - - - - - - - - -  D A T A   F R A M E S  - - - - - - - - - -"
       Snd="\x00\x57"
       Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
       if self._ChkSum(Recv) != 0:
@@ -740,7 +747,6 @@ class PikoWebRead:
       if Portal == True : self._GetPikoPortalData()
       if Header == True : self._GetPikoHeader()
 
-    if self.Opt['Dbg']: print "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
     self.SocketStream.close()
 
     return Status
