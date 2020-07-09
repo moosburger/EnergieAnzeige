@@ -209,9 +209,10 @@ class OpenWeatherMap(object):
         data = {}
         r = requests.get(
             "http://api.openweathermap.org/data/2.5/weather?id={}&appid={}&units=metric".format(_conf.CITY_CODE, _conf.OPENWEATHERMAP_API_KEY))
-
         if r.status_code == 200:
             current_data = r.json()
+            data['sunrise'] = current_data['sys']['sunrise']
+            data['sunset'] = current_data['sys']['sunset']
             data['weather'] = current_data['main']
             rain, rain_level = self.get_rain_level_from_weather(current_data['weather'])
             data['weather']['rain'] = rain

@@ -1,0 +1,32 @@
+###########################################################
+#   dietPi Startup
+#   English:    https://wiki.debian.org/systemd/Services
+#   Deutsch:    https://manpages.debian.org/buster/manpages-de/systemd.service.5.de.html
+#
+#   Datei nach /etc/systemd/system/RaspiCooler.service
+#
+#   Berechtigungen setzen
+#   sudo chmod 644 /etc/systemd/system/RaspiCooler.service
+#
+#   systemd informieren den Process beim Bootup zu starten
+#   sudo systemctl daemon-reload
+#   und
+#   sudo systemctl enable RaspiCooler.service
+#
+#   systemctl start RaspiCooler.service
+#   systemctl stop RaspiCooler.service
+#
+###########################################################
+
+[Unit]
+Description=Collecting Data from Victron mqtt broker
+After=multi-user.target
+
+[Service]
+Type=simple
+RestartSec=30
+Restart=on-failure
+ExecStart=/usr/bin/python /mnt/dietpi_userdata/RaspiCooler/RaspiCooler.py
+
+[Install]
+WantedBy=multi-user.target

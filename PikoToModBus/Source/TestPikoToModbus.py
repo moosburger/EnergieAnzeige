@@ -110,7 +110,9 @@ sunSpec = (
             ('      Dc1 Strom',40641, 1,40624),
             ('      Dc2 Strom',40661, 1,40624),
             ('   Dc1 Leistung',40643, 1,40626),
-            ('   Dc2 Leistung',40663, 1,40626)
+            ('   Dc2 Leistung',40663, 1,40626),
+            (' Betriebsstatus',40224, 1,0),
+            (' Ereignisnummer',40226, 2,0)
         )
 
 for dataSet in sunSpec:

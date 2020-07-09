@@ -128,6 +128,8 @@ class PvInverter():
         AcEnergyForwardPerDay
         AcEnergyForwardPerMonth
         AcEnergyForwardPerYear
+        AcEnergyForwardMonthSoFar
+        AcEnergyForwardYearSoFar
         Connected	                {"value": 1}
         CustomName	                {"value": ""}
         DeviceInstance	            {"value": 24}
@@ -344,6 +346,8 @@ class System():
         PvInvertersAcEnergyForwardPerDay
         PvInvertersAcEnergyForwardPerMonth
         PvInvertersAcEnergyForwardPerYear
+        PvInvertersAcEnergyForwardMonthSoFar
+        PvInvertersAcEnergyForwardYearSoFar
         system/0/Relay/0/State	                        {"value": 0}
         system/0/Relay/1/State	                        {"value": 0}
         system/0/Serial	                                {"value": "0479b7f1e15c"}
