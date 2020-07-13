@@ -24,6 +24,7 @@ from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 from pymodbus.register_read_message import ReadHoldingRegistersResponse
 import ctypes
 import sys
+import configuration as _conf
 
 # --------------------------------------------------------------------------- #
 # configure the client logging
@@ -85,8 +86,8 @@ UNIT = 126  # default according to the manual, see below
 # ------------------------------------------------------------------------#
 # Define client
 # ------------------------------------------------------------------------#
-modbus = ModbusClient('192.168.2.50', port=502)
-#client = ModbusClient('localhost', port=502)
+modbus = ModbusClient(_conf.INVERTER_IP, port=_conf.MODBUS_PORT)
+#modbus = ModbusClient('192.168.2.42' , port=_conf.MODBUS_PORT)
 modbus.connect()
 
 # ----------------------------------------------------------------------- #
@@ -112,7 +113,9 @@ sunSpec = (
             ('   Dc1 Leistung',40643, 1,40626),
             ('   Dc2 Leistung',40663, 1,40626),
             (' Betriebsstatus',40224, 1,0),
-            (' Ereignisnummer',40226, 2,0)
+            (' Ereignisnummer',40226, 2,0),
+            ('    MAC-Adresse',40076, 4,0),
+            ('     IP-Adresse',40097, 8,0,)
         )
 
 for dataSet in sunSpec:

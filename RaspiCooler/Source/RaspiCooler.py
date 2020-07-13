@@ -19,9 +19,13 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
+import sys
 import RPi.GPIO as GPIO
 import time
 import os
+
+import logging
+from logging.config import fileConfig
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -47,9 +51,9 @@ sys.setdefaultencoding("utf-8")
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-IMPULS_PIN		= 23	#Pin, der zum Transistor fuehrt
-SLEEP_TIME		= 30	#Alle wie viel Sekunden die Temperatur ueberprueft wird
-MAX_CPU_TEMP	= 40	#Ab welcher CPU Temperatur der Luefter sich drehen soll
+IMPULS_PIN		= 17	#Pin, der zum Transistor fuehrt
+SLEEP_TIME		= 60	#Alle wie viel Sekunden die Temperatur ueberprueft wird
+MAX_CPU_TEMP	= 45	#Ab welcher CPU Temperatur der Luefter sich drehen soll
 MAX_SENSOR_TEMP	= 30	#Ab welcher Temperatur im Gehaeuse der Luefter sich drehen soll
 SENSOR_ID 		= ''	#ID des Sonsors, BITTE ANPASSEN, falls kein Sensor vorhanden leer lassen
 
@@ -103,10 +107,11 @@ def get_cpu_temperature():
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-def main():
+def _main(argv):
 
+	iLogCount = -1
 	#Init
-	self.log.info("Starte RaspiCooler mit Intervall {} sek.".format(SLEEP_TIME))
+	log.info("Starte RaspiCooler mit Intervall {} sek.".format(SLEEP_TIME))
 	GPIO.setup(IMPULS_PIN, GPIO.OUT)
 	GPIO.output(IMPULS_PIN, False)
 
@@ -118,10 +123,13 @@ def main():
 		else:
 			GPIO.output(IMPULS_PIN, False)
 
-		log.info("gemessene CPU Temperatur:" + str(cpu_temp))
-		log.info("gemessene Sensor Temperatur:" + str(sensor_temp))
+		if (iLogCount > 10) or (iLogCount == -1):
+			log.info("   CPU Temperatur: {}".format(cpu_temp))
+			log.info("Sensor Temperatur: {}".format(sensor_temp))
+			iLogCount = 0
 
 		time.sleep(SLEEP_TIME)
+		iLogCount = iLogCount + 1
 
 # # Ende Funktion: ' main ' #######################################################################
 

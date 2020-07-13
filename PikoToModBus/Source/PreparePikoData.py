@@ -102,7 +102,6 @@ class PrepareData():
     def __init__(self, logger):
 
         self.log = logger.getLogger('PrepareData')
-
         self.log.info("gestartet")
 
 # # Ende Funktion: ' Constructor ' ################################################################

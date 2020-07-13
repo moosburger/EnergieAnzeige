@@ -19,14 +19,14 @@
 ###########################################################
 
 [Unit]
-Description=Collecting Data from Victron mqtt broker
+Description=Preparing Piko Data for ModBus
 After=multi-user.target
 
 [Service]
 Type=simple
 RestartSec=30
 Restart=on-failure
-ExecStart=/usr/bin/python /mnt/dietpi_userdata/EnergieAnzeige/PikoToModbus.py
+ExecStart=/usr/bin/python /mnt/dietpi_userdata/PikoToModbus/PikoToModbus.py
 
 [Install]
 WantedBy=multi-user.target

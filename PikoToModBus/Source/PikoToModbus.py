@@ -66,7 +66,7 @@ except:
 # #################################################################################################
 # # Logging
 # #################################################################################################
-fileConfig('/mnt/dietpi_userdata/PikoToModBus/logging_config.ini')
+fileConfig('/mnt/dietpi_userdata/PikoToModbus/logging_config.ini')
 log = logging.getLogger('PikoToModbus')
 
 # #################################################################################################
@@ -74,13 +74,13 @@ log = logging.getLogger('PikoToModbus')
 # # Prototypen
 # #################################################################################################
 _FirstRun = True
+_FirstDayRun = True
 
 # #################################################################################################
 # #  Funktion: ' _Fetch_Piko_Data '
-## \details        -
-#   \param[in]     -
-#   \param[in]     -
-#   \return          -
+## 	\details
+#   \param[in]	-
+#   \return     -
 # #################################################################################################
 def _Fetch_Piko_Data(a):
     """ A worker process that runs every so often and
@@ -92,6 +92,7 @@ def _Fetch_Piko_Data(a):
     Piko = a[1]
     Data = a[2]
     global _FirstRun
+    global _FirstDayRun
 
     # Tagsüber oder nachts
     AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
@@ -105,6 +106,7 @@ def _Fetch_Piko_Data(a):
     #print sunSet
 
     if ((locNow < sunRise) or (locNow > sunSet)) and (_FirstRun == False):
+        _FirstDayRun = True
         return
 
     log.debug("\tUpdating the database context")
@@ -118,7 +120,7 @@ def _Fetch_Piko_Data(a):
     if ((retStat == -1) and (_conf.DEBUG == False)):
         return
 
-    pikoData = Piko.GetFetchedData()
+    pikoData = Piko.GetFetchedData(_FirstDayRun)
     #Data.Dbg_Print(Piko, pikoData)
 
     sunSpec = Data.Prepare(Piko, pikoData, _FirstRun)
@@ -140,14 +142,14 @@ def _Fetch_Piko_Data(a):
             context[slave_id].setValues(writefunction, skr, vSkr)
 
     _FirstRun = False
+    _FirstDayRun = False
     #print '\n\nFIRSTRUN 2 %s\n\n' %(str(_FirstRun))
 
 # #################################################################################################
 # #  Funktion: ' _run_modbus_server '
-## \details        -
-#   \param[in]     -
-#   \param[in]     -
-#   \return          -
+## 	\details
+#   \param[in]	-
+#   \return     -
 # #################################################################################################
 def _run_modbus_server(Piko, Data):
     global _Loop
@@ -188,24 +190,25 @@ def _run_modbus_server(Piko, Data):
 
 # #################################################################################################
 # #  Funktion: ' _main '
-## \details         Die Einsprungsfunktion, ruft alle Funktionen und Klassen auf.
-#   \param[in]    argv
-#   \return            -
+## 	\details 	Die Einsprungsfunktion, ruft alle Funktionen und Klassen auf.
+#   \param[in]  argv
+#   \return     -
 # #################################################################################################
 def _main(argv):
 
     _FirstRun = True
+    _FirstDayRun = True
     try:
-        self.log.info("gestartet")
+        log.info("gestartet mit Intervall {} sek.".format(_conf.SCHED_INTERVAL))
 
         # # Mit dem Piko instanzieren ####################################
-        _Piko = PikoWebRead(_conf.PIKO_IP, _conf.PIKO_PASSWORD, log)
-        _data = PrepareData(log)
+        _Piko = PikoWebRead(_conf.PIKO_IP, _conf.PIKO_PASSWORD, logging)
+        _data = PrepareData(logging)
 
         # Daten vom Piko holen
         #~retStat = _Piko.FetchData(Timers=True, Portal=True, Header=True, Data=True)
         #~pikoData = _Piko.GetFetchedData()
-        #~ _data.Dbg_Print(_Piko, pikoData)
+        #~ _data.DbgPrintOut(_Piko, pikoData)
         #~ sunSpec = _data.Prepare(_Piko, pikoData, _FirstRun)
         #~ for dataSet in sunSpec:
             #~ des = dataSet[0]
@@ -223,12 +226,16 @@ def _main(argv):
 
         _run_modbus_server(_Piko, _data)
 
+    except IOError as e:
+        log.error("IOError: {}".format(e.msg))
+        print 'IOError'
+
     except:
         for info in sys.exc_info():
             log.error("Fehler: {}".format(info))
             print ("Fehler: {}".format(info))
 
-# # Ende Funktion: ' _main' ###########################################################################
+# # Ende Funktion: ' _main' #######################################################################
 
 # #################################################################################################
 # #  Funktion: 'Einsprung beim Aufruf  '

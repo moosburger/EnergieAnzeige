@@ -19,7 +19,7 @@
 ###########################################################
 
 [Unit]
-Description=Collecting Data from Victron mqtt broker
+Description=Fan Control
 After=multi-user.target
 
 [Service]

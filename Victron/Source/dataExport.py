@@ -82,7 +82,7 @@ class ExportDataFromInflux(object):
         self.log = logger.getLogger('ExportData')
         self.influxHdlr = influxIO(_host = _conf.INFLUXDB_ADDRESS, _port = _conf.INFLUXDB_PORT, _username = _conf.INFLUXDB_USER, _password = _conf.INFLUXDB_PASSWORD, _database = None, _gzip = _conf.INFLUXDB_ZIPPED, logger = logger)
         self.bWasOff = False
-        self.LogIt = True
+        self.LogIt = False
 
         thread = threading.Thread(target=self.main, args=(interval, ))
         thread.daemon = True
@@ -327,6 +327,12 @@ class ExportDataFromInflux(object):
 
         # Gesamtenergie Piko und SMA gestern
         PikoLastDayTotal, SmaLastDayTotal = self.influxHdlr._Query_influxDb([_conf.PIKO_ENERGY_LASTDAY,_conf.SMA_ENERGY_LASTDAY], PvInv.RegEx, 'last')
+        if not (PikoLastDayTotal) or not (SmaLastDayTotal):
+            self.log.warning("Piko LastDayTotal von DB: {}".format(PikoLastDayTotal))
+            self.log.warning("Sma LastDayTotal von db: {}".format(SmaLastDayTotal))
+            PikoLastDayTotal, SmaLastDayTotal = _ReadStartEnergy(self, _conf.EXPORT_FILEPATH + "EnergyStartInDay.js")
+            self.log.warning("Piko LastDayTotal aus Datei: {}".format(PikoLastDayTotal))
+            self.log.warning("Sma LastDayTotal aus Datei: {}".format(SmaLastDayTotal))
 
         PikoAcEnergyForwardPerDay = PikoEn - PikoLastDayTotal  # 18207,76 - 19,751  kWh
         SmaAcEnergyForwardPerDay = SmaEn - SmaLastDayTotal     # 4344,58 - 0
@@ -347,6 +353,9 @@ class ExportDataFromInflux(object):
         sensor_data_day.append(SensorData(System.RegEx, System.Label1, ["PvInvertersAcEnergyForwardPerDay",], [PvInvertersAcEnergyForwardPerDay,], timestamp))
 
         if (self.LogIt == True):
+            self.log.info("Piko LastDayTotal: {}".format(PikoLastDayTotal))
+            self.log.info("Sma LastDayTotal: {}".format(SmaLastDayTotal))
+
             self.log.info("Piko AcEnergyForwardDay: {}".format(PikoEn))
             self.log.info("Sma AcEnergyForwardDay: {}".format(SmaEn))
 
@@ -560,6 +569,56 @@ class ExportDataFromInflux(object):
 #   \param[in]     -
 #   \return          -
 # #################################################################################################
+    def _ReadStartEnergy(self, datei):
+
+        PikoEarly = 0
+        SmaEarly = 0
+        with open(datei, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+
+                smaRegEx = "\|(\d*);(\d*)"
+                match = Utils.RegEx(smaRegEx, line, Utils.fndFrst, Utils.Srch, '')
+                if match:
+                    print match.groups()
+                    PikoEarly = int(match.group(1))
+                    SmaEarly = int(match.group(2))
+
+        f.close()
+
+        return [PikoEarly, SmaEarly]
+
+# # Ende Funktion: 'get_DayHistPac ' ######################################################################
+
+# #################################################################################################
+# #  Funktion: '_GetStartEnergy '
+## 	\details
+#   \param[in] 	Zeit
+#   \param[in]  PvInvertersAcEnergyForwardPerDay
+#   \return     -
+# #################################################################################################
+    def _GetStartEnergy(self):
+
+        # Aktuelle Gesamtenergie Piko
+        PikoEn = self._Get_Energy_Piko()
+        PikoEn = round(PikoEn, 2)
+
+        # Aktuelle Gesamtenergie SMA
+        SmaEn = self._Get_Energy_Sma()
+        SmaEn = round(SmaEn, 2)
+
+        return [PikoEn, SmaEn]
+
+# # Ende Funktion: ' _GetStartEnergy ' ###########################################################
+
+# #################################################################################################
+# #  Funktion: 'get_DayHistPac '
+## \details
+#   \param[in]     -
+#   \return          -
+# #################################################################################################
     def get_DayHistPac(self, datei):
 
         Pac = 0
@@ -648,6 +707,7 @@ class ExportDataFromInflux(object):
             bDays_hist_written = False
             bMonat = False
             bYear = False
+            iLogCnt = -1
 
             PacMax = self.get_DayHistPac(_conf.EXPORT_FILEPATH + "days.js")
 
@@ -655,6 +715,7 @@ class ExportDataFromInflux(object):
             while True:
                 bNextDay = False
                 toDay = datetime.date.today()
+                Zeit = datetime.datetime.now()
 
                 FolderYear = toDay.strftime('[%Y]')
                 strFolder = os.path.join(_conf.EXPORT_FILEPATH, FolderYear)
@@ -672,17 +733,27 @@ class ExportDataFromInflux(object):
                 # Neuer Tag
                 if (yesterDay < toDay):
                     yesterDay = toDay
+
                     # nur wenn die Datei nicht existiert ist es ein neuer Tag, sonst wurde diese schon geschrieben und es erfolgte ein Reboot
                     if (not os.path.exists(strFile)):
                         bNextDay = True
                         PacMax = 0
+                        bDays_hist_written = False
+
+                        self.log.info("Neuer Tag : {}".format(toDay))
 
                         if (not os.path.exists(strFolder)):
                             os.mkdir(strFolder)
+                    else:
+                        self.log.info("Programmstart am : {}".format(toDay))
 
                     ## Csv Stream zusammenbauen
                         csvStream = self._prepare_Csv_Header(toDay)
                         self._write_File(strFile, csvStream, "w")
+
+                    ## EnergyStartInDay
+                        PikoEarly, SmaEarly = self._GetStartEnergy()
+                        self._write_File(_conf.EXPORT_FILEPATH + "EnergyStartInDay.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.strftime("%d"), Zeit.strftime("%m"), Zeit.strftime("%y"), PikoEarly, SmaEarly), "wt")
 
                 ## InverterStaus PIKO : 0,8,3,11 - Hochfahren,  11,8,0 runterfahren
                 _Status, _StatusCode = self._PvInverterStatus(bFirstRun, bNextDay)
@@ -709,9 +780,6 @@ class ExportDataFromInflux(object):
                     continue
         ################################################################################
 
-                if (bNextDay == True):
-                    bDays_hist_written = False
-
             ## Aktuelle Tages und Gesamtenergieen
                 PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal, sensor_data_list, sensor_data_day_list = self._get_Enery()
                 self._WriteEnergyToDb(sensor_data_list)
@@ -725,7 +793,6 @@ class ExportDataFromInflux(object):
                 ##
 
         ##### Logging der Daten ####################################################
-                Zeit = datetime.datetime.now()
             ## Wenn eine Spannung > 0 ist, die Daten rausloggen
                 if (_Status == True):
                 ## Csv Stream in Datei schreiben
@@ -737,8 +804,11 @@ class ExportDataFromInflux(object):
                     self._write_File(_conf.EXPORT_FILEPATH + "days.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.strftime("%d"), Zeit.strftime("%m"), Zeit.strftime("%y"), int(round(PvInvertersAcEnergyForwardPerDay*1000)), PacMax), "wt")
 
                 EnergyMonthSoFar, Total = (self._EnergyMonthSoFar(toDay))
-                self.log.info("Energie SoFar : {}".format(Total))
                 self._WriteEnergyToDb(EnergyMonthSoFar)
+
+                if (iLogCnt > 300) or (iLogCnt == -1):
+                    self.log.info("Energie SoFar : {}".format(Total))
+                    iLogCnt = 0
 
                 ## Wenn trotz  Sonnenuntergang noch Restleistung vorhanden ist
                 if (Ges_P1 > 0) or (Ges_P2 > 0) or (Ges_P3 > 0):

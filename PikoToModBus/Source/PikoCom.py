@@ -45,7 +45,6 @@ import sys
 import socket
 import urllib2
 import csv
-#import os
 
 from optparse import OptionParser, OptionGroup
 from datetime import datetime, timedelta
@@ -60,24 +59,13 @@ sys.setdefaultencoding("utf-8")
 # #################################################################################################
 # # private Imports
 # #################################################################################################
-#try:
-#    PrivateImport = True
-#    import Error
-#    import Utils
-#    from GetTrello import (TrelloCards)
-#    from GetMercurial import (HgLogOutput)
-#except:
-#    PrivateImport = False
 
 # #################################################################################################
 # # UmgebungsVariablen
 # #################################################################################################
-#env =  os.environ
-
 RelVer="1.4.1"
 RelDate="20160218"
 TRef="c800"
-#P="?"
 
 # #################################################################################################
 # # Funktionen
@@ -94,7 +82,7 @@ class PikoWebRead:
 
 # #################################################################################################
 # # Funktion: ' Constructor '
-## \details Die Initialisierung der Klasse TrelloCards
+## 	\details 	Die Initialisierung der Klasse
 #   \param[in]  self der Objectpointer
 #   \param[in]
 #   \param[in]
@@ -106,10 +94,10 @@ class PikoWebRead:
 
     self.Opt = {}
 
-    self.log = logger.getLogger('PrepareData')
+    self.log = logger.getLogger('PikoCom')
     self.log.info("gestartet")
 
-    self.FirstRun = True
+    self.Opt['Dbg'] = False
 
     #HostGroup.add_option("", "--id", help="RS485 bus address", type=int, dest="Addr", metavar="255", default="255")
     self.Opt['Addr'] = 255
@@ -244,11 +232,9 @@ class PikoWebRead:
 
 # #################################################################################################
 # # Funktion: ' Destructor '
-# # \details
-#   \param[in]
-#   \param[in]
-#   \param[in]
-#   \return
+## 	\details
+#   \param[in]	-
+#   \return     -
 # #################################################################################################
     #def __del__(self):
 
@@ -256,10 +242,9 @@ class PikoWebRead:
 
 # #################################################################################################
 # #  Funktion:      ' _PrintHexa '
-## \details        -
-#   \param[in]     -
-#   \param[in]     -
-#   \return          -
+## 	\details
+#   \param[in]	-
+#   \return     -
 # #################################################################################################
   def _PrintHexa(self, Txt, St):
     HexSt=''; TxtSt='';
@@ -272,13 +257,12 @@ class PikoWebRead:
     #print "%s%s %s" % (Txt, HexSt, TxtSt)
     print "%s%s" % (Txt, HexSt)
 
-  # #################################################################################################
-  # #  Funktion: ' _DspTimer '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _DspTimer '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _DspTimer(self, Txt, Timer, fmt):
     St = ""; Space = ""
     if fmt==1: Space=" "
@@ -289,13 +273,12 @@ class PikoWebRead:
       St = "%s%02dh%s%02dm%s%02ds" % (Txt, d.hour, Space, d.minute, Space, d.second)
     return St
 
-  # #################################################################################################
-  # #  Funktion: ' SndRecv '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' SndRecv '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _SndRecv(self, Addr, Snd, Dbg) :
     Snd="\x62"+chr(Addr)+"\x03"+chr(Addr)+Snd
     Snd+=chr(self._CalcChkSum(Snd))+"\x00"
@@ -321,13 +304,12 @@ class PikoWebRead:
       self._PrintHexa("Recv:", Recv)
     return Recv
 
-  # #################################################################################################
-  # #  Funktion: ' _ChkSum '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _ChkSum '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _ChkSum(self, St):
     Chk = 0
     if len(St) == 0: return 0
@@ -339,13 +321,12 @@ class PikoWebRead:
     else:
       return 0
 
-  # #################################################################################################
-  # #  Funktion: ' _CalcChkSum '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _CalcChkSum '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _CalcChkSum(self, St):
     Chk = 0
     if len(St) == 0: return 0
@@ -354,50 +335,46 @@ class PikoWebRead:
       Chk %= 256
     return Chk
 
-  # #################################################################################################
-  # #  Funktion: ' _GetWord '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetWord '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetWord(self, St, Idx):
     Val = 0
     Val = ord(St[Idx])+256*ord(St[Idx+1])
     return Val
 
-  # #################################################################################################
-  # #  Funktion: ' _GetDWord '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetDWord '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetDWord(self, St, Idx):
     Val = 0
     Val = ord(St[Idx])+256*ord(St[Idx+1])+65536*ord(St[Idx+2])+256*65536*ord(St[Idx+3])
     return Val
 
-  # #################################################################################################
-  # #  Funktion: ' _CnvTemp '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _CnvTemp '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _CnvTemp(self, Val):
     T=(int("0x"+TRef, 16)-Val)/448.0+22
     if T<0.0: T=0.0
     if T>99.99: T=99.99
     return T
 
-  # #################################################################################################
-  # #  Funktion: ' _CnvCA_S '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _CnvCA_S '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _CnvCA_S(self, Val):
     # Maybe some mising bit value
     L1="1" if Val & 0x04 else "-"
@@ -410,13 +387,12 @@ class PikoWebRead:
     E="E" if Val & 0x100 else "-"
     return E+I+C+L
 
-  # #################################################################################################
-  # #  Funktion: ' _CnvStatusTxt '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _CnvStatusTxt '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _CnvStatusTxt(self, Val):
     Txt = "Communication error"
     if Val == 0: Txt = "Off"                        # SMA 1 = Aus
@@ -429,61 +405,56 @@ class PikoWebRead:
                                                     # SMA 8 = Warte auf EVU
     return Txt
 
-  # #################################################################################################
-  # #  Funktion: ' _GetHistInt '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetHistInt '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetHistInt(self, St):
     St = St.strip()
     if len(St) > 0:
       return int(St.replace(".", ""))
     else: return 0;
 
-  # #################################################################################################
-  # #  Funktion: ' _GetHistTime '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetHistTime '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetHistTime(self, t, tref, now):
     dt=timedelta(seconds=tref-t)
     ht=now-dt
     ht=ht.replace(microsecond=0)
     return ht.isoformat()
 
-  # #################################################################################################
-  # #  Funktion: ' GetFetchedData '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
-  def GetFetchedData(self):
+# #################################################################################################
+# #  Funktion: ' GetFetchedData '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
+  def GetFetchedData(self, bDbgOut):
 
-    if (self.FirstRun == True):
+    if (bDbgOut == True):
       self.DbgPrintOut()
-      self.FirstRun = False
 
     return self.Data
 
-  # #################################################################################################
-  # #  Funktion: ' DbgPrintOut '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' DbgPrintOut '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def DbgPrintOut(self):
 
     self.log.info("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(self.Data['Now']))
     self.log.info("Comm software   : Piko v%s - %s" % (self.Data['RelVer'], self.Data['RelDate']))
     self.log.info("Comm host       : %s" % self.Data['host'])
     self.log.info("Comm port       : %d" % self.Data['port'])
-    self.log.info("Comm status     : %s\n" % self.Data['NetStatus'])
+    self.log.info("Comm status     : %s" % self.Data['NetStatus'])
     self.log.info("Inverter Status : %d (%s)" % (self.Data['Status'], self.Data['StatusTxt']))
     self.log.info("Inverter Error  : %s" % self.Data['ErrorCode'])
     self.log.info("Inverter Name   : %s" % self.Data['InvName'])
@@ -492,15 +463,15 @@ class PikoWebRead:
     self.log.info("Inverter Version: %s" % self.Data['InvVer'])
     self.log.info("Inverter Model  : %s" % self.Data['InvModel'])
     self.log.info("Inverter String : %d" % self.Data['InvString'])
-    self.log.info("Inverter Phase  : %d\n" % self.Data['InvPhase'])
+    self.log.info("Inverter Phase  : %d" % self.Data['InvPhase'])
     self.log.info("Total Time      : %s (%d j)" % (self._DspTimer("", self.Data['InvInstTime'], 1), self.Data['InvInstTime']//86400))
     self.log.info("Running Time    : %s" % self._DspTimer("", self.Data['InvRunTime'], 1))
     self.log.info("Last Port. upld : %s" % self._DspTimer("", self.Data['InvPortalTime'], 1))
     self.log.info("Last Hist. updt : %s" % self._DspTimer("", self.Data['InvHistTime'], 1))
-    self.log.info("Hist. updt step : %s\n" % self._DspTimer("", self.Data['InvHistStep'], 1))
+    self.log.info("Hist. updt step : %s" % self._DspTimer("", self.Data['InvHistStep'], 1))
     self.log.info("Total energy    : %d Wh" % self.Data['TotalWh'])
     self.log.info("Today energy    : %d Wh" % self.Data['TodayWh'])
-    self.log.info("DC Power        : %5d W\nAC Power        : %5d W\nEfficiency      : %5.1f %%\n" % (self.Data['CC_P'], self.Data['CA_P'], self.Data['Eff']))
+    self.log.info("DC Power        : %5d W\tAC Power        : %5d W\tEfficiency      : %5.1f %%" % (self.Data['CC_P'], self.Data['CA_P'], self.Data['Eff']))
 
     self.log.info('DC String 1     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC1_U'], self.Data['CC1_I'], self.Data['CC1_P'], self.Data['CC1_T'], self._CnvTemp(self.Data['CC1_T']), self.Data['CC1_S']))
     self.log.info('DC String 2     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (self.Data['CC2_U'], self.Data['CC2_I'], self.Data['CC2_P'], self.Data['CC2_T'], self._CnvTemp(self.Data['CC2_T']), self.Data['CC2_S']))
@@ -510,13 +481,12 @@ class PikoWebRead:
     self.log.info('AC Phase 2      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA2_U'], self.Data['CA2_I'], self.Data['CA2_P'], self.Data['CA2_T'], self._CnvTemp(self.Data['CA2_T'])))
     self.log.info('AC Phase 3      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (self.Data['CA3_U'], self.Data['CA3_I'], self.Data['CA3_P'], self.Data['CA3_T'], self._CnvTemp(self.Data['CA3_T'])))
 
-  # #################################################################################################
-  # #  Funktion: ' _GetPikoTimes '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetPikoTimes '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetPikoTimes(self):
 
     # Total Running time
@@ -547,13 +517,12 @@ class PikoWebRead:
     if self._ChkSum(Recv) != 0:
       self.Data['InvHistStep']=self._GetDWord(Recv, 5)
 
-  # #################################################################################################
-  # #  Funktion: ' _GetPikoPortalData '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetPikoPortalData '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetPikoPortalData(self):
 
     # Portal Name & Update Timer
@@ -570,13 +539,12 @@ class PikoWebRead:
       for i in range(32):
         if 0x20 <= ord(Recv[5+i]) <= 0x7f: InvPortalName+=Recv[5+i]
 
-  # #################################################################################################
-  # #  Funktion: ' _GetPikoHeader '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetPikoHeader '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetPikoHeader(self):
 
     # Get Inverter Model
@@ -637,13 +605,12 @@ class PikoWebRead:
     if self._ChkSum(Recv) != 0:
       self.Data['InvRef']=self._GetDWord(Recv, 5)
 
-  # #################################################################################################
-  # #  Funktion: ' _GetPikoData '
-  ## \details        -
-  #   \param[in]     -
-  #   \param[in]     -
-  #   \return          -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' _GetPikoData '
+## 	\details
+#   \param[in]	-
+#   \return     -
+# #################################################################################################
   def _GetPikoData(self):
 
     # Get Total Wh
@@ -706,12 +673,12 @@ class PikoWebRead:
       if self.Data['CC_P']<1: self.Data['Eff']=0
       else : self.Data['Eff']=self.Data['CA_P']*100.0/self.Data['CC_P']
 
-  # #################################################################################################
-  # #  Funktion: ' FetchData '
-  ## \details         Die Einsprungsfunktion, ruft alle Funktionen und Klassen auf.
-  #   \param[in]    argv
-  #   \return            -
-  # #################################################################################################
+# #################################################################################################
+# #  Funktion: ' FetchData '
+## 	\details	Die Einsprungsfunktion, ruft alle Funktionen und Klassen auf.
+#   \param[in]	argv
+#   \return     -
+# #################################################################################################
   def FetchData(self, Timers, Portal, Header, Data):
 
     self.SocketStream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -723,7 +690,8 @@ class PikoWebRead:
       self.SocketStream.connect((self.Data['host'],  self.Data['port']))
       self.SocketStream.settimeout(1)
     except socket.error, msg:
-      self.Data['NetStatus']=msg
+      self.log.error("NetStatus: {}".format(msg))
+      self.Data['NetStatus'] = msg
 
     # Get Inverter Status (0=Stop; 1=dry-run; 3..5=running)
     Status = -1; self.Data['ErrorCode'] = 0;
