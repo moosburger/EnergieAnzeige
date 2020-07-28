@@ -744,8 +744,6 @@ class ExportDataFromInflux(object):
 
                         if (not os.path.exists(strFolder)):
                             os.mkdir(strFolder)
-                    else:
-                        self.log.info("Programmstart am : {}".format(toDay))
 
                     ## Csv Stream zusammenbauen
                         csvStream = self._prepare_Csv_Header(toDay)
@@ -754,6 +752,9 @@ class ExportDataFromInflux(object):
                     ## EnergyStartInDay
                         PikoEarly, SmaEarly = self._GetStartEnergy()
                         self._write_File(_conf.EXPORT_FILEPATH + "EnergyStartInDay.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.strftime("%d"), Zeit.strftime("%m"), Zeit.strftime("%y"), PikoEarly, SmaEarly), "wt")
+
+                    else:
+                        self.log.info("Programmstart am : {}".format(toDay))
 
                 ## InverterStaus PIKO : 0,8,3,11 - Hochfahren,  11,8,0 runterfahren
                 _Status, _StatusCode = self._PvInverterStatus(bFirstRun, bNextDay)
@@ -815,10 +816,9 @@ class ExportDataFromInflux(object):
                     continue
 
             ## days_hist.js
-                ShutDowntime = datetime.time(UMh, UMm - 5, 00)  # 5 min vor Sonnenuntergang
-                actTime = datetime.time(Zeit.hour, Zeit.minute, Zeit.second)
                 ## Die Zeit ist UTC also 21 entspricht 23 MEZ Berlin
-                if ((actTime > ShutDowntime) and (bDays_hist_written == False)):
+                # 5 min vor Sonnenuntergang
+                if ((localNow > sunSet - 5) and (bDays_hist_written == False)):
                 ## Die Tagesenergie
                     self.log.info("TagesEnergie: {} | PacMax: {}".format(PvInvertersAcEnergyForwardPerDay, PacMax))
                     self._WriteEnergyToDb(sensor_data_day_list)
