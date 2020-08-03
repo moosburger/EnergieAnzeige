@@ -123,7 +123,7 @@ class influxIO(object):
 
         except:
             for info in sys.exc_info():
-                self.log.error("Fehler: {}".format(info))
+                self.log.error("{}".format(info))
 
         return False
 
@@ -154,9 +154,15 @@ class influxIO(object):
 
         json_body[0]["fields"] = jsDict
         self.log.debug(json_body)
-        retVal = self.influxdb_client.write_points(json_body)
-        if (retVal == False):
+
+        try:
             retVal = self.influxdb_client.write_points(json_body)
+            if (retVal == False):
+                retVal = self.influxdb_client.write_points(json_body)
+        except:
+            for info in sys.exc_info():
+                self.log.error("{}".format(info))
+            self.log.error("json_body: {}".format(json_body))
 
         return retVal
 
@@ -170,25 +176,39 @@ class influxIO(object):
 # #################################################################################################
     def _Query_influxDb(self, queries, measurement, searchFor):
 
-        results = []
-        for query in queries:
-            result = self.influxdb_client.query(query)
-            results.append(result)
+        try:
+            retVal = []
+            points = []
+            results = []
+            errQuery = ''
+            errPoint = ''
+            errResult = ''
 
-        points = []
-        for result in results:
-            point = list(result.get_points(measurement))
-            points.append(point)
+            for query in queries:
+                errQuery = query
+                result = self.influxdb_client.query(query)
+                results.append(result)
 
-        retVal = []
-        for point in points:
-            if (len(point) > 1):
-                for k in range (0, len(point)):
-                    retVal.append(point[k][searchFor])
-            elif (len(point) > 0):
-                retVal.append(point[0][searchFor])
-            else:
-                retVal.append(0)
+            for result in results:
+                errResult = result
+                point = list(result.get_points(measurement))
+                points.append(point)
+
+            for point in points:
+                errPoint = point
+                if (len(point) > 1):
+                    for k in range (0, len(point)):
+                        retVal.append(point[k][searchFor])
+                elif (len(point) > 0):
+                    retVal.append(point[0][searchFor])
+                else:
+                    retVal.append(0)
+        except:
+            for info in sys.exc_info():
+                self.log.error("{}".format(info))
+            self.log.error("errQuery: {}".format(errQuery))
+            self.log.error("errResult: {}".format(errResult))
+            self.log.error("errPoint: {}".format(errPoint))
 
         return retVal
 
