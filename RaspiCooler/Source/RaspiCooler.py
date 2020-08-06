@@ -23,6 +23,7 @@ import sys
 import RPi.GPIO as GPIO
 import time
 import os
+import psutil
 
 import logging
 from logging.config import fileConfig
@@ -77,12 +78,15 @@ log = logging.getLogger('RaspiCooler')
 # #################################################################################################
 def get_sensor_temperature():
 	try:
-		tempfile = open("/sys/bus/w1/devices/"+SENSOR_ID+"/w1_slave")
-		text = tempfile.read()
-		tempfile.close()
-		temperature_data = text.split()[-1]
-		temperature = float(temperature_data[2:])
-		temperature = temperature / 1000
+		#tempfile = open("/sys/bus/w1/devices/"+SENSOR_ID+"/w1_slave")
+		#text = tempfile.read()
+		#tempfile.close()
+		#temperature_data = text.split()[-1]
+		#temperature = float(temperature_data[2:])
+		#temperature = temperature / 1000
+        cputemp = psutil.sensors_temperatures()
+        temperature = cputemp['w1_slave_temp'][0].current
+
 		return float(temperature)
 	except:
 		return 0

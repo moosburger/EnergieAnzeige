@@ -757,7 +757,7 @@ class ExportDataFromInflux(object):
                 strFolder = os.path.join(_conf.EXPORT_FILEPATH, FolderYear)
                 csvFile = toDay.strftime('%Y%m%d.csv')
                 strFile = os.path.join(strFolder, csvFile)
-                strMonth =  os.path.join(strFolder, toDay.strftime('month_%m.js'))
+                strMonth =  os.path.join(strFolder, 'month_{0:02d}.js'.format(toDay.month-1))
 
                 # Neues Jahr
                 if (yesterDay.year < toDay.year) and (bFirstRun == False):
@@ -800,7 +800,8 @@ class ExportDataFromInflux(object):
                     sensor_data_day_list, Total = (self._EnergyPerMonth(toDay))
                     self.log.info("MonatsEnergie: {}".format(Total))
                     self._WriteEnergyToDb(sensor_data_day_list)
-                    self._write_File(strMonth, 'da[dx++]="{0}.{1}.{2}|{3}"'.format(Zeit.strftime("%d"), Zeit.strftime("%m"), Zeit.strftime("%y"), Total), "a")
+                    Tage, Monat, Jahr, TageMonat = Utils.monthdelta(Zeit, -1, False)
+                    self._write_File(strMonth, 'da[dx++]="{0:02d}.{1:02d}.{2:02d}|{3}"'.format(TageMonat, Monat, Jahr, int(Total * 1000)), "wt")
 
             ## Die Monatsenergien zum Jahr
                 if (bYear):
@@ -832,8 +833,10 @@ class ExportDataFromInflux(object):
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
                 if ((localNow < sunRise) or (localNow > sunSet)) and (bDays_hist_written == True):
-                    bDays_hist_written = False
                     continue
+
+                if (localNow >= sunRise) and (bDays_hist_written == True):
+                    bDays_hist_written = False
         ################################################################################
 
             ## Aktuelle Tages und Gesamtenergieen

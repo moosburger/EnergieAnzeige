@@ -24,6 +24,7 @@ try:
     from datetime import datetime
     import psutil
     from collections import namedtuple as NamedTuple
+    import os
 
 except:
     raise
@@ -80,6 +81,7 @@ class Raspi_CallBack():  #object
         self.mDiskUsage = []
         self.mMemoryInfo = []
         self.mCpuInfo = []
+        self.firstRun = True
 
         thread = threading.Thread(target=self.run, args=(interval, funcObj))
         thread.daemon = True
@@ -107,7 +109,7 @@ class Raspi_CallBack():  #object
 
         fncCnt = 0
         while True:
-            self.log.debug(self.callFunc[fncCnt])
+            self.log.info(self.callFunc[fncCnt])
 
             if (self.callFunc[fncCnt] == 'GetDiskUsageData'):
                 self.mDiskUsage = self._GetDiskUsage()
@@ -120,8 +122,10 @@ class Raspi_CallBack():  #object
             fncCnt = fncCnt + 1
             if fncCnt >= len(self.callFunc):
                 fncCnt = 1 # BootTime nur einmal
+                self.firstRun = False
 
-            time.sleep(interval)
+            if (self.firstRun == False):
+                time.sleep(interval)
 
 # # Ende Funktion: ' run ' ###############################################################################
 
@@ -301,8 +305,16 @@ class Raspi_CallBack():  #object
         usage = psutil.cpu_percent()
 
         # CPU temp
-        cputemp = psutil.sensors_temperatures()
-        temp = cputemp['cpu-thermal'][0].current
+        ## Wenn ein Dallas DS Sensor angeschlossen ist, liefert psutils den Ds zurück als w1_slave_temp
+        ## {'w1_slave_temp': [shwtemp(label='', current=27.187, high=None, critical=None)]}
+        ## ohne kommt die Cpu Temp
+        ## {'cpu-thermal': [shwtemp(label='', current=51.54, high=None, critical=None)]}
+        #cputemp = psutil.sensors_temperatures()
+        #temp = cputemp['cpu-thermal'][0].current
+        #temp = cputemp['w1_slave_temp'][0].current
+
+        temp = os.popen('vcgencmd measure_temp').readline()
+        temp = float(temp.replace("temp=","").replace("'C\n",""))
 
         return CpuInfo(physical, total, max, min, current, usage, temp, cores)
 
