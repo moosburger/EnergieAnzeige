@@ -83,9 +83,8 @@ def get_sensor_temperature():
 		#tempfile.close()
 		#temperature_data = text.split()[-1]
 		#temperature = float(temperature_data[2:])
-		#temperature = temperature / 1000
-        cputemp = psutil.sensors_temperatures()
-        temperature = cputemp['w1_slave_temp'][0].current
+		cputemp = psutil.sensors_temperatures()
+		temperature = cputemp['w1_slave_temp'][0].current
 
 		return float(temperature)
 	except:
@@ -122,15 +121,16 @@ def _main(argv):
 	while True:
 		cpu_temp = get_cpu_temperature()
 		sensor_temp = get_sensor_temperature()
-		if cpu_temp >= MAX_CPU_TEMP or sensor_temp >= MAX_SENSOR_TEMP :
+		#if cpu_temp >= MAX_CPU_TEMP or sensor_temp >= MAX_SENSOR_TEMP :
+		if cpu_temp > MAX_CPU_TEMP + 2.5:
 			GPIO.output(IMPULS_PIN, True)
-		else:
+		elif cpu_temp < MAX_CPU_TEMP - 2.5:
 			GPIO.output(IMPULS_PIN, False)
 
-		if (iLogCount > 10) or (iLogCount == -1):
-			log.info("   CPU Temperatur: {}".format(cpu_temp))
-			log.info("Sensor Temperatur: {}".format(sensor_temp))
-			iLogCount = 0
+		#~ if (iLogCount > 10) or (iLogCount == -1):
+			#~ log.info("   CPU Temperatur: {}".format(cpu_temp))
+			#~ log.info("Sensor Temperatur: {}".format(sensor_temp))
+			#~ iLogCount = 0
 
 		time.sleep(SLEEP_TIME)
 		iLogCount = iLogCount + 1
