@@ -430,6 +430,27 @@ class PikoWebRead:
     return ht.isoformat()
 
 # #################################################################################################
+# #  Funktion: '_write_File '
+## 	\details
+#   \param[in] 	strFile
+#   \param[in]  txtStream
+#   \param[in]  oType
+#   \return     -
+# #################################################################################################
+  def _write_File(self, strFile, txtStream, oType):
+
+    with open(strFile, oType) as f:
+      f.write (txtStream)
+      f.flush()
+
+    f.close()
+
+    # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
+    os.chmod(strFile, 0777)
+
+# # Ende Funktion: ' _write_File ' ################################################################
+
+# #################################################################################################
 # #  Funktion: ' GetFetchedData '
 ## 	\details
 #   \param[in]	-
@@ -439,6 +460,9 @@ class PikoWebRead:
 
     if (bDbgOut == True):
       self.DbgPrintOut()
+      datStream = "TimeStamp: {:%m/%d/%y %H:%M %S}          Total energy: {} Wh\n".format(self.Data['Now'], self.Data['TotalWh'])
+      #datStream = "{}\tTotal energy    : {} Wh\n".format(datStream, self.Data['TotalWh'])
+      self._write_File("/mnt/dietpi_userdata/SolarExport/PikoTotalEnergy.log" , datStream, "a")
 
     return self.Data
 
@@ -450,6 +474,7 @@ class PikoWebRead:
 # #################################################################################################
   def DbgPrintOut(self):
 
+    self.log.info("")
     self.log.info("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(self.Data['Now']))
     self.log.info("Comm software   : Piko v%s - %s" % (self.Data['RelVer'], self.Data['RelDate']))
     self.log.info("Comm host       : %s" % self.Data['host'])
