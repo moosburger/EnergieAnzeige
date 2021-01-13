@@ -159,6 +159,8 @@ class ExportDataFromInflux(object):
 # #################################################################################################
     def _WriteEnergyToDb(self, sensor_data_day_list):
 
+        retVal = True
+
         try:
             errLog = ''
             for sensor_data in sensor_data_day_list:
@@ -335,12 +337,12 @@ class ExportDataFromInflux(object):
 # # Ende Funktion: '_check_Data_Type ' ############################################################
 
 # #################################################################################################
-# #  Funktion: '_get_Enery '
+# #  Funktion: '_get_Energy '
 ## 	\details
 #   \param[in] 	timestamp
 #   \return          -
 # #################################################################################################
-    def _get_Enery(self):
+    def _get_Energy(self):
 
         sensor_data = []
         timestamp = datetime.datetime.utcnow()
@@ -359,8 +361,8 @@ class ExportDataFromInflux(object):
         PikoLastDayTotal, SmaLastDayTotal = self.influxHdlr._Query_influxDb([_conf.PIKO_ENERGY_LASTDAY,_conf.SMA_ENERGY_LASTDAY], PvInv.RegEx, 'last')
         if not (PikoLastDayTotal) or not (SmaLastDayTotal):
             self.log.warning("Piko LastDayTotal von DB: {}".format(PikoLastDayTotal))
-            self.log.warning("Sma LastDayTotal von db: {}".format(SmaLastDayTotal))
-            PikoLastDayTotal, SmaLastDayTotal = _ReadStartEnergy(self, _conf.EXPORT_FILEPATH + "EnergyStartInDay.js")
+            self.log.warning("Sma LastDayTotal von DB: {}".format(SmaLastDayTotal))
+            PikoLastDayTotal, SmaLastDayTotal = self._ReadStartEnergy(_conf.EXPORT_FILEPATH + "EnergyStartInDay.js")
             self.log.warning("Piko LastDayTotal aus Datei: {}".format(PikoLastDayTotal))
             self.log.warning("Sma LastDayTotal aus Datei: {}".format(SmaLastDayTotal))
 
@@ -395,7 +397,7 @@ class ExportDataFromInflux(object):
 
         return [PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal, sensor_data, sensor_data_day]
 
-# # Ende Funktion: ' _get_Enery ' #################################################################
+# # Ende Funktion: ' _get_Energy ' #################################################################
 
 # #################################################################################################
 # #  Funktion: '_get_PUI '
@@ -561,7 +563,7 @@ class ExportDataFromInflux(object):
                     + "WR-Nr;Name;Typ;Serien-Nr;Strings;Leistung;\n" \
                     + "1;{};WR;{};2;{};\n".format('NAME', 'SERIENNUMMER', 'LEISTUNG') \
                     + "Einheiten: U[V], I[mA], P[W], E[kWh], Ain [mV]\n" \
-                    + "Zeit;WR-Nr;DC1 U;DC1 I;DC1 P;DC2 U;DC2 I;DC2 P;DC3 U;DC3 I;DC3 P;AC1 U;AC1 I;AC1 P;AC2 U;AC2 I;AC2 P;AC3 U;AC3 I;AC3 P;Ain1;Ain2;Ain3;Ain4;Tages E;Total E;Tages E Out;Total E Out;Tages E In;Total E In;StatusCode;\n"
+                    + "Zeit;WR-Nr;DC1 U;DC1 I;DC1 P;DC2 U;DC2 I;DC2 P;DC3 U;DC3 I;DC3 P;AC1 U;AC1 I;AC1 P;AC2 U;AC2 I;AC2 P;AC3 U;AC3 I;AC3 P;Ain1;Ain2;Ain3;Ain4;Tages E;Total E;Tages E Out;Total E Out;Tages E In;Total E In;StatusCode;Leistung;PacMax\n"
 
         return csvStream
 
@@ -612,12 +614,14 @@ class ExportDataFromInflux(object):
                 if not line:
                     continue
 
-                smaRegEx = "\|(\d*);(\d*)"
+                smaRegEx = "\|(.*);(.*)\""
                 match = Utils.RegEx(smaRegEx, line, Utils.fndFrst, Utils.Srch, '')
                 if match:
                     print match.groups()
-                    PikoEarly = int(match.group(1))
-                    SmaEarly = int(match.group(2))
+                    PikoEarly = float(match.group(1))
+                    SmaEarly = float(match.group(2))
+                    PikoEarly = int(round(PikoEarly))
+                    SmaEarly = int(round(SmaEarly))
 
         f.close()
 
@@ -753,7 +757,7 @@ class ExportDataFromInflux(object):
                 toDay = datetime.date.today()
                 Zeit = datetime.datetime.now()
 
-                FolderYear = toDay.strftime('[%Y]')
+                FolderYear = toDay.strftime('%Y')
                 strFolder = os.path.join(_conf.EXPORT_FILEPATH, FolderYear)
                 csvFile = toDay.strftime('%Y%m%d.csv')
                 strFile = os.path.join(strFolder, csvFile)
@@ -792,7 +796,7 @@ class ExportDataFromInflux(object):
                         self._write_File(_conf.EXPORT_FILEPATH + "EnergyStartInDay.js", 'da[dx++]="{}.{}.{}|{};{}"'.format(Zeit.strftime("%d"), Zeit.strftime("%m"), Zeit.strftime("%y"), PikoEarly, SmaEarly), "wt")
 
                     else:
-                        self.log.info("Programmstart am : {}".format(toDay))
+                        self.log.info("Programmstart")
 
             ## Die Tagesenergie aufsummiern zu Monat
                 if (bMonat):
@@ -832,7 +836,7 @@ class ExportDataFromInflux(object):
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
-                if ((localNow < sunRise) or (localNow > sunSet)) and (bDays_hist_written == True):
+                if ((localNow > sunSet) or (localNow < sunRise)) and (bDays_hist_written == True):
                     continue
 
                 if (localNow >= sunRise) and (bDays_hist_written == True):
@@ -840,7 +844,7 @@ class ExportDataFromInflux(object):
         ################################################################################
 
             ## Aktuelle Tages und Gesamtenergieen
-                PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal, sensor_data_list, sensor_data_day_list = self._get_Enery()
+                PvInvertersAcEnergyForwardPerDay, PvInvertersAcEnergyForwardTotal, sensor_data_list, sensor_data_day_list = self._get_Energy()
                 self._WriteEnergyToDb(sensor_data_list)
             ## Aktuelle Gesamtleistung je Phase, sowie einzel Spannung und Strom
                 Pv_U1, Ges_I1, Ges_P1, Pv_U2, Ges_I2, Ges_P2, Pv_U3, Ges_I3, Ges_P3, PAC = self._get_PUI()
@@ -880,8 +884,8 @@ class ExportDataFromInflux(object):
 
             ## days_hist.js
                 ## Die Zeit ist UTC also 21 entspricht 23 MEZ Berlin
-                # 5 min vor Sonnenuntergang
-                if ((localNow > sunSet - 5) and (bDays_hist_written == False)):
+                # Sonnenuntergang
+                if ((localNow >= sunSet) and (bDays_hist_written == False)):
                 ## Die Tagesenergie
                     self.log.info("TagesEnergie: {} | PacMax: {}".format(PvInvertersAcEnergyForwardPerDay, PacMax))
                     self._WriteEnergyToDb(sensor_data_day_list)

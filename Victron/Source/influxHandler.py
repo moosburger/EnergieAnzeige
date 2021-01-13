@@ -155,14 +155,25 @@ class influxIO(object):
         json_body[0]["fields"] = jsDict
         self.log.debug(json_body)
 
+        retVal = False
         try:
             retVal = self.influxdb_client.write_points(json_body)
-            if (retVal == False):
-                retVal = self.influxdb_client.write_points(json_body)
+            #if (retVal == False):
+                #retVal = self.influxdb_client.write_points(json_body)
+
+        except (InfluxDBServerError):
+            self.log.error("ServerError mit: {}".format(json_body))
+
+        except (InfluxDBClientError):
+            self.log.error("CientError mit: {}".format(json_body))
+
+        except (RequestException):
+            self.log.error("RequestError mit: {}".format(json_body))
+
         except:
             for info in sys.exc_info():
                 self.log.error("{}".format(info))
-            self.log.error("json_body: {}".format(json_body))
+            self.log.error("Sonstiger Error mit : {}".format(json_body))
 
         return retVal
 

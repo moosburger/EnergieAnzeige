@@ -31,25 +31,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
-          "decimals": 3,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -77,10 +60,10 @@
       "linewidth": 2,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -332,25 +315,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
-          "decimals": 3,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -378,10 +344,10 @@
       "linewidth": 2,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -577,7 +543,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": "1M",
+      "timeFrom": "1M/M",
       "timeRegions": [],
       "timeShift": null,
       "title": "Solarertrag letzter Monat",
@@ -632,7 +598,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -662,9 +629,10 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -819,6 +787,8 @@
     },
     {
       "aliasColors": {
+        ".": "rgba(31, 96, 196, 0.4)",
+        "Akt. Monat": "rgba(31, 96, 196, 0.4)",
         "Gesamt": "rgba(31, 96, 196, 0.39)",
         "Heute": "rgba(31, 96, 196, 0.4)",
         "Piko": "dark-green",
@@ -831,25 +801,8 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
-          "decimals": 3,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -877,10 +830,10 @@
       "linewidth": 2,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -921,7 +874,7 @@
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "first"
               }
             ]
           ],
@@ -964,7 +917,7 @@
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "first"
               }
             ]
           ],
@@ -1007,7 +960,7 @@
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "first"
               }
             ]
           ],
@@ -1020,7 +973,7 @@
           ]
         },
         {
-          "alias": "Heute",
+          "alias": "Akt. Monat",
           "groupBy": [
             {
               "params": [
@@ -1035,22 +988,23 @@
               "type": "fill"
             }
           ],
+          "hide": false,
           "measurement": "system",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "D",
+          "refId": "E",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "PvInvertersAcEnergyForwardPerMonth"
+                  "PvInvertersAcEnergyForwardMonthSoFar"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "first"
               }
             ]
           ],
@@ -1062,7 +1016,7 @@
             },
             {
               "condition": "AND",
-              "key": "PvInvertersAcEnergyForwardDay",
+              "key": "PvInvertersAcEnergyForwardMonthSoFar",
               "operator": ">",
               "value": "0"
             },
@@ -1122,6 +1076,7 @@
     {
       "aliasColors": {
         "Gesamt": "rgba(31, 96, 196, 0.39)",
+        "Heuer": "rgba(31, 96, 196, 0.4)",
         "Heute": "rgba(31, 96, 196, 0.4)",
         "Piko": "dark-green",
         "Sma": "dark-yellow"
@@ -1132,25 +1087,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
-          "decimals": 3,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -1163,6 +1101,7 @@
         "y": 14
       },
       "hiddenSeries": false,
+      "hideTimeOverride": true,
       "id": 13,
       "interval": "",
       "legend": {
@@ -1178,10 +1117,10 @@
       "linewidth": 2,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1195,13 +1134,13 @@
           "groupBy": [
             {
               "params": [
-                "365d"
+                "360d"
               ],
               "type": "time"
             },
             {
               "params": [
-                "null"
+                "none"
               ],
               "type": "fill"
             }
@@ -1222,7 +1161,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1239,13 +1178,13 @@
           "groupBy": [
             {
               "params": [
-                "365d"
+                "360d"
               ],
               "type": "time"
             },
             {
               "params": [
-                "null"
+                "none"
               ],
               "type": "fill"
             }
@@ -1265,7 +1204,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1282,13 +1221,13 @@
           "groupBy": [
             {
               "params": [
-                "365d"
+                "360d"
               ],
               "type": "time"
             },
             {
               "params": [
-                "null"
+                "none"
               ],
               "type": "fill"
             }
@@ -1308,7 +1247,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1321,22 +1260,22 @@
           ]
         },
         {
-          "alias": "Heute",
+          "alias": "Heuer",
           "groupBy": [
             {
               "params": [
-                "1d"
+                "360d"
               ],
               "type": "time"
             },
             {
               "params": [
-                "0"
+                "none"
               ],
               "type": "fill"
             }
           ],
-          "hide": true,
+          "hide": false,
           "measurement": "system",
           "orderByTime": "ASC",
           "policy": "default",
@@ -1346,13 +1285,13 @@
             [
               {
                 "params": [
-                  "PvInvertersAcEnergyForwardDay"
+                  "PvInvertersAcEnergyForwardYearSoFar"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "first"
               }
             ]
           ],
@@ -1364,7 +1303,7 @@
             },
             {
               "condition": "AND",
-              "key": "PvInvertersAcEnergyForwardDay",
+              "key": "PvInvertersAcEnergyForwardYearSoFar",
               "operator": ">",
               "value": "0"
             },
@@ -1372,13 +1311,13 @@
               "condition": "AND",
               "key": "time",
               "operator": ">",
-              "value": "now()-1h"
+              "value": "now()-10m"
             }
           ]
         }
       ],
       "thresholds": [],
-      "timeFrom": "now-6y/y",
+      "timeFrom": "now-10y/y",
       "timeRegions": [],
       "timeShift": null,
       "title": "Solarertrag letzten Jahre",
@@ -1423,8 +1362,11 @@
     },
     {
       "aliasColors": {
+        ".": "rgba(31, 96, 196, 0.4)",
+        "Akt. Monat": "rgba(31, 96, 196, 0.4)",
         "Gesamt": "rgba(31, 96, 196, 0.39)",
         "Heute": "rgba(31, 96, 196, 0.4)",
+        "Jetzt": "rgba(31, 96, 196, 0.4)",
         "Piko": "dark-green",
         "Sma": "dark-yellow"
       },
@@ -1434,25 +1376,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
-          "decimals": 3,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -1480,10 +1405,10 @@
       "linewidth": 2,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1524,7 +1449,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1567,7 +1492,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1610,7 +1535,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1623,11 +1548,11 @@
           ]
         },
         {
-          "alias": "Heute",
+          "alias": "Akt. Monat",
           "groupBy": [
             {
               "params": [
-                "1d"
+                "30d"
               ],
               "type": "time"
             },
@@ -1638,7 +1563,7 @@
               "type": "fill"
             }
           ],
-          "hide": true,
+          "hide": false,
           "measurement": "system",
           "orderByTime": "ASC",
           "policy": "default",
@@ -1648,13 +1573,13 @@
             [
               {
                 "params": [
-                  "PvInvertersAcEnergyForwardDay"
+                  "PvInvertersAcEnergyForwardMonthSoFar"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "last"
               }
             ]
           ],
@@ -1666,7 +1591,7 @@
             },
             {
               "condition": "AND",
-              "key": "PvInvertersAcEnergyForwardDay",
+              "key": "PvInvertersAcEnergyForwardMonthSoFar",
               "operator": ">",
               "value": "0"
             },
@@ -1725,10 +1650,10 @@
     },
     {
       "aliasColors": {
-        "Gesamt": "rgba(31, 96, 196, 0.39)",
-        "Heute": "rgba(31, 96, 196, 0.4)",
-        "Piko": "dark-green",
-        "Sma": "dark-yellow"
+        "Gesamt": "rgba(55, 135, 45, 0.4)",
+        "Netz": "rgba(55, 135, 45, 0.4)",
+        "Solar": "rgba(31, 96, 196, 0.4)",
+        "Verbrauch": "rgba(224, 180, 0, 0.4)"
       },
       "bars": true,
       "dashLength": 10,
@@ -1739,9 +1664,8 @@
           "custom": {
             "align": null
           },
-          "decimals": 3,
+          "links": [],
           "mappings": [],
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1758,12 +1682,285 @@
         },
         "overrides": []
       },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 11,
+        "x": 0,
+        "y": 21
+      },
+      "hiddenSeries": false,
+      "id": 19,
+      "interval": "",
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.2.2",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Netz",
+          "groupBy": [
+            {
+              "params": [
+                "1d"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "grid",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcPower"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Meter"
+            }
+          ]
+        },
+        {
+          "alias": "Verbrauch",
+          "groupBy": [
+            {
+              "params": [
+                "1d"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcConsumptionOnInputPower"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            }
+          ]
+        },
+        {
+          "alias": "Solar",
+          "groupBy": [
+            {
+              "params": [
+                "1d"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcPvOnGridPower"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            }
+          ]
+        },
+        {
+          "alias": "Batterie",
+          "groupBy": [
+            {
+              "params": [
+                "1d"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "DcBatteryPower"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": "1M/M",
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Netz Bezug/Lieferung letzter Monat",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "Gesamt": "rgba(31, 96, 196, 0.39)",
+        "Heute": "rgba(31, 96, 196, 0.4)",
+        "Piko": "dark-green",
+        "Sma": "dark-yellow"
+      },
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
       "fill": 2,
       "fillGradient": 10,
       "gridPos": {
         "h": 7,
         "w": 11,
-        "x": 0,
+        "x": 11,
         "y": 21
       },
       "hiddenSeries": false,
@@ -1782,10 +1979,10 @@
       "linewidth": 2,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1826,7 +2023,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1869,7 +2066,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1912,7 +2109,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "first"
               }
             ]
           ],
@@ -1929,7 +2126,7 @@
           "groupBy": [
             {
               "params": [
-                "1d"
+                "30d"
               ],
               "type": "time"
             },
@@ -1940,7 +2137,7 @@
               "type": "fill"
             }
           ],
-          "hide": true,
+          "hide": false,
           "measurement": "system",
           "orderByTime": "ASC",
           "policy": "default",
@@ -1950,7 +2147,7 @@
             [
               {
                 "params": [
-                  "PvInvertersAcEnergyForwardDay"
+                  "PvInvertersAcEnergyForwardMonthSoFar"
                 ],
                 "type": "field"
               },
@@ -1968,7 +2165,7 @@
             },
             {
               "condition": "AND",
-              "key": "PvInvertersAcEnergyForwardDay",
+              "key": "PvInvertersAcEnergyForwardMonthSoFar",
               "operator": ">",
               "value": "0"
             },
@@ -2024,10 +2221,851 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 11,
+        "x": 0,
+        "y": 28
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.2.2",
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "battery",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "HistoryAutomaticSyncs"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Anzahl SoC Synchronisationen"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryAverageDischarge"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Durchschnittliche Entladung (Ah)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryChargeCycles"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Ladezyklen"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryChargedEnergy"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Eingeladene Energie (kWh)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryDeepestDischarge"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "tiefste Entladung (Ah)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryDischargedEnergy"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "entnommene Energie (kWh)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryFullDischarges"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "komplett Entladen"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryLastDischarge"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "letzte Entladung (Ah)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryMaximumVoltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Max. Spannung (U)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryMinimumVoltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Min. Spannung (U)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryTimeSinceLastFullCharge"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 3600"
+                ],
+                "type": "math"
+              },
+              {
+                "params": [
+                  "Zeit seit dem letztem Vollladen (h)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HistoryTotalAhDrawn"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Gesamt entladene Ah"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "BMV-700"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Batterie Historie",
+      "type": "stat"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 7,
+        "x": 11,
+        "y": 28
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.2.2",
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "battery",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "Dc0Voltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Spannung (V)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "Dc0Current"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Strom (A)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "Dc0Power"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Leistung (W)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "ConsumedAmphours"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "verbrauchte Ah"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "Soc"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "%"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "BMV-700"
+            }
+          ]
+        },
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "vebus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "Dc0Temperature"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              },
+              {
+                "params": [
+                  "C"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "MultiPlus-II"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Batterie Zusammenfassung",
+      "type": "stat"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 5,
+        "x": 18,
+        "y": 28
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.2.2",
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "pvinverter",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcL1Voltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "SMA L1 V"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL1Current"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "SMA L1 A "
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL1Power"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "SMA L1 W"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "SMA"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "pvinverter",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcL1Voltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L1 V"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL1Current"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L1 A"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL1Power"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L1 W"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL2Voltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L2 V"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL2Current"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L2 A"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL2Power"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L2 W"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL3Voltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L3 V"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL3Current"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L3  A"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "AcL3Power"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "PIKO L3  W"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "PIKO"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "SolarInverter Zusammenfassung",
+      "type": "stat"
     }
   ],
-  "refresh": "5s",
-  "schemaVersion": 25,
+  "refresh": "10s",
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -2053,5 +3091,5 @@
   "timezone": "",
   "title": "Monat",
   "uid": "s3JKKwigz",
-  "version": 41
+  "version": 82
 }

@@ -47,7 +47,7 @@ except:
 # # UmgebungsVariablen / Globals
 # #################################################################################################
 DiskInfo = NamedTuple('DiskInfo', 'device total used free percentage')
-CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp cores')
+CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp DStemp cores')
 
 # #################################################################################################
 # # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
@@ -109,7 +109,7 @@ class Raspi_CallBack():  #object
 
         fncCnt = 0
         while True:
-            self.log.info(self.callFunc[fncCnt])
+            self.log.debug(self.callFunc[fncCnt])
 
             if (self.callFunc[fncCnt] == 'GetDiskUsageData'):
                 self.mDiskUsage = self._GetDiskUsage()
@@ -309,14 +309,21 @@ class Raspi_CallBack():  #object
         ## {'w1_slave_temp': [shwtemp(label='', current=27.187, high=None, critical=None)]}
         ## ohne kommt die Cpu Temp
         ## {'cpu-thermal': [shwtemp(label='', current=51.54, high=None, critical=None)]}
-        #cputemp = psutil.sensors_temperatures()
-        #temp = cputemp['cpu-thermal'][0].current
-        #temp = cputemp['w1_slave_temp'][0].current
+        cputemp = psutil.sensors_temperatures()
+        temp = 0
+        DStemp = 0
+        try:
+            temp = cputemp['cpu-thermal'][0].current
+        except:
+            temp = os.popen('vcgencmd measure_temp').readline()
+            temp = float(temp.replace("temp=","").replace("'C\n",""))
 
-        temp = os.popen('vcgencmd measure_temp').readline()
-        temp = float(temp.replace("temp=","").replace("'C\n",""))
+        try:
+            DStemp = cputemp['w1_slave_temp'][0].current
+        except:
+            DStemp = -1
 
-        return CpuInfo(physical, total, max, min, current, usage, temp, cores)
+        return CpuInfo(physical, total, max, min, current, usage, temp, DStemp, cores)
 
 # # Ende Funktion: ' GetCpuInfo ' ############################################################################
 

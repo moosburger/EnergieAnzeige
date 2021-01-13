@@ -222,12 +222,14 @@ def on_Raspi(obj, Raspi):
     timestamp = datetime.utcnow()
 ## BootTime noch in sep. Datei, zum auslesen und vergleich on Reboot erfolgt, wenn andere Zeit und Datum
 
+    retVal = True
+
     _cpuLabel = 'Cpu'
     if (obj == 'GetBootTimeData'):
         log.debug('GetBootTimeData')
         bootTime = Raspi.GetBootTimeData()
         sensor_data = SensorData(_conf.HOST_INSTANCE, 'CpuInfo', ['BootTime',], [bootTime,], timestamp)
-        influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+        retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
 
     if (obj == 'GetCpuInfoData'):
         log.debug('GetCpuInfoData')
@@ -238,25 +240,34 @@ def on_Raspi(obj, Raspi):
             _typ.append('UsageCore{}'.format(j))
             _val.append(core)
 
-        _typ.extend(['PhysicalCores', 'TotalCores', 'MaxFreq', 'MinFreq', 'ActFreq', 'Usage', 'Temp'])
-        _val.extend([CpuInfo.physical, CpuInfo.total, CpuInfo.max, CpuInfo.min, CpuInfo.current, CpuInfo.usage, CpuInfo.temp])
+        _typ.extend(['PhysicalCores', 'TotalCores', 'MaxFreq', 'MinFreq', 'ActFreq', 'Usage', 'Temp', 'CaseTemp'])
+        _val.extend([CpuInfo.physical, CpuInfo.total, CpuInfo.max, CpuInfo.min, CpuInfo.current, CpuInfo.usage, CpuInfo.temp, CpuInfo.DStemp])
 
         sensor_data = SensorData(_conf.HOST_INSTANCE, 'CpuInfo', _typ, _val, timestamp)
-        influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+        retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
 
     if (obj == 'GetMemoryInfoData'):
         log.debug('GetMemoryInfoData')
         Memorys = Raspi.GetMemoryInfoData() # Werte in KB
         for ram in Memorys:
             sensor_data = SensorData(_conf.HOST_INSTANCE, ram.device, ['Total', 'Used', 'Available', 'Percentage'], [ram.total, ram.used, ram.free, ram.percentage], timestamp)
-            influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+            retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+            if (retVal != True):
+                break
 
     if (obj == 'GetDiskUsageData'):
         log.debug('GetDiskUsageData')
         Disks = Raspi.GetDiskUsageData() # Werte in KB
         for disk in Disks:
             sensor_data = SensorData(_conf.HOST_INSTANCE, disk.device, ['Total', 'Used', 'Free', 'Percentage'], [disk.total, disk.used, disk.free, disk.percentage], timestamp)
-            influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+            retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+            if (retVal != True):
+                break
+
+    if (retVal != True):
+        log.warning("Fehler beim schreiben von Raspi: {}".format(sensor_data))
+        # Reinit Database
+        influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
 
 # # Ende Funktion: 'on_Raspi ' ######################################################################
 
@@ -353,7 +364,7 @@ def _checkPayload(client, userdata, message):
         if not (message.payload):
             log.warning ("Msg.Topic: {}".format(message.topic))
             log.warning ("Msg.Payload: {}".format(message.payload))
-            return retVal
+            return None
 
         payload = message.payload.decode('utf-8')
         # ConvertBytearry to dictonary
@@ -390,55 +401,69 @@ def _extract_Data(msg, myVal, timestamp):
     topic = str(msg.topic).strip()
 
     smaRegEx = "N/{0}/([^/]+)/([^/]+)/(.*)".format(_conf.PORTAL_ID)
-    match = Utils.RegEx(smaRegEx, topic, Utils.fndFrst, Utils.Srch, '')
-    if match:
-        device = match.group(1)
-        #Messwert Typ
-        type = match.group(3).replace("/", "")  #Ac/Energy/Forward
 
-        sensor_data_list = []
-        if (device == PvInv.RegEx) and (match.group(2) == PvInv.Inst1):
-            instance = PvInv.Label1
+    try:
+        match = Utils.RegEx(smaRegEx, topic, Utils.fndFrst, Utils.Srch, '')
+        if match:
+            device = match.group(1)
+            #Messwert Typ
+            type = match.group(3).replace("/", "")  #Ac/Energy/Forward
 
-            # Beim SMA den Strom berechnen, die Gesamtleistung und ~Energie aller PvInverter
-            if (type == 'AcPower'):
-                #Strom
-                sensor_data_list.append(_get_Sma_Current(device, instance, myVal, timestamp))
-                #Gesamt Piko + akt. Sma
-                sensor_data_list.append(_get_Total_Power(device, _conf.PIKO, myVal, timestamp))
+            sensor_data_list = []
+            if (device == PvInv.RegEx) and (match.group(2) == PvInv.Inst1):
+                instance = PvInv.Label1
 
-        elif (device == PvInv.RegEx) and (match.group(2) == PvInv.Inst2):
-            instance = PvInv.Label2
+                # Beim SMA den Strom berechnen, die Gesamtleistung und ~Energie aller PvInverter
+                if (type == 'AcPower'):
+                    #Strom
+                    sensor_data_list.append(_get_Sma_Current(device, instance, myVal, timestamp))
+                    #Gesamt Piko + akt. Sma
+                    sensor_data_list.append(_get_Total_Power(device, _conf.PIKO, myVal, timestamp))
 
-            # Beim Piko die Gesamtleistung und ~Energie aller PvInverter
-            if (type == 'AcPower'):
-                #Gesamt Sma + akt. Piko
-                sensor_data_list.append(_get_Total_Power(device, _conf.SMA, myVal, timestamp))
+            elif (device == PvInv.RegEx) and (match.group(2) == PvInv.Inst2):
+                instance = PvInv.Label2
 
-        elif (device == Grid.RegEx) and (match.group(2) == Grid.Inst1):
-            instance = Grid.Label1
-        elif (device == Battery.RegEx) and (match.group(2) == Battery.Inst1):
-            instance = Battery.Label1
-        elif (device == VeBus.RegEx) and (match.group(2) == VeBus.Inst1):
-            instance = VeBus.Label1
-        elif (device == System.RegEx):
-            instance = System.Label1
+                # Beim Piko die Gesamtleistung und ~Energie aller PvInverter
+                if (type == 'AcPower'):
+                    #Gesamt Sma + akt. Piko
+                    sensor_data_list.append(_get_Total_Power(device, _conf.SMA, myVal, timestamp))
 
-            # Der gesamte Verbrauch aller Lasten, für die Prozentuale Aufteilung
-            if (type == 'AcConsumptionOnInputL1Power') or (type == 'AcConsumptionOnInputL2Power') or (type == 'AcConsumptionOnInputL3Power'):
-               sensor_data_list.append(_get_Total_Consumption(instance, timestamp))
+            elif (device == Grid.RegEx) and (match.group(2) == Grid.Inst1):
+                instance = Grid.Label1
+            elif (device == Battery.RegEx) and (match.group(2) == Battery.Inst1):
+                instance = Battery.Label1
+            elif (device == VeBus.RegEx) and (match.group(2) == VeBus.Inst1):
+                instance = VeBus.Label1
+            elif (device == System.RegEx):
+                instance = System.Label1
 
-        else:
-            instance = str(match.group(2))
+                # Der gesamte Verbrauch aller Lasten, für die Prozentuale Aufteilung
+                if (type == 'AcConsumptionOnInputL1Power') or (type == 'AcConsumptionOnInputL2Power') or (type == 'AcConsumptionOnInputL3Power'):
+                   sensor_data_list.append(_get_Total_Consumption(instance, timestamp))
 
-        #float, int, str, list, dict, tuple
-        myVal = _check_Data_Type(myVal)
-        sensor_data_list.insert(0,SensorData(device, instance, [type,], [myVal,], timestamp))
+            else:
+                instance = str(match.group(2))
 
-        for sensor_data in sensor_data_list:
-            retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
-            if (retVal == False):
-                log.warning("Fehler beim schreiben von {}".format(sensor_data))
+            #float, int, str, list, dict, tuple
+            myVal = _check_Data_Type(myVal)
+            sensor_data_list.insert(0,SensorData(device, instance, [type,], [myVal,], timestamp))
+
+            for sensor_data in sensor_data_list:
+                retVal = False
+                retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+                if (retVal != True):
+                    log.warning("Fehler beim schreiben von {}".format(sensor_data))
+                    # Reinit Database
+                    influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
+                    break
+
+    except ValueError as e:
+        log.warning("ValueError in '_extract_Data': {}".format(e))
+
+    except:
+        for info in sys.exc_info():
+            log.error("Fehler in '_extract_Data': {}".format(info))
+            print ("Fehler in '_extract_Data': {}".format(info))
 
 # # Ende Funktion: '_extract_Data ' ######################################################################
 

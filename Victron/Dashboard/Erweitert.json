@@ -88,10 +88,12 @@
           "calcs": [
             "last"
           ],
+          "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "groupBy": [
@@ -242,10 +244,12 @@
           "calcs": [
             "last"
           ],
+          "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "groupBy": [],
@@ -362,10 +366,12 @@
           "calcs": [
             "lastNotNull"
           ],
+          "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "alias": "GesamtEnergie Piko",
@@ -540,7 +546,7 @@
           ]
         }
       ],
-      "timeFrom": "1h",
+      "timeFrom": "1d",
       "timeShift": null,
       "title": "Solare Energie",
       "transparent": true,
@@ -549,7 +555,8 @@
     {
       "aliasColors": {
         "Ac Last": "#C4162A",
-        "Batterie": "#1F60C4",
+        "Batterie": "#37872D",
+        "Netz": "#C4162A",
         "Netz Bezug": "#37872D",
         "Solar": "#E0B400"
       },
@@ -575,6 +582,7 @@
         "x": 11,
         "y": 0
       },
+      "hideTimeOverride": true,
       "id": 49,
       "interval": null,
       "legend": {
@@ -591,50 +599,6 @@
       "strokeWidth": "1",
       "targets": [
         {
-          "alias": "Ac Last",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "0"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": true,
-          "measurement": "system",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "AcConsumptionOnInputPower"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Gateway"
-            }
-          ]
-        },
-        {
           "alias": "Solar",
           "groupBy": [
             {
@@ -645,7 +609,7 @@
             },
             {
               "params": [
-                "null"
+                "0"
               ],
               "type": "fill"
             }
@@ -688,7 +652,7 @@
             },
             {
               "params": [
-                "null"
+                "0"
               ],
               "type": "fill"
             }
@@ -731,7 +695,7 @@
             },
             {
               "params": [
-                "null"
+                "0"
               ],
               "type": "fill"
             }
@@ -764,7 +728,7 @@
           ]
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "10m",
       "timeShift": null,
       "title": "Verbrauch aktuell von",
       "transparent": true,
@@ -774,9 +738,9 @@
     {
       "aliasColors": {
         "Ac Lasten": "#C4162A",
-        "Batterie": "#1F60C4",
+        "Batterie": "#37872D",
         "Direkt": "#E0B400",
-        "Netz": "#37872D"
+        "Netz": "#C4162A"
       },
       "breakPoint": "50%",
       "cacheTimeout": null,
@@ -826,6 +790,7 @@
         "x": 18,
         "y": 0
       },
+      "hideTimeOverride": true,
       "id": 48,
       "interval": null,
       "legend": {
@@ -852,7 +817,7 @@
             },
             {
               "params": [
-                "null"
+                "0"
               ],
               "type": "fill"
             }
@@ -885,49 +850,6 @@
           ]
         },
         {
-          "alias": "Netz",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "system",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "PvPowerToGrid"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Gateway"
-            }
-          ]
-        },
-        {
           "alias": "Batterie",
           "groupBy": [
             {
@@ -938,7 +860,7 @@
             },
             {
               "params": [
-                "null"
+                "0"
               ],
               "type": "fill"
             }
@@ -969,9 +891,52 @@
               "value": "Gateway"
             }
           ]
+        },
+        {
+          "alias": "Netz",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "0"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "PvPowerToGrid"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            }
+          ]
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "10m",
       "timeShift": null,
       "title": "Solarertrag aktuell nach",
       "transparent": true,
@@ -1056,10 +1021,12 @@
           "calcs": [
             "mean"
           ],
+          "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "groupBy": [],
@@ -2508,7 +2475,7 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": null,
-      "decimals": 0,
+      "decimals": 2,
       "description": "negative Werte: -> entladen | positive Werte: <- laden",
       "fieldConfig": {
         "defaults": {
@@ -6839,7 +6806,7 @@
         "gaugeUnits": "",
         "innerCol": "#fff",
         "labelFontSize": 18,
-        "maxNeedleAngle": 320,
+        "maxNeedleAngle": 330,
         "maxTickAngle": 300,
         "maxValue": 5500,
         "minValue": 0,
@@ -8316,10 +8283,12 @@
           "calcs": [
             "lastNotNull"
           ],
+          "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "groupBy": [],
@@ -8556,10 +8525,12 @@
           "calcs": [
             "last"
           ],
+          "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "groupBy": [],
@@ -8703,20 +8674,7 @@
       "fieldConfig": {
         "defaults": {
           "custom": {},
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "links": []
         },
         "overrides": []
       },
@@ -8743,10 +8701,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -8984,12 +8942,13 @@
           "calcs": [
             "lastNotNull"
           ],
+          "fields": "",
           "values": false
         },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "alias": "PIKO",
@@ -9116,8 +9075,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 4,
-        "x": 17,
+        "w": 5,
+        "x": 16,
         "y": 11
       },
       "id": 8,
@@ -9125,16 +9084,18 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
+          "fields": "",
           "values": false
         },
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
+          "alias": "Cpu",
           "groupBy": [
             {
               "params": [
@@ -9159,6 +9120,49 @@
               {
                 "params": [
                   "Temp"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "CpuInfo"
+            }
+          ]
+        },
+        {
+          "alias": "Gehäuse",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "CaseTemp"
                 ],
                 "type": "field"
               },
@@ -9251,10 +9255,12 @@
           "calcs": [
             "last"
           ],
+          "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "groupBy": [],
@@ -9335,11 +9341,12 @@
           "calcs": [
             "last"
           ],
+          "fields": "",
           "values": false
         },
         "showUnfilled": true
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "groupBy": [],
@@ -9444,7 +9451,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -9471,9 +9479,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -9664,7 +9673,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -9691,9 +9701,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -9956,11 +9967,12 @@
           "calcs": [
             "lastNotNull"
           ],
+          "fields": "",
           "values": false
         },
         "showUnfilled": false
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "alias": "total",
@@ -10130,7 +10142,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -10159,9 +10172,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -10376,6 +10390,7 @@
       "yaxes": [
         {
           "$$hashKey": "object:1812",
+          "decimals": 1,
           "format": "volt",
           "label": "",
           "logBase": 1,
@@ -10385,7 +10400,7 @@
         },
         {
           "$$hashKey": "object:1813",
-          "decimals": null,
+          "decimals": 1,
           "format": "amp",
           "label": "",
           "logBase": 1,
@@ -10435,11 +10450,12 @@
           "calcs": [
             "lastNotNull"
           ],
+          "fields": "",
           "values": false
         },
         "showUnfilled": true
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "alias": "total",
@@ -10609,7 +10625,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -10636,9 +10653,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -10900,11 +10918,12 @@
           "calcs": [
             "lastNotNull"
           ],
+          "fields": "",
           "values": false
         },
         "showUnfilled": true
       },
-      "pluginVersion": "7.0.1",
+      "pluginVersion": "7.2.2",
       "targets": [
         {
           "alias": "total",
@@ -11074,7 +11093,8 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "links": []
         },
         "overrides": []
       },
@@ -11101,9 +11121,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": []
+        "alertThreshold": true
       },
       "percentage": false,
+      "pluginVersion": "7.2.2",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -11379,8 +11400,8 @@
       }
     }
   ],
-  "refresh": "5s",
-  "schemaVersion": 25,
+  "refresh": "10s",
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -11406,5 +11427,5 @@
   "timezone": "Europe/Berlin",
   "title": "Erweitert",
   "uid": "Gw2MqQkRk",
-  "version": 269
+  "version": 288
 }
