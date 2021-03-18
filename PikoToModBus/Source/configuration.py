@@ -53,4 +53,4 @@ SCHED_INTERVAL = 10          #  seconds delay
 #POW_THERESHOLD = 10         # Watt threshold
 LOG_LEVEL = logging.ERROR    # Levels: NONE, FATAL, ERROR, NOTICE, DEBUG
 
-
+EXPORT_FILEPATH = '/mnt/dietpi_userdata/SolarExport/'

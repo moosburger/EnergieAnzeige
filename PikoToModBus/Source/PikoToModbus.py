@@ -40,8 +40,8 @@ from twisted.internet.task import LoopingCall
 import logging
 from logging.config import fileConfig
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
+#reload(sys)
+#sys.setdefaultencoding("utf-8")
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -50,14 +50,15 @@ sys.setdefaultencoding("utf-8")
 # #################################################################################################
 # # private Imports
 # #################################################################################################
-try:
-    PrivateImport = True
-    import configuration as _conf
-    from PikoCom import (PikoWebRead)
-    from PreparePikoData import (PrepareData)
-    import SunRiseSet
-except:
-    PrivateImport = False
+#try:
+PrivateImport = True
+import configuration as _conf
+from PikoCom import PikoWebRead
+from PreparePikoData import (PrepareData)
+from GetSmaTotal import TotalSmaEnergy
+import SunRiseSet
+#except:
+PrivateImport = False
 
 # #################################################################################################
 # # UmgebungsVariablen / Globals
@@ -88,62 +89,71 @@ def _Fetch_Piko_Data(a):
     It should be noted that there is a race condition for the update.
     :param arguments: The input arguments to the call    """
 
-    context  = a[0]
-    Piko = a[1]
-    Data = a[2]
-    global _FirstRun
-    global _FirstDayRun
+    try:
 
-    # Tagsüber oder nachts
-    AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
-    log.debug("\tTimeStamp {0:02d}.{1:02d}.{2:4d} {3:02d}:{4:02d}:{5:02d}".format(lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s))
+        context  = a[0]
+        Sma = a[1]
+        Piko = a[2]
+        Data = a[3]
+        global _FirstRun
+        global _FirstDayRun
 
-    sunRise = AMh  * 60 + AMm
-    sunSet  = UMh  * 60 + UMm
-    locNow  = lt_h * 60 + lt_m
-    #print sunRise
-    #print locNow
-    #print sunSet
+        # Tagsueber oder nachts
+        AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
+        log.debug("\tTimeStamp {0:02d}.{1:02d}.{2:4d} {3:02d}:{4:02d}:{5:02d}".format(lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s))
 
-    if ((locNow < sunRise) or (locNow > sunSet)) and (_FirstRun == False):
-        _FirstDayRun = True
-        return
+        sunRise = AMh  * 60 + AMm
+        sunSet  = UMh  * 60 + UMm
+        locNow  = lt_h * 60 + lt_m
+        #print sunRise
+        #print locNow
+        #print sunSet
 
-    log.debug("\tUpdating the database context")
-    #readfunction = 0x03 # read holding registers
-    writefunction = 0x10
-    slave_id = 126 # slave address
+        if ((locNow < sunRise) or (locNow > sunSet)) and (_FirstRun == False):
+            _FirstDayRun = True
+            return
 
-    #print 'FIRSTRUN 1 %s \n' %(str(_FirstRun))
-    # Daten vom Piko holen
-    retStat = Piko.FetchData(Timers=True, Portal=True, Header=True, Data=True)
-    if ((retStat == -1) and (_conf.DEBUG == False)):
-        return
+        log.debug("\tUpdating the database context")
+        #readfunction = 0x03 # read holding registers
+        writefunction = 0x10
+        slave_id = 126 # slave address
 
-    pikoData = Piko.GetFetchedData(_FirstDayRun)
-    #Data.Dbg_Print(Piko, pikoData)
+        #print 'FIRSTRUN 1 %s \n' %(str(_FirstRun))
+        # Daten vom Piko holen
+        retStat = Piko.FetchData(Timers=True, Portal=True, Header=True, Data=True)
+        if ((retStat == -1) and (_conf.DEBUG == False)):
+            return
 
-    sunSpec = Data.Prepare(Piko, pikoData, _FirstRun)
-    for dataSet in sunSpec:
-        #print (dataSet)
-        des = dataSet[0]
-        vAdr = dataSet[1] - 1
-        leng = dataSet[2]
-        val = dataSet[3]
-        skr = dataSet[4] - 1
-        vSkr = dataSet[5]
+        pikoData = Piko.GetFetchedData(_FirstDayRun)
+        #Data.Dbg_Print(Piko, pikoData)
+        Sma.FetchSmaTotal(_FirstDayRun)
 
-        #print "\n%s" % (des.strip())
-        #print "Wert - Adr: %d, Wert: %s" % (vAdr, str(val))
-        context[slave_id].setValues(writefunction, vAdr, val)
+        sunSpec = Data.Prepare(Piko, pikoData, _FirstRun)
+        for dataSet in sunSpec:
+            #print (dataSet)
+            des = dataSet[0]
+            vAdr = dataSet[1] - 1
+            leng = dataSet[2]
+            val = dataSet[3]
+            skr = dataSet[4] - 1
+            vSkr = dataSet[5]
 
-        if (skr > 0):
-            #print "Dkal - Adr: %d, Skal: %s" % (skr, str(vSkr))
-            context[slave_id].setValues(writefunction, skr, vSkr)
+            #print "\n%s" % (des.strip())
+            #print "Wert - Adr: %d, Wert: %s" % (vAdr, str(val))
+            context[slave_id].setValues(writefunction, vAdr, val)
 
-    _FirstRun = False
-    _FirstDayRun = False
-    #print '\n\nFIRSTRUN 2 %s\n\n' %(str(_FirstRun))
+            if (skr > 0):
+                #print "Dkal - Adr: %d, Skal: %s" % (skr, str(vSkr))
+                context[slave_id].setValues(writefunction, skr, vSkr)
+
+        _FirstRun = False
+        _FirstDayRun = False
+        #print '\n\nFIRSTRUN 2 %s\n\n' %(str(_FirstRun))
+
+    except:
+        for info in sys.exc_info():
+            log.error("Fehler: {}".format(info))
+            print("Fehler: {}".format(info))
 
 # #################################################################################################
 # #  Funktion: ' _run_modbus_server '
@@ -151,7 +161,7 @@ def _Fetch_Piko_Data(a):
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-def _run_modbus_server(Piko, Data):
+def _run_modbus_server(Sma, Piko, Data):
     global _Loop
     # ----------------------------------------------------------------------- #
     # initialize your data store
@@ -183,7 +193,7 @@ def _run_modbus_server(Piko, Data):
     # ----------------------------------------------------------------------- #
     # run the server you want
     # ----------------------------------------------------------------------- #
-    _Loop = LoopingCall(f=_Fetch_Piko_Data, a=(context,Piko,Data))
+    _Loop = LoopingCall(f=_Fetch_Piko_Data, a=(context,Sma,Piko,Data))
     _Loop.start(_conf.SCHED_INTERVAL, now=False)  # initially delay by time
 
     StartTcpServer(context, identity=identity, address=(_conf.INVERTER_IP, _conf.MODBUS_PORT))
@@ -204,6 +214,7 @@ def _main(argv):
         # # Mit dem Piko instanzieren ####################################
         _Piko = PikoWebRead(_conf.PIKO_IP, _conf.PIKO_PASSWORD, logging)
         _data = PrepareData(logging)
+        _Sma = TotalSmaEnergy(logging)
 
         # Daten vom Piko holen
         #~retStat = _Piko.FetchData(Timers=True, Portal=True, Header=True, Data=True)
@@ -224,16 +235,16 @@ def _main(argv):
             #~ if (skr > 0):
                 #~ print ("Dkal - Adr: %d, Skal: %s" % (skr, str(vSkr)))
 
-        _run_modbus_server(_Piko, _data)
+        _run_modbus_server(_Sma, _Piko, _data)
 
     except IOError as e:
         log.error("IOError: {}".format(e.msg))
-        print 'IOError'
+        print('IOError')
 
     except:
         for info in sys.exc_info():
             log.error("Fehler: {}".format(info))
-            print ("Fehler: {}".format(info))
+            print("Fehler: {}".format(info))
 
 # # Ende Funktion: ' _main' #######################################################################
 

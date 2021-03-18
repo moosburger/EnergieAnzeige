@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # #################################################################################################
@@ -19,15 +19,22 @@
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
+    ImportError = None
     import threading
     import time
-    from datetime import datetime
-    import psutil
-    from collections import namedtuple as NamedTuple
     import os
+    from datetime import datetime
+    from collections import namedtuple as NamedTuple
+    import psutil
 
-except:
-    raise
+except Exception as e:
+    ImportError = e
+
+# #################################################################################################
+# # UmgebungsVariablen / Globals
+# #################################################################################################
+DiskInfo = NamedTuple('DiskInfo', 'device total used free percentage')
+CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp DStemp cores')
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -37,21 +44,12 @@ except:
 # # private Imports
 # #################################################################################################
 try:
+    PrivateImportError = None
     import Error
     from configuration import Global as _conf
 
-except:
-    raise
-
-# #################################################################################################
-# # UmgebungsVariablen / Globals
-# #################################################################################################
-DiskInfo = NamedTuple('DiskInfo', 'device total used free percentage')
-CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp DStemp cores')
-
-# #################################################################################################
-# # Logging geht in dieselbe Datei, trotz verschiedener Prozesse!
-# #################################################################################################
+except Exception as e:
+    PrivateImportError = e
 
 # #################################################################################################
 # # Funktionen
@@ -65,6 +63,15 @@ CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp DStem
 # #################################################################################################
 class Raspi_CallBack():  #object
 
+    try:
+        ## Import fehlgeschlagen
+        if (PrivateImportError):
+            raise IOError(PrivateImportError)
+
+        if (ImportError):
+            raise IOError(ImportError)
+
+
 # #################################################################################################
 # # Funktion: ' Constructor '
 ## \details Die Initialisierung der Klasse KeepAlive
@@ -73,19 +80,19 @@ class Raspi_CallBack():  #object
 #   \param[in] CallBack
 #   \return -
 # #################################################################################################
-    def __init__(self, interval, funcObj, logger):
+        def __init__(self, interval, funcObj, logger):
 
-        self.log = logger.getLogger('Host')
-        self.callFunc = ['GetBootTimeData', 'GetCpuInfoData', 'GetMemoryInfoData', 'GetCpuInfoData', 'GetDiskUsageData']
-        self.mBootTime = ""
-        self.mDiskUsage = []
-        self.mMemoryInfo = []
-        self.mCpuInfo = []
-        self.firstRun = True
+            self.log = logger.getLogger('Host')
+            self.callFunc = ['GetBootTimeData', 'GetCpuInfoData', 'GetMemoryInfoData', 'GetCpuInfoData', 'GetDiskUsageData']
+            self.mBootTime = ""
+            self.mDiskUsage = []
+            self.mMemoryInfo = []
+            self.mCpuInfo = []
+            self.firstRun = True
 
-        thread = threading.Thread(target=self.run, args=(interval, funcObj))
-        thread.daemon = True
-        thread.start()
+            thread = threading.Thread(target=self.run, args=(interval, funcObj))
+            thread.daemon = True
+            thread.start()
 
 # # Ende Funktion: ' Constructor ' ################################################################
 
@@ -102,30 +109,30 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return Temperatur
 # #################################################################################################
-    def run(self, interval, funcObj):
+        def run(self, interval, funcObj):
 
-        self.log.info("Starte Raspi Callback mit Intervall {} sek.".format(interval))
-        self.mBootTime = self._GetBootTime()
+            self.log.info("Starte Raspi Callback mit Intervall {} sek.".format(interval))
+            self.mBootTime = self._GetBootTime()
 
-        fncCnt = 0
-        while True:
-            self.log.debug(self.callFunc[fncCnt])
+            fncCnt = 0
+            while True:
+                self.log.debug(self.callFunc[fncCnt])
 
-            if (self.callFunc[fncCnt] == 'GetDiskUsageData'):
-                self.mDiskUsage = self._GetDiskUsage()
-            if (self.callFunc[fncCnt] == 'GetMemoryInfoData'):
-                self.mMemoryInfo = self._GetMemoryInfo()
-            if (self.callFunc[fncCnt] == 'GetCpuInfoData'):
-                self.mCpuInfo = self._GetCpuInfo()
+                if (self.callFunc[fncCnt] == 'GetDiskUsageData'):
+                    self.mDiskUsage = self._GetDiskUsage()
+                if (self.callFunc[fncCnt] == 'GetMemoryInfoData'):
+                    self.mMemoryInfo = self._GetMemoryInfo()
+                if (self.callFunc[fncCnt] == 'GetCpuInfoData'):
+                    self.mCpuInfo = self._GetCpuInfo()
 
-            funcObj(self.callFunc[fncCnt], self)
-            fncCnt = fncCnt + 1
-            if fncCnt >= len(self.callFunc):
-                fncCnt = 1 # BootTime nur einmal
-                self.firstRun = False
+                funcObj(self.callFunc[fncCnt], self)
+                fncCnt = fncCnt + 1
+                if fncCnt >= len(self.callFunc):
+                    fncCnt = 1 # BootTime nur einmal
+                    self.firstRun = False
 
-            if (self.firstRun == False):
-                time.sleep(interval)
+                if (self.firstRun == False):
+                    time.sleep(interval)
 
 # # Ende Funktion: ' run ' ###############################################################################
 
@@ -135,18 +142,18 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return Temperatur
 # #################################################################################################
-    def _get_size(self, bytes, suffix="B".format()):
-        """
-        Scale bytes to its proper format
-        e.g:
-            1253656 => '1.20MB'
-            1253656678 => '1.17GB'
-        """
-        factor = 1024
-        for unit in ["", "K", "M", "G", "T", "P"]:
-            if bytes < factor:
-                return '{:.2f}{}{}'.format(bytes, unit, suffix)
-            bytes /= factor
+        def _get_size(self, bytes, suffix="B".format()):
+            """
+            Scale bytes to its proper format
+            e.g:
+                1253656 => '1.20MB'
+                1253656678 => '1.17GB'
+            """
+            factor = 1024
+            for unit in ["", "K", "M", "G", "T", "P"]:
+                if bytes < factor:
+                    return '{:.2f}{}{}'.format(bytes, unit, suffix)
+                bytes /= factor
 
 # # Ende Funktion: ' _get_size ' ############################################################################
 
@@ -156,9 +163,9 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return Temperatur
 # #################################################################################################
-    def GetBootTimeData(self):
+        def GetBootTimeData(self):
 
-        return self.mBootTime
+            return self.mBootTime
 
 # # Ende Funktion: ' GetBootTime ' ############################################################################
 
@@ -168,9 +175,9 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return Temperatur
 # #################################################################################################
-    def GetDiskUsageData(self):
+        def GetDiskUsageData(self):
 
-        return self.mDiskUsage
+            return self.mDiskUsage
 
 # # Ende Funktion: ' GetDiskUsage ' ############################################################################
 
@@ -180,9 +187,9 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return
 # #################################################################################################
-    def GetMemoryInfoData(self):
+        def GetMemoryInfoData(self):
 
-        return self.mMemoryInfo
+            return self.mMemoryInfo
 
 # # Ende Funktion: ' GetMemoryInfo ' ############################################################################
 
@@ -192,9 +199,9 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return
 # #################################################################################################
-    def GetCpuInfoData(self):
+        def GetCpuInfoData(self):
 
-        return self.mCpuInfo
+            return self.mCpuInfo
 
 # # Ende Funktion: ' GetCpuInfo ' ############################################################################
 
@@ -204,12 +211,12 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return Temperatur
 # #################################################################################################
-    def _GetBootTime(self):
+        def _GetBootTime(self):
 
-        # Boot Time
-        boot_time_timestamp = psutil.boot_time()
-        bt = datetime.fromtimestamp(boot_time_timestamp)
-        return ("{}/{}/{} {}:{}:{}".format(bt.year, bt.month, bt.day, bt.hour, bt.minute, bt.second))
+            # Boot Time
+            boot_time_timestamp = psutil.boot_time()
+            bt = datetime.fromtimestamp(boot_time_timestamp)
+            return ("{}/{}/{} {}:{}:{}".format(bt.year, bt.month, bt.day, bt.hour, bt.minute, bt.second))
 
 # # Ende Funktion: ' GetBootTime ' ############################################################################
 
@@ -219,34 +226,34 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return Temperatur
 # #################################################################################################
-    def _GetDiskUsage(self):
+        def _GetDiskUsage(self):
 
-        DiskInfoList = []
-        partitions = psutil.disk_partitions()
-        for partition in partitions:
+            DiskInfoList = []
+            partitions = psutil.disk_partitions()
+            for partition in partitions:
 
-            device = partition.device
-            total = 0
-            used = 0
-            free = 0
-            percentage = 0
-            valid = True
+                device = partition.device
+                total = 0
+                used = 0
+                free = 0
+                percentage = 0
+                valid = True
 
-            try:
-                partition_usage = psutil.disk_usage(partition.mountpoint)
+                try:
+                    partition_usage = psutil.disk_usage(partition.mountpoint)
 
-            except PermissionError as e:
-                valid = False
+                except PermissionError as e:
+                    valid = False
 
-            if (valid == True):
-                total = partition_usage.total/1024
-                used = partition_usage.used/1024
-                free = partition_usage.free/1024
-                percentage = partition_usage.percent
+                if (valid == True):
+                    total = int(partition_usage.total/1024)
+                    used = int(partition_usage.used/1024)
+                    free = int(partition_usage.free/1024)
+                    percentage = float(partition_usage.percent)
 
-            DiskInfoList.append(DiskInfo(device, total, used, free, percentage))
+                DiskInfoList.append(DiskInfo(device, total, used, free, percentage))
 
-        return DiskInfoList
+            return DiskInfoList
 
 # # Ende Funktion: ' GetDiskUsage ' ############################################################################
 
@@ -256,26 +263,26 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return
 # #################################################################################################
-    def _GetMemoryInfo(self):
+        def _GetMemoryInfo(self):
 
-        MemInfoList = []
-        # get the memory details
-        svmem = psutil.virtual_memory()
-        total = svmem.total/1024
-        used = svmem.used/1024
-        free = svmem.available/1024
-        percentage = svmem.percent
-        MemInfoList.append(DiskInfo('Memory', total, used, free, percentage))
+            MemInfoList = []
+            # get the memory details
+            svmem = psutil.virtual_memory()
+            total = int(svmem.total/1024)
+            used = int(svmem.used/1024)
+            free = int(svmem.available/1024)
+            percentage = float(svmem.percent)
+            MemInfoList.append(DiskInfo('Memory', total, used, free, percentage))
 
-        # get the swap memory details (if exists)
-        swap = psutil.swap_memory()
-        total = swap.total/1024
-        used = swap.used/1024
-        free = swap.free/1024
-        percentage = swap.percent
-        MemInfoList.append(DiskInfo('Swap', total, used, free, percentage))
+            # get the swap memory details (if exists)
+            swap = psutil.swap_memory()
+            total = int(swap.total/1024)
+            used = int(swap.used/1024)
+            free = int(swap.free/1024)
+            percentage = float(swap.percent)
+            MemInfoList.append(DiskInfo('Swap', total, used, free, percentage))
 
-        return MemInfoList
+            return MemInfoList
 
 # # Ende Funktion: ' GetMemoryInfo ' ############################################################################
 
@@ -285,47 +292,55 @@ class Raspi_CallBack():  #object
 #   \param[in]  -
 #   \return
 # #################################################################################################
-    def _GetCpuInfo(self):
+        def _GetCpuInfo(self):
 
-        # number of cores
-        physical = psutil.cpu_count(logical=False)
-        total = psutil.cpu_count(logical=True)
+            # number of cores
+            physical = int(psutil.cpu_count(logical=False))
+            total = int(psutil.cpu_count(logical=True))
 
-        # CPU frequencies
-        cpufreq = psutil.cpu_freq()
-        max = cpufreq.max
-        min = cpufreq.min
-        current = cpufreq.current
+            # CPU frequencies
+            cpufreq = psutil.cpu_freq()
+            max = float(cpufreq.max)
+            min = float(cpufreq.min)
+            current = float(cpufreq.current)
 
-        # CPU usage
-        cores = []
-        for i, percentage in enumerate(psutil.cpu_percent(percpu=True, interval=1)):
-            cores.append(percentage)
+            # CPU usage
+            cores = []
+            for i, percentage in enumerate(psutil.cpu_percent(percpu=True, interval=1)):
+                cores.append(float(percentage))
 
-        usage = psutil.cpu_percent()
+            usage = float(psutil.cpu_percent())
 
-        # CPU temp
-        ## Wenn ein Dallas DS Sensor angeschlossen ist, liefert psutils den Ds zurück als w1_slave_temp
-        ## {'w1_slave_temp': [shwtemp(label='', current=27.187, high=None, critical=None)]}
-        ## ohne kommt die Cpu Temp
-        ## {'cpu-thermal': [shwtemp(label='', current=51.54, high=None, critical=None)]}
-        cputemp = psutil.sensors_temperatures()
-        temp = 0
-        DStemp = 0
-        try:
-            temp = cputemp['cpu-thermal'][0].current
-        except:
-            temp = os.popen('vcgencmd measure_temp').readline()
-            temp = float(temp.replace("temp=","").replace("'C\n",""))
+            # CPU temp
+            ## Wenn ein Dallas DS Sensor angeschlossen ist, liefert psutils den Ds zurück als w1_slave_temp
+            ## {'w1_slave_temp': [shwtemp(label='', current=27.187, high=None, critical=None)]}
+            ## ohne kommt die Cpu Temp
+            ## {'cpu-thermal': [shwtemp(label='', current=51.54, high=None, critical=None)]}
+            cputemp = psutil.sensors_temperatures()
+            temp = 0
+            DStemp = 0
+            try:
+                temp = cputemp['cpu-thermal'][0].current
+            except:
+                temp = os.popen('vcgencmd measure_temp').readline()
+                temp = float(temp.replace("temp=","").replace("'C\n",""))
 
-        try:
-            DStemp = cputemp['w1_slave_temp'][0].current
-        except:
-            DStemp = -1
+            try:
+                DStemp = float(cputemp['w1_slave_temp'][0].current)
+            except:
+                DStemp = float(-1)
 
-        return CpuInfo(physical, total, max, min, current, usage, temp, DStemp, cores)
+            return CpuInfo(physical, total, max, min, current, usage, temp, DStemp, cores)
 
 # # Ende Funktion: ' GetCpuInfo ' ############################################################################
+
+##### Fehlerbehandlung #####################################################
+    except IOError as e:
+        print('Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e))
+
+    except:
+        for info in sys.exc_info():
+            print ("Fehler: {}".format(info))
 
 # # Ende Klasse: ' CallRaspi ' ####################################################################
 

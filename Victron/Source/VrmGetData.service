@@ -3,7 +3,7 @@
 #   English:    https://wiki.debian.org/systemd/Services
 #   Deutsch:    https://manpages.debian.org/buster/manpages-de/systemd.service.5.de.html
 #
-#   Datei nach /etc/systemd/system/VrmGetData.service
+#   Datei nach /etc/systemd/system/VrmGetData.service kopieren
 #
 #   Berechtigungen setzen
 #   sudo chmod 644 /etc/systemd/system/VrmGetData.service
@@ -15,6 +15,16 @@
 #
 #   systemctl start VrmGetData.service
 #   systemctl stop VrmGetData.service
+#   systemctl reload-or-restart VrmGetData.service
+#    reload-or-restart PATTERN...
+#           Reload one or more units if they support it. If not, restart them
+#           instead. If the units are not running yet, they will be started.
+#
+#    reload-or-try-restart PATTERN...
+#           Reload one or more units if they support it. If not, restart them
+#           instead. This does nothing if the units are not running. Note that,
+#           for compatibility with SysV init scripts, force-reload is
+#           equivalent to this command.
 #
 ###########################################################
 
@@ -26,7 +36,7 @@ After=multi-user.target
 Type=simple
 RestartSec=30
 Restart=on-failure
-ExecStart=/usr/bin/python /mnt/dietpi_userdata/EnergieAnzeige/VrmGetData.py
+ExecStart=/usr/bin/python3 /mnt/dietpi_userdata/EnergieAnzeige/VrmGetData.py
 
 [Install]
 WantedBy=multi-user.target

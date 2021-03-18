@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # #################################################################################################
@@ -16,18 +16,26 @@
 # 1.0         26.05.2020
 #
 # #################################################################################################
+#########
+## history -c
+## /mnt/dietpi_userdata/EnergieAnzeige
+## /mnt/dietpi_userdata/SolarExport
+#########
 
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
     PublicImport = True
+    from importlib import reload
     import sys
+    import os
     import json
     import ssl
     import logging
     from logging.config import fileConfig
     from datetime import datetime
+    import time
     import paho.mqtt.client as mqtt
     from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
 
@@ -35,8 +43,8 @@ except ImportError as e:
     PublicImport = False
     ErrorMsg = e
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
+#reload(sys)
+#sys.setdefaultencoding("utf-8")
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -52,7 +60,7 @@ try:
     import Utils
     from Host import Raspi_CallBack
     from influxHandler import influxIO, _SensorData as SensorData
-    from dataExport import ExportDataFromInflux
+    from CalcPercentage import CalcPercentageBreakdown
 
 except ImportError as e:
     PrivateImport = False
@@ -102,9 +110,14 @@ def _get_vrm_broker_url(vrm_portal_id):
 #   \param[in]     rc
 #   \return         -
 # #################################################################################################
-def on_connect(self, mosq, obj, rc):
-    mqtt_errno, mid = self.subscribe('N/%s/#' % _conf.PORTAL_ID, 1)
-    log.info(str(mqtt.connack_string(rc)))
+def on_connect(client, mosq, obj, rc):
+
+    if (rc == 0):
+        client.initDone = True
+        mqtt_errno, mid = client.subscribe('N/%s/#' % _conf.PORTAL_ID, 1)
+        log.info("Init Done {}".format(client.initDone))
+
+    log.info("mqttClient onConnect: {}".format(str(mqtt.connack_string(rc))))
 
 # # Ende Funktion: ' ' ############################################################################
 
@@ -117,7 +130,9 @@ def on_connect(self, mosq, obj, rc):
 #   \return         -
 # #################################################################################################
 def on_disconnect(client, userdata, rc):
-    log.info(str(mqtt.connack_string(rc)))
+
+    client.initDone = False
+    log.info("mqttClient onDisconnect: {}".format(str(mqtt.connack_string(rc))))
 
 # # Ende Funktion: 'on_disconnect ' ###############################################################
 
@@ -130,7 +145,6 @@ def on_disconnect(client, userdata, rc):
 #   \return         -
 # #################################################################################################
 def on_message_fallback(client, userdata, message):
-
     log.info ("Msg.Payload: {}\n\t\t\t\t\t\t- Msg.Topic: {}\n\t\t\t\t\t\t- Msg.qos: {}\n\t\t\t\t\t\t- Userdata: {}".format(message.payload, message.topic, message.qos, userdata))
 
 # # Ende Funktion: ' on_message_fallback' ##################################################################
@@ -144,6 +158,9 @@ def on_message_fallback(client, userdata, message):
 #   \return         -
 # #################################################################################################
 def on_message(client, userdata, message):
+
+    if not client.initDone:
+        return;
 
     timestamp = datetime.utcnow()
     myVal = _checkPayload(client, userdata, message)
@@ -190,7 +207,7 @@ def on_subscribe(mosq, userdata, mid, granted_qos):
 #   \return         -
 # #################################################################################################
 def on_unsubscribe(client, userdata, mid):
-    pass
+    log.info("Unsubscribed: {} {} {} {}".format(str(mid), str(granted_qos), str(userdata), str(mosq)))
 
 # # Ende Funktion: 'on_unsubscribe ' ##############################################################
 
@@ -220,8 +237,6 @@ def on_log(client, userdata, level, buf):
 def on_Raspi(obj, Raspi):
 
     timestamp = datetime.utcnow()
-## BootTime noch in sep. Datei, zum auslesen und vergleich on Reboot erfolgt, wenn andere Zeit und Datum
-
     retVal = True
 
     _cpuLabel = 'Cpu'
@@ -266,8 +281,9 @@ def on_Raspi(obj, Raspi):
 
     if (retVal != True):
         log.warning("Fehler beim schreiben von Raspi: {}".format(sensor_data))
+        time.sleep(5)
         # Reinit Database
-        influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
+        influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE, 'VrmGetData')
 
 # # Ende Funktion: 'on_Raspi ' ######################################################################
 
@@ -277,16 +293,12 @@ def on_Raspi(obj, Raspi):
 #   \param[in]
 #   \return
 # #################################################################################################
-def _get_Sma_Current(device, instance, AcPower, timestamp):
+def _get_Sma_Current(AcVoltage, AcPower, timestamp):
 
     #Strom
-    AcL1Current = 0
-    SmaV, = influxHdlr._Query_influxDb([_conf.SMA_VL1,], device, 'last')
-    if SmaV > 0:
-       AcL1Current = AcPower / SmaV
-
-    AcL1Current = _check_Data_Type(AcL1Current)
-    sensor_data = SensorData(device, instance, ["AcL1Current",], [AcL1Current,], timestamp)
+    if AcVoltage > 0:
+        AcL1Current = _check_Data_Type(AcPower / AcVoltage)
+        sensor_data = SensorData(PvInv.RegEx, PvInv.Label1, ["AcL1Current",], [AcL1Current,], timestamp)
 
     return sensor_data
 
@@ -298,13 +310,10 @@ def _get_Sma_Current(device, instance, AcPower, timestamp):
 #   \param[in]
 #   \return
 # #################################################################################################
-def _get_Total_Power(device, query, otherPower, timestamp):
+def _get_Total_Power(myVal, otherPower, timestamp):
 
     #Leistung Pv
-    AcPvOnGridPower, = influxHdlr._Query_influxDb([query,], device, 'last')
-    AcPvOnGridPower = _check_Data_Type(AcPvOnGridPower)
-    #Gesamt Piko + akt. Sma
-    AcPvOnGridPower = AcPvOnGridPower + otherPower
+    AcPvOnGridPower = _check_Data_Type(myVal + otherPower)
     sensor_data = SensorData(System.RegEx, System.Label1, ["AcPvOnGridPower",], [AcPvOnGridPower,], timestamp)
 
     return sensor_data
@@ -317,11 +326,17 @@ def _get_Total_Power(device, query, otherPower, timestamp):
 #   \param[in]
 #   \return
 # #################################################################################################
-def _get_Total_Consumption(instance, timestamp):
+def _get_Total_Consumption(type, myVal, timestamp):
 
-    ConsPower1, ConsPower2, ConsPower3 = influxHdlr._Query_influxDb([_conf.LastL1, _conf.LastL2, _conf.LastL3], System.RegEx, 'last')
-    AcConsumptionOnInputPower = _check_Data_Type(ConsPower1 + ConsPower2 + ConsPower3)
-    sensor_data = SensorData(System.RegEx, instance, ["AcConsumptionOnInputPower",], [AcConsumptionOnInputPower,], timestamp)
+    global AcConsumptionOnInputL1Power, AcConsumptionOnInputL2Power, AcConsumptionOnInputL3Power
+
+    # Der gesamte Verbrauch aller Lasten, für die Prozentuale Aufteilung
+    if (type == 'AcConsumptionOnInputL1Power'): AcConsumptionOnInputL1Power = myVal
+    if (type == 'AcConsumptionOnInputL2Power'): AcConsumptionOnInputL2Power = myVal
+    if (type == 'AcConsumptionOnInputL3Power'): AcConsumptionOnInputL3Power = myVal
+
+    AcConsumptionOnInputPower = _check_Data_Type(AcConsumptionOnInputL1Power + AcConsumptionOnInputL2Power + AcConsumptionOnInputL3Power)
+    sensor_data = SensorData(System.RegEx, System.Label1, ["AcConsumptionOnInputPower",], [AcConsumptionOnInputPower,], timestamp)
 
     return sensor_data
 
@@ -335,14 +350,14 @@ def _get_Total_Consumption(instance, timestamp):
 def _check_Data_Type(myVal):
 
     #float, int, str, list, dict, tuple
-    if (isinstance(myVal, basestring)):
+    if (isinstance(myVal, str)):
         pass
     elif (isinstance(myVal, int)):
         myVal = float(myVal)
-    elif (isinstance(myVal, long)):
-        myVal = float(myVal)
+        myVal = round(myVal, 2)
     elif (isinstance(myVal, float)):
         myVal = float(myVal)
+        myVal = round(myVal, 2)
     else:
         myVal = str(myVal)
 
@@ -362,8 +377,8 @@ def _checkPayload(client, userdata, message):
     retVal = None
     try:
         if not (message.payload):
-            log.warning ("Msg.Topic: {}".format(message.topic))
-            log.warning ("Msg.Payload: {}".format(message.payload))
+            #log.warning ("Msg.Topic: {}".format(message.topic))
+            #log.warning ("Msg.Payload: {}".format(message.payload))
             return None
 
         payload = message.payload.decode('utf-8')
@@ -396,13 +411,19 @@ def _checkPayload(client, userdata, message):
 #   \return
 # #################################################################################################
 def _extract_Data(msg, myVal, timestamp):
-    global EnergyPerDay
+
+    global SmaAcPower, SmaAcVoltage
+    global PikoAcPower
 
     topic = str(msg.topic).strip()
-
+    type = ""
     smaRegEx = "N/{0}/([^/]+)/([^/]+)/(.*)".format(_conf.PORTAL_ID)
+    retVal = False
 
     try:
+        #float, int, str, list, dict, tuple
+        myVal = _check_Data_Type(myVal)
+
         match = Utils.RegEx(smaRegEx, topic, Utils.fndFrst, Utils.Srch, '')
         if match:
             device = match.group(1)
@@ -411,22 +432,27 @@ def _extract_Data(msg, myVal, timestamp):
 
             sensor_data_list = []
             if (device == PvInv.RegEx) and (match.group(2) == PvInv.Inst1):
-                instance = PvInv.Label1
+                instance = PvInv.Label1 #SMA
 
                 # Beim SMA den Strom berechnen, die Gesamtleistung und ~Energie aller PvInverter
                 if (type == 'AcPower'):
-                    #Strom
-                    sensor_data_list.append(_get_Sma_Current(device, instance, myVal, timestamp))
+                    SmaAcPower = myVal
                     #Gesamt Piko + akt. Sma
-                    sensor_data_list.append(_get_Total_Power(device, _conf.PIKO, myVal, timestamp))
+                    sensor_data_list.append(_get_Total_Power(PikoAcPower, myVal, timestamp))
+
+                #Strom
+                if (type == 'AcL1Voltage'): SmaAcVoltage = myVal
+                if SmaAcVoltage > 0:
+                    sensor_data_list.append(_get_Sma_Current(SmaAcVoltage, SmaAcPower, timestamp))
 
             elif (device == PvInv.RegEx) and (match.group(2) == PvInv.Inst2):
-                instance = PvInv.Label2
+                instance = PvInv.Label2 #Piko
 
-                # Beim Piko die Gesamtleistung und ~Energie aller PvInverter
+                # Beim Piko die Gesamtleistung aller PvInverter
                 if (type == 'AcPower'):
+                    PikoAcPower = myVal
                     #Gesamt Sma + akt. Piko
-                    sensor_data_list.append(_get_Total_Power(device, _conf.SMA, myVal, timestamp))
+                    sensor_data_list.append(_get_Total_Power(SmaAcPower, myVal, timestamp))
 
             elif (device == Grid.RegEx) and (match.group(2) == Grid.Inst1):
                 instance = Grid.Label1
@@ -438,14 +464,11 @@ def _extract_Data(msg, myVal, timestamp):
                 instance = System.Label1
 
                 # Der gesamte Verbrauch aller Lasten, für die Prozentuale Aufteilung
-                if (type == 'AcConsumptionOnInputL1Power') or (type == 'AcConsumptionOnInputL2Power') or (type == 'AcConsumptionOnInputL3Power'):
-                   sensor_data_list.append(_get_Total_Consumption(instance, timestamp))
+                sensor_data_list.append(_get_Total_Consumption(type, myVal, timestamp))
 
             else:
                 instance = str(match.group(2))
 
-            #float, int, str, list, dict, tuple
-            myVal = _check_Data_Type(myVal)
             sensor_data_list.insert(0,SensorData(device, instance, [type,], [myVal,], timestamp))
 
             for sensor_data in sensor_data_list:
@@ -453,17 +476,37 @@ def _extract_Data(msg, myVal, timestamp):
                 retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
                 if (retVal != True):
                     log.warning("Fehler beim schreiben von {}".format(sensor_data))
-                    # Reinit Database
-                    influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
                     break
 
     except ValueError as e:
-        log.warning("ValueError in '_extract_Data': {}".format(e))
+        log.warning("ValueError in '_extract_Data': Type: {} ({})".format(type, e))
+        retVal = False
+
+    except IndexError as e:
+        log.warning("IndexError in '_extract_Data': Type: {} ({})".format(type, e))
+        retVal = False
+
+    except TypeError as e:
+        log.warning("TypeError in '_extract_Data': Type: {} ({})".format(type, e))
+        retVal = False
+
+    except Error.InfluxDBProblem:
+        log.warning("InfluxDBProblem)")
+        retVal = False
 
     except:
         for info in sys.exc_info():
-            log.error("Fehler in '_extract_Data': {}".format(info))
-            print ("Fehler in '_extract_Data': {}".format(info))
+            iCnt = 0
+            log.error("Fehler in '_extract_Data': {} : {}".format(iCnt, info))
+            iCnt += 1
+
+        retVal = False
+
+    finally:
+        if (retVal != True):
+            time.sleep(5)
+            influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE, 'VrmGetData')
+
 
 # # Ende Funktion: '_extract_Data ' ######################################################################
 
@@ -474,24 +517,46 @@ def _extract_Data(msg, myVal, timestamp):
 #   \return            -
 # #################################################################################################
 def _main(argv):
-    global EnergyPerDay, influxHdlr
+    global influxHdlr
+    global AcConsumptionOnInputL1Power, AcConsumptionOnInputL2Power, AcConsumptionOnInputL3Power
+    global SmaAcPower, SmaAcVoltage
+    global PikoAcPower
 
+    AcConsumptionOnInputL1Power = 0
+    AcConsumptionOnInputL2Power = 0
+    AcConsumptionOnInputL3Power = 0
+    SmaAcPower = 0
+    SmaAcVoltage = 0
+    PikoAcPower = 0
+
+    log.info("Python Version: {}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))
     log.info('VrmGetData started')
     try:
         ## Import fehlgeschlagen
         if (PrivateImport == False) or (PublicImport == False):
             raise ImportError
 
-        #raise Error.AllgBuild('Übergebens Argument (Pfad) ist leer!')
-
-        EnergyPerDay = False
         _MqttPort = _conf.MQTT_PORT
 
         ## Database initialisieren
         influxHdlr = influxIO(_host = _conf.INFLUXDB_ADDRESS, _port = _conf.INFLUXDB_PORT, _username = _conf.INFLUXDB_USER, _password = _conf.INFLUXDB_PASSWORD, _database = None, _gzip = _conf.INFLUXDB_ZIPPED, logger = logging)
-        influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE)
+
+        for i in range(10):
+            ver = influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE, 'VrmGetData')
+            if (ver != None):
+                log.info('influxdb Version: {}'.format(ver))
+                break
+
+            time.sleep(5)
+
+        ## auslesen der Raspi Temperatur
+        Raspi_CallBack(_conf.HOST_INTERVAL, on_Raspi, logging)
+
+        ## Die Prozentuale Berechnung alle 60 sec
+        CalcPercentageBreakdown(_conf.PERCENTAGE_INTERVAL, logging)
 
         ## Client instanzieren
+        mqtt.Client.initDone = False
         mqttClient = mqtt.Client(_conf.CLIENT_ID, protocol=mqtt.MQTTv311)
 
         ## Background KeepAlive
@@ -502,7 +567,7 @@ def _main(argv):
 
         ## sichere Verbindung
         if (_conf.USE_TSL == True):
-            mqttClient.tls_set(_conf.TSL_CERTIFICATION, tls_version=ssl.PROTOCOL_TLSv1_2 )
+            mqttClient.tls_set(_conf.TSL_CERTIFICATION, tls_version=ssl.PROTOCOL_TLSv1_2)
             mqttClient.username_pw_set(_conf.MQTT_USERNAME, _conf.MQTT_PASSWORD)
             _MqttPort = _conf.MQTT_TSL_PORT
             CCGX = _get_vrm_broker_url(_conf.PORTAL_ID)
@@ -536,20 +601,14 @@ def _main(argv):
         ##    mqttClient.message_callback_add('N/{0}/{1}/+/{2}'.format( _conf.PORTAL_ID, Setting.RegEx, topic), on_message)
 
         mqttClient.on_subscribe = on_subscribe
-        #mqttClient.on_log = on_log
+        ##mqttClient.on_log = on_log
         ##mqttClient.on_unsubscribe = on_unsubscribe
         ##mqttClient.on_publish = on_publish
         mqttClient.on_disconnect = on_disconnect
 
         ## Once everything has been set up, we can (finally) connect to the broker
         connac = mqttClient.connect(_conf.CCGX, int(_MqttPort), int(_conf.SCHED_INTERVAL))
-        log.debug(connac)
-
-        ## auslesen der Raspi Temperatur
-        Raspi_CallBack(_conf.HOST_INTERVAL, on_Raspi, logging)
-
-        ## Daten zu csv und SolarLog exportieren
-        ExportDataFromInflux(_conf.EXPORT_INTERVAL, logging)
+        log.info('mqttClient.connect Error: {}'.format(connac))
 
         ## Once we have told the client to connect, let the client object run itself
         mqttClient.loop_forever()
@@ -557,23 +616,25 @@ def _main(argv):
 
     ##### Fehlerbehandlung #####################################################
     except ImportError as e:
-        log.error('Eine der Bibliotheken konnte nicht geladen werden!\n{}\n'.format(e))
-        print 'Eine der Bibliotheken konnte nicht geladen werden!\n{}\n'.format(e)
+        log.error('Eine der Bibliotheken konnte nicht geladen werden!\n{}\n'.format(ErrorMsg))
+        print('Eine der Bibliotheken konnte nicht geladen werden!\n{}\n'.format(ErrorMsg))
 
     except IOError as e:
-        log.error("IOError: {}".format(e.msg))
-        print 'IOError'
+        log.error("IOError: {}".format(e))
+        print("IOError: {}".format(e))
 
     except Error.OpenFile as e:
-        print e.openfileInfo %{'msg': e.msg}
+        log.error(e.openfileInfo %{'msg': e.msg})
+        print(e.openfileInfo %{'msg': e.msg})
 
     except Error.Dateiname as e:
-        print e.dateinameInfo %{'msg': e.msg}
+        log.error(e.dateinameInfo %{'msg': e.msg})
+        print(e.dateinameInfo %{'msg': e.msg})
 
-    except:
-        for info in sys.exc_info():
-            log.error("Fehler: {}".format(info))
-            print ("Fehler: {}".format(info))
+    #except:
+    #    for info in sys.exc_info():
+    #        log.error("Fehler: {}".format(info))
+    #        print ("Fehler: {}".format(info))
 
 # # Ende Funktion: ' _main' #######################################################################
 

@@ -43,14 +43,16 @@
 # #################################################################################################
 import sys
 import socket
-import urllib2
+#import urllib2
 import csv
+import os
 
 from optparse import OptionParser, OptionGroup
 from datetime import datetime, timedelta
+import configuration as _conf
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
+#reload(sys)
+#sys.setdefaultencoding("utf-8")
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -78,7 +80,7 @@ TRef="c800"
 ## \details#
 #
 # #################################################################################################
-class PikoWebRead:
+class PikoWebRead(object):
 
 # #################################################################################################
 # # Funktion: ' Constructor '
@@ -90,7 +92,7 @@ class PikoWebRead:
 # #################################################################################################
   def __init__(self, Inv_Host, InvPwd, logger):
 
-    self.SocketStream = 0
+    self.SocketStream = None
 
     self.Opt = {}
 
@@ -255,7 +257,7 @@ class PikoWebRead:
       else:
         TxtSt+='.';
     #print "%s%s %s" % (Txt, HexSt, TxtSt)
-    print "%s%s" % (Txt, HexSt)
+    print("%s%s" % (Txt, HexSt))
 
 # #################################################################################################
 # #  Funktion: ' _DspTimer '
@@ -446,7 +448,7 @@ class PikoWebRead:
     f.close()
 
     # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
-    os.chmod(strFile, 0777)
+    os.chmod(strFile, 0o777)
 
 # # Ende Funktion: ' _write_File ' ################################################################
 
@@ -456,13 +458,23 @@ class PikoWebRead:
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-  def GetFetchedData(self, bDbgOut):
+  def GetFetchedData(self, bLogIt):
 
-    if (bDbgOut == True):
+    if (bLogIt == True):
       self.DbgPrintOut()
-      datStream = "TimeStamp: {:%m/%d/%y %H:%M %S}          Total energy: {} Wh\n".format(self.Data['Now'], self.Data['TotalWh'])
-      #datStream = "{}\tTotal energy    : {} Wh\n".format(datStream, self.Data['TotalWh'])
-      self._write_File("/mnt/dietpi_userdata/SolarExport/PikoTotalEnergy.log" , datStream, "a")
+
+      timestamp = "{}.{}.{} {}:{} {}".format(self.Data['Now'].strftime("%d"), self.Data['Now'].strftime("%m"), self.Data['Now'].strftime("%Y"), self.Data['Now'].strftime("%H"), self.Data['Now'].strftime("%M"), self.Data['Now'].strftime("%S"))
+      datStream = "TimeStamp: {}    Total energy: {} Wh\n".format(timestamp, self.Data['TotalWh'])
+
+      strFolder = "{}{}".format(_conf.EXPORT_FILEPATH, self.Data['Now'].strftime("%Y"))
+      fileName = "{}/PikoTotalEnergy.log".format(strFolder)
+
+      if (not os.path.exists(strFolder)):
+        os.mkdir(strFolder)
+        # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
+        os.chmod(strFolder, 0o777)
+
+      self._write_File(fileName , datStream, "a")
 
     return self.Data
 
@@ -714,8 +726,8 @@ class PikoWebRead:
     try:
       self.SocketStream.connect((self.Data['host'],  self.Data['port']))
       self.SocketStream.settimeout(1)
-    except socket.error, msg:
-      self.log.error("NetStatus: {}".format(msg))
+    except socket.error as e:
+      self.log.error("NetStatus: {}".format(e.msg))
       self.Data['NetStatus'] = msg
 
     # Get Inverter Status (0=Stop; 1=dry-run; 3..5=running)

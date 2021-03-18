@@ -21,8 +21,8 @@
 import ctypes
 import sys
 import math
-reload(sys)
-sys.setdefaultencoding("utf-8")
+#reload(sys)
+#sys.setdefaultencoding("utf-8")
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -134,7 +134,7 @@ class PrepareData():
                 Translate.u8.l = ord(single)
                 second = True
             else:
-                if (isinstance(single, basestring)):
+                if (isinstance(single, str)):
                     Translate.u8.h = ord(single)
                 else:
                     Translate.u8.h = single
@@ -271,6 +271,7 @@ class PrepareData():
 
         TotalWh2 = self._Conf_Two_Register(Data['TotalWh'])
         TotalWh4 = self._Conf_Four_Register(Data['TotalWh'])
+        DailyWh2 = self._Conf_Two_Register(Data['TodayWh'])
 
         CA_P  = self._Conf_Single_Register(Data['CA_P'])
         CA1_U = self._Conf_Single_Register(Data['CA1_U'])
@@ -332,7 +333,8 @@ class PrepareData():
                     ('Dc1 Strom',40641, 1,CC1_I[0],40624,CC1_I[1]),     #Data['CC1_I']   #~ DC String 1     :  6.04 A
                     ('Dc2 Strom',40661, 1,CC2_I[0],40624,CC1_I[1]),     #Data['CC2_I']   #~ DC String 2     : 0.00 A
                     ('Dc1 Leistung',40643, 1,CC1_P[0],40626,CC1_P[1]),  #Data['CC1_P']   #~ DC String 1     : 2203 W
-                    ('Dc2 Leistung',40663, 1,CC2_P[0],40626,CC1_P[1])   #Data['CC2_P']   #~ DC String 2     :  0 W
+                    ('Dc2 Leistung',40663, 1,CC2_P[0],40626,CC1_P[1]),   #Data['CC2_P']   #~ DC String 2     :  0 W
+                    ('Tagesertrag',40670, 2,DailyWh2,40212,[0,]),        #Data['DailyWh2'] #~ Daily energy    : 8 Wh
                 )
 
         if (FirstRun == True):
@@ -558,7 +560,7 @@ class PrepareData():
         return sunSpec
 
     # #################################################################################################
-    # #  Funktion: ' _Dbg_Print '
+    # #  Funktion: ' _Dbg_print('
     ## \details        -
     #   \param[in]     -
     #   \param[in]     -
@@ -566,42 +568,41 @@ class PrepareData():
     # #################################################################################################
     def Dbg_Print(self, Piko, Data):
 
-        print '#################################################################################################'
-        print "TimeStamp       : {:%m/%d/%y %H:%M %S}".format(Data['Now'])
-        print "Comm software   : Piko v%s - %s" % (Data['RelVer'], Data['RelDate'])
-        print "Comm host       : %s" % Data['host']
-        print "Comm port       : %d" % Data['port']
-        print "Comm status     : %s\n" % Data['NetStatus']
-        print "Inverter Status : %d (%s)" % (Data['Status'], Data['StatusTxt'])
-        print "Inverter Error  : %s" % Data['ErrorCode']
-        print "Inverter Name   : %s" % Data['InvName']
-        print "Inverter SN     : %s" % Data['InvSN']
-        print "Inverter Ref    : %s" % Data['InvRef']
-        print "Inverter Version: %s" % Data['InvVer']
-        print "Inverter Model  : %s" % Data['InvModel']
-        print "Inverter String : %d" % Data['InvString']
-        print "Inverter Phase  : %d\n" % Data['InvPhase']
-        print "Total Time      : %s (%d j)" % (Piko._DspTimer("", Data['InvInstTime'], 1), Data['InvInstTime']//86400)
-        print "Running Time    : %s" % Piko._DspTimer("", Data['InvRunTime'], 1)
-        print "Last Port. upld : %s" % Piko._DspTimer("", Data['InvPortalTime'], 1)
-        print "Last Hist. updt : %s" % Piko._DspTimer("", Data['InvHistTime'], 1)
-        print "Hist. updt step : %s\n" % Piko._DspTimer("", Data['InvHistStep'], 1)
-        print "Total energy    : %d Wh" % Data['TotalWh']
-        print "Today energy    : %d Wh" % Data['TodayWh']
-        print "DC Power        : %5d W\nAC Power        : %5d W\nEfficiency      : %5.1f %%\n" % (Data['CC_P'], Data['CA_P'], Data['Eff'])
+        print('#################################################################################################')
+        print("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(Data['Now']))
+        print("Comm software   : Piko v%s - %s" % (Data['RelVer'], Data['RelDate']))
+        print("Comm host       : %s" % Data['host'])
+        print("Comm port       : %d" % Data['port'])
+        print("Comm status     : %s\n" % Data['NetStatus'])
+        print("Inverter Status : %d (%s)" % (Data['Status'], Data['StatusTxt']))
+        print("Inverter Error  : %s" % Data['ErrorCode'])
+        print("Inverter Name   : %s" % Data['InvName'])
+        print("Inverter SN     : %s" % Data['InvSN'])
+        print("Inverter Ref    : %s" % Data['InvRef'])
+        print("Inverter Version: %s" % Data['InvVer'])
+        print("Inverter Model  : %s" % Data['InvModel'])
+        print("Inverter String : %d" % Data['InvString'])
+        print("Inverter Phase  : %d\n" % Data['InvPhase'])
+        print("Total Time      : %s (%d j)" % (Piko._DspTimer("", Data['InvInstTime'], 1), Data['InvInstTime']//86400))
+        print("Running Time    : %s" % Piko._DspTimer("", Data['InvRunTime'], 1))
+        print("Last Port. upld : %s" % Piko._DspTimer("", Data['InvPortalTime'], 1))
+        print("Last Hist. updt : %s" % Piko._DspTimer("", Data['InvHistTime'], 1))
+        print("Hist. updt step : %s\n" % Piko._DspTimer("", Data['InvHistStep'], 1))
+        print("Total energy    : %d Wh" % Data['TotalWh'])
+        print("Today energy    : %d Wh" % Data['TodayWh'])
+        print("DC Power        : %5d W\nAC Power        : %5d W\nEfficiency      : %5.1f %%\n" % (Data['CC_P'], Data['CA_P'], Data['Eff']))
 
-        print 'DC String 1     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (Data['CC1_U'], Data['CC1_I'], Data['CC1_P'], Data['CC1_T'], Piko._CnvTemp(Data['CC1_T']), Data['CC1_S'])
-        print 'DC String 2     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (Data['CC2_U'], Data['CC2_I'], Data['CC2_P'], Data['CC2_T'], Piko._CnvTemp(Data['CC2_T']), Data['CC2_S'])
-        print 'DC String 3     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (Data['CC3_U'], Data['CC3_I'], Data['CC3_P'], Data['CC3_T'], Piko._CnvTemp(Data['CC3_T']), Data['CC3_S'])
-        print 'AC Status       : %d (%04x %s)' % (Data['CA_S'], Data['CA_S'], Piko._CnvCA_S(Data['CA_S']))
-        print 'AC Phase 1      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA1_U'], Data['CA1_I'], Data['CA1_P'], Data['CA1_T'], Piko._CnvTemp(Data['CA1_T']))
-        print 'AC Phase 2      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA2_U'], Data['CA2_I'], Data['CA2_P'], Data['CA2_T'], Piko._CnvTemp(Data['CA2_T']))
-        print 'AC Phase 3      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA3_U'], Data['CA3_I'], Data['CA3_P'], Data['CA3_T'], Piko._CnvTemp(Data['CA3_T']))
-        print '#################################################################################################\n'
+        print('DC String 1     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (Data['CC1_U'], Data['CC1_I'], Data['CC1_P'], Data['CC1_T'], Piko._CnvTemp(Data['CC1_T']), Data['CC1_S']))
+        print('DC String 2     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (Data['CC2_U'], Data['CC2_I'], Data['CC2_P'], Data['CC2_T'], Piko._CnvTemp(Data['CC2_T']), Data['CC2_S']))
+        print('DC String 3     : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)  S=%04x' % (Data['CC3_U'], Data['CC3_I'], Data['CC3_P'], Data['CC3_T'], Piko._CnvTemp(Data['CC3_T']), Data['CC3_S']))
+        print('AC Status       : %d (%04x %s)' % (Data['CA_S'], Data['CA_S'], Piko._CnvCA_S(Data['CA_S'])))
+        print('AC Phase 1      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA1_U'], Data['CA1_I'], Data['CA1_P'], Data['CA1_T'], Piko._CnvTemp(Data['CA1_T'])))
+        print('AC Phase 2      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA2_U'], Data['CA2_I'], Data['CA2_P'], Data['CA2_T'], Piko._CnvTemp(Data['CA2_T'])))
+        print('AC Phase 3      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA3_U'], Data['CA3_I'], Data['CA3_P'], Data['CA3_T'], Piko._CnvTemp(Data['CA3_T'])))
+        print('#################################################################################################\n')
 
-    # # Ende Funktion: ' _Dbg_Print ' ###################################################################
+    # # Ende Funktion: ' _Dbg_print(' ###################################################################
 
 # # Ende Klasse: ' PikoWebRead ' ##################################################################
 
 # # DateiEnde #####################################################################################
-

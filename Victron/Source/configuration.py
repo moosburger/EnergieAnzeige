@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # #################################################################################################
@@ -43,6 +43,7 @@ class Global():
     CITY_CODE = '123456'
     CITY_NAME = 'Stadt'
 
+    PERCENTAGE_INTERVAL = 60
     EXPORT_INTERVAL = 120
     EXPORT_FILEPATH = '/mnt/dietpi_userdata/SolarExport/'
 
@@ -56,47 +57,52 @@ class Global():
     INFLUXDB_PASSWORD = None
     INFLUXDB_ZIPPED = False
     INFLUXDB_DATABASE = 'EnergieAnzeige'
+    INFLUXDB_DATABASE_LONG = 'MonatsAnzeige'
+
+    MODBUS_PORT = 502
+    MODBUS_PIKO_IP = "192.168.100.142"
+    MODBUS_SMA_IP = "192.168.100.143"
 
 # #################################################################################################
 # # Query auf Influx für zsätzliche Infos aus Berechnungen
 # #################################################################################################
-    PIKO = "SELECT last(AcPower) FROM pvinverter where instance='PIKO'"
-    PIKO_VL1 = "SELECT last(AcL1Voltage) FROM pvinverter where instance='PIKO'"
-    PIKO_VL2 = "SELECT last(AcL2Voltage) FROM pvinverter where instance='PIKO'"
-    PIKO_VL3 = "SELECT last(AcL3Voltage) FROM pvinverter where instance='PIKO'"
-    PIKO_IL1 = "SELECT last(AcL1Current) FROM pvinverter where instance='PIKO'"
-    PIKO_IL2 = "SELECT last(AcL2Current) FROM pvinverter where instance='PIKO'"
-    PIKO_IL3 = "SELECT last(AcL3Current) FROM pvinverter where instance='PIKO'"
+    #PIKO = "SELECT last(AcPower) FROM pvinverter where instance='PIKO'"
+    #PIKO_VL1 = "SELECT last(AcL1Voltage) FROM pvinverter where instance='PIKO'"
+    #PIKO_VL2 = "SELECT last(AcL2Voltage) FROM pvinverter where instance='PIKO'"
+    #PIKO_VL3 = "SELECT last(AcL3Voltage) FROM pvinverter where instance='PIKO'"
+    #PIKO_IL1 = "SELECT last(AcL1Current) FROM pvinverter where instance='PIKO'"
+    #PIKO_IL2 = "SELECT last(AcL2Current) FROM pvinverter where instance='PIKO'"
+    #PIKO_IL3 = "SELECT last(AcL3Current) FROM pvinverter where instance='PIKO'"
     PIKO_ENERGY1 = "SELECT last(AcL1EnergyForward) FROM pvinverter where instance='PIKO'"
     PIKO_ENERGY2 = "SELECT last(AcL2EnergyForward) FROM pvinverter where instance='PIKO'"
     PIKO_ENERGY3 = "SELECT last(AcL3EnergyForward) FROM pvinverter where instance='PIKO'"
-    PIKO_ENERGY_TOTAL = "SELECT last(AcEnergyForwardTotal) FROM pvinverter where instance='PIKO'"
-    PIKO_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='PIKO' and time > now() - 26h"
+    #PIKO_ENERGY_TOTAL = "SELECT last(AcEnergyForwardTotal) FROM pvinverter where instance='PIKO'"
+    #PIKO_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='PIKO' and time > now() - 26h"
 
-    SMA = "SELECT last(AcPower) FROM pvinverter where instance='SMA'"
-    SMA_VL1 = "SELECT last(AcL1Voltage) FROM pvinverter where instance='SMA'"
-    SMA_VL2 = "SELECT last(AcL2Voltage) FROM pvinverter where instance='SMA'"
-    SMA_VL3 = "SELECT last(AcL3Voltage) FROM pvinverter where instance='SMA'"
-    SMA_IL1 = "SELECT last(AcL1Current) FROM pvinverter where instance='SMA'"
-    SMA_IL2 = "SELECT last(AcL2Current) FROM pvinverter where instance='SMA'"
-    SMA_IL3 = "SELECT last(AcL3Current) FROM pvinverter where instance='SMA'"
+    #SMA = "SELECT last(AcPower) FROM pvinverter where instance='SMA'"
+    #SMA_VL1 = "SELECT last(AcL1Voltage) FROM pvinverter where instance='SMA'"
+    #SMA_VL2 = "SELECT last(AcL2Voltage) FROM pvinverter where instance='SMA'"
+    #SMA_VL3 = "SELECT last(AcL3Voltage) FROM pvinverter where instance='SMA'"
+    #SMA_IL1 = "SELECT last(AcL1Current) FROM pvinverter where instance='SMA'"
+    #SMA_IL2 = "SELECT last(AcL2Current) FROM pvinverter where instance='SMA'"
+    #SMA_IL3 = "SELECT last(AcL3Current) FROM pvinverter where instance='SMA'"
     SMA_ENERGY1 = "SELECT last(AcL1EnergyForward) FROM pvinverter where instance='SMA'"
     SMA_ENERGY2 = "SELECT last(AcL2EnergyForward) FROM pvinverter where instance='SMA'"
     SMA_ENERGY3 = "SELECT last(AcL3EnergyForward) FROM pvinverter where instance='SMA'"
-    SMA_ENERGY_TOTAL = "SELECT last(AcEnergyForwardTotal) FROM pvinverter where instance='SMA'"
-    SMA_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='SMA' and time > now() - 26h"
+    #SMA_ENERGY_TOTAL = "SELECT last(AcEnergyForwardTotal) FROM pvinverter where instance='SMA'"
+    #SMA_ENERGY_LASTDAY = "SELECT last(AcEnergyForwardDay) FROM pvinverter where instance='SMA' and time > now() - 26h"
 
-    PvOnGridL1 = "SELECT last(AcPvOnGridL1Power) FROM system where instance='Gateway'"
-    PvOnGridL2 = "SELECT last(AcPvOnGridL2Power) FROM system where instance='Gateway'"
-    PvOnGridL3 = "SELECT last(AcPvOnGridL3Power) FROM system where instance='Gateway'"
+    #PvOnGridL1 = "SELECT last(AcPvOnGridL1Power) FROM system where instance='Gateway'"
+    #PvOnGridL2 = "SELECT last(AcPvOnGridL2Power) FROM system where instance='Gateway'"
+    #PvOnGridL3 = "SELECT last(AcPvOnGridL3Power) FROM system where instance='Gateway'"
 
-    L1Power = "SELECT last(AcL1Power) FROM grid where instance='Meter'"
-    L2Power = "SELECT last(AcL2Power) FROM grid where instance='Meter'"
-    L3Power = "SELECT last(AcL3Power) FROM grid where instance='Meter'"
+    #L1Power = "SELECT last(AcL1Power) FROM grid where instance='Meter'"
+    #L2Power = "SELECT last(AcL2Power) FROM grid where instance='Meter'"
+    #L3Power = "SELECT last(AcL3Power) FROM grid where instance='Meter'"
     AllPower= "SELECT last(AcPower) FROM grid where instance='Meter'"
 
-    DcBattPower = "SELECT last(DcBatteryPower) FROM system where instance='Gateway'"
-    Dc0Power = "SELECT last(Dc0Power) FROM vebus where instance='MultiPlus-II'"
+    #DcBattPower = "SELECT last(DcBatteryPower) FROM system where instance='Gateway'"
+    #Dc0Power = "SELECT last(Dc0Power) FROM vebus where instance='MultiPlus-II'"
     AcBattPower = "SELECT last(AcActiveInL1P) FROM vebus where instance='MultiPlus-II'"
 
     LastL1 = "SELECT last(AcConsumptionOnInputL1Power) FROM system where instance='Gateway'"
@@ -123,13 +129,15 @@ class PvInverter():
         Ac/L3/Voltage-	            {"value": 230.60000343620777}
         Ac/MaxPower	                {"value": 3000.0}
         Ac/Power-	                {"value": 9.0}
+
         AcEnergyForwardTotal
         AcEnergyForwardDay
-        AcEnergyForwardPerDay
-        AcEnergyForwardPerMonth
-        AcEnergyForwardPerYear
+        AcEnergyForwardMonth
+        AcEnergyForwardYear
+        AcEnergyForwardDaySoFar
         AcEnergyForwardMonthSoFar
         AcEnergyForwardYearSoFar
+
         Connected	                {"value": 1}
         CustomName	                {"value": ""}
         DeviceInstance	            {"value": 24}
@@ -343,9 +351,9 @@ class System():
         system/0/PvInvertersProductIds	                {"value": [41283, 41284]}
         PvInvertersAcEnergyForwardTotal
         PvInvertersAcEnergyForwardDay
-        PvInvertersAcEnergyForwardPerDay
-        PvInvertersAcEnergyForwardPerMonth
-        PvInvertersAcEnergyForwardPerYear
+        PvInvertersAcEnergyForwardMonth                 war mal PvInvertersAcEnergyForwardPerMonth
+        PvInvertersAcEnergyForwardYear                  war mal PvInvertersAcEnergyForwardPerYear
+        PvInvertersAcEnergyForwardDaySoFar              war mal PvInvertersAcEnergyForwardPerDay
         PvInvertersAcEnergyForwardMonthSoFar
         PvInvertersAcEnergyForwardYearSoFar
         system/0/Relay/0/State	                        {"value": 0}

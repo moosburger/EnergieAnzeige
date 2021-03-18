@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # #################################################################################################
@@ -76,6 +76,7 @@ class KeepAlive(object):
             mqttClient.publish("R/%s/system/0/Serial" % portal_id)
 
             time.sleep(interval)
+            #self.log.info('Alive Ping')
 
 # # Ende Funktion: ' Constructor ' ################################################################
 
