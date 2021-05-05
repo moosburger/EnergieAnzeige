@@ -16,32 +16,45 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if(bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
     ImportError = None
+    import sys
     import threading
     import time
     import datetime
-    import sys
 
 except Exception as e:
     ImportError = e
-
-# #################################################################################################
-# # Python Imports (site-packages)
-# #################################################################################################
 
 # #################################################################################################
 # # private Imports
 # #################################################################################################
 try:
     PrivateImportError = None
+    from GetModbus import ModBusHandler
+
+    sys.path.insert(0, importPath)
     import Error
     import Utils
     import SunRiseSet
-
-    from GetModbus import ModBusHandler
     from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
     from influxHandler import influxIO, _SensorData as SensorData
 
@@ -204,8 +217,8 @@ class CalcPercentageBreakdown():  #object
     # #################################################################################################
         def _prepareData(self, influxHandler, QUERY, Instance, Unit, where, TargetVar, timestamp):
 
-            resultVar, = influxHandler._Query_influxDb([QUERY,], Instance, where)
-            resultVar = self._check_Data_Type(resultVar)
+            tmp = influxHandler._Query_influxDb([QUERY,], Instance, where)
+            resultVar = self._check_Data_Type(tmp[0])
 
             return(SensorData(Instance, Unit, [TargetVar,], [resultVar,], timestamp))
 
@@ -219,8 +232,8 @@ class CalcPercentageBreakdown():  #object
     # #################################################################################################
         def _getVal(self, influxHandler, QUERY, Instance, where):
 
-            resultVar, = influxHandler._Query_influxDb([QUERY,], Instance, where)
-            resultVar = self._check_Data_Type(resultVar)
+            tmp = influxHandler._Query_influxDb([QUERY,], Instance, where)
+            resultVar = self._check_Data_Type(tmp[0])
 
             return resultVar
 
@@ -267,7 +280,7 @@ class CalcPercentageBreakdown():  #object
 
             try:
                 sensor_data = []
-                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
+                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
@@ -286,8 +299,10 @@ class CalcPercentageBreakdown():  #object
                         sensor_data.append(SensorData(PvInv.RegEx, PvInv.Label1, ["AcEnergyForwardDaySoFar",], [0.0,], DaySoFarTimeStamp))
                         sensor_data.append(SensorData(PvInv.RegEx, PvInv.Label2, ["AcEnergyForwardDaySoFar",], [0.0,], DaySoFarTimeStamp))
                         sensor_data.append(SensorData(System.RegEx, System.Label1, ["PvInvertersAcEnergyForwardDaySoFar",], [0.0,], DaySoFarTimeStamp))
-                        self.log.info("_calcDailyEnergySoFar NEW DAY: {}".format(sensor_data))
-                        self._writeEnergyToDb(self.influxHdlrDaily, sensor_data)
+
+                        #self.log.info("_calcDailyEnergySoFar NEW DAY: {}".format(sensor_data))
+                        #self._writeEnergyToDb(self.influxHdlrDaily, sensor_data)
+                        self._writeEnergyToDb(self.influxHdlrLong, sensor_data)
                     self.IsNewDay = True
                     return
 
@@ -299,7 +314,8 @@ class CalcPercentageBreakdown():  #object
                 sensor_data.append(SensorData(System.RegEx, System.Label1, ["PvInvertersAcEnergyForwardDaySoFar",], [PvInvertersAcEnergyForwardDaySoFar,], DaySoFarTimeStamp))
 
                 #self.log.info("_calcDailyEnergySoFar: {}".format(sensor_data))
-                self._writeEnergyToDb(self.influxHdlrDaily, sensor_data)
+                #self._writeEnergyToDb(self.influxHdlrDaily, sensor_data)
+                self._writeEnergyToDb(self.influxHdlrLong, sensor_data)
 
             except Exception as e:
                 #print('_calcDailyEnergySoFar: {}'.format(e))
@@ -324,7 +340,7 @@ class CalcPercentageBreakdown():  #object
                 if (datetime.datetime.day == 2):
                     self.IsInitWritten2 = False
 
-                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
+                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
@@ -428,7 +444,7 @@ class CalcPercentageBreakdown():  #object
                 if (datetime.datetime.day == 2) and (datetime.datetime.month == 1):
                     self.IsInitWritten3 = False
 
-                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
+                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
@@ -525,7 +541,7 @@ class CalcPercentageBreakdown():  #object
 
             try:
                 sensor_data = []
-                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
+                AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m

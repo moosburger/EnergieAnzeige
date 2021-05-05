@@ -21,8 +21,6 @@
 import ctypes
 import sys
 import math
-#reload(sys)
-#sys.setdefaultencoding("utf-8")
 
 # #################################################################################################
 # # Python Imports (site-packages)
@@ -33,7 +31,7 @@ import math
 # #################################################################################################
 try:
     PrivateImport = True
-    import configuration as _conf
+    import locConfiguration as _conf
 except:
     PrivateImport = False
 

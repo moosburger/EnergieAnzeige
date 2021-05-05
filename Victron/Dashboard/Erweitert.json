@@ -16,7 +16,7 @@
   },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
+  "graphTooltip": 2,
   "id": 4,
   "links": [],
   "panels": [
@@ -25,7 +25,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [
             {
               "from": "-100000",
@@ -42,7 +41,6 @@
               "type": 2
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -91,9 +89,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "groupBy": [
@@ -144,12 +143,9 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
           "mappings": [
             {
-              "from": "0.01",
+              "from": "0.1",
               "id": 0,
               "text": "Erzeugung",
               "to": "10000",
@@ -159,12 +155,11 @@
               "from": "0",
               "id": 1,
               "text": "Aus",
-              "to": "0.01",
+              "to": "0.1",
               "type": 2
             }
           ],
           "noValue": "Aus",
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -247,9 +242,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "groupBy": [],
@@ -333,11 +329,13 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
+          "color": {
+            "mode": "thresholds"
+          },
           "decimals": 3,
           "mappings": [],
           "thresholds": {
-            "mode": "absolute",
+            "mode": "percentage",
             "steps": [
               {
                 "color": "green",
@@ -345,7 +343,7 @@
               }
             ]
           },
-          "unit": "watth"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -369,9 +367,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "alias": "GesamtEnergie Piko",
@@ -513,7 +512,7 @@
             },
             {
               "params": [
-                "previous"
+                "none"
               ],
               "type": "fill"
             }
@@ -527,13 +526,13 @@
             [
               {
                 "params": [
-                  "PvInvertersAcEnergyForwardDay"
+                  "PvInvertersAcEnergyForwardDaySoFar"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "max"
+                "type": "first"
               }
             ]
           ],
@@ -548,7 +547,7 @@
       ],
       "timeFrom": "1d",
       "timeShift": null,
-      "title": "Solare Energie",
+      "title": "Solare Energie (kWh)",
       "transparent": true,
       "type": "stat"
     },
@@ -569,9 +568,7 @@
       "datasource": null,
       "decimals": 0,
       "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
+        "defaults": {},
         "overrides": []
       },
       "fontSize": "80%",
@@ -728,7 +725,7 @@
           ]
         }
       ],
-      "timeFrom": "10m",
+      "timeFrom": "1d",
       "timeShift": null,
       "title": "Verbrauch aktuell von",
       "transparent": true,
@@ -750,37 +747,8 @@
       },
       "datasource": null,
       "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": null
-          },
-          "decimals": 2,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Netz"
-            },
-            "properties": [
-              {
-                "id": "noValue",
-                "value": "0"
-              }
-            ]
-          }
-        ]
+        "defaults": {},
+        "overrides": []
       },
       "fontSize": "80%",
       "format": "percent",
@@ -936,7 +904,7 @@
           ]
         }
       ],
-      "timeFrom": "10m",
+      "timeFrom": "1d",
       "timeShift": null,
       "title": "Solarertrag aktuell nach",
       "transparent": true,
@@ -948,9 +916,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
           "mappings": [
             {
               "from": "-100",
@@ -974,7 +939,6 @@
               "type": 2
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1024,9 +988,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "groupBy": [],
@@ -1075,9 +1040,7 @@
       "decimals": 0,
       "description": "negative Werte: -> zum Netz | positive Werte: <- vom Netz",
       "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
+        "defaults": {},
         "overrides": []
       },
       "fontSizes": [
@@ -2478,9 +2441,7 @@
       "decimals": 2,
       "description": "negative Werte: -> entladen | positive Werte: <- laden",
       "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
+        "defaults": {},
         "overrides": []
       },
       "fontSizes": [
@@ -3880,25 +3841,7 @@
       "datasource": null,
       "decimals": null,
       "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": null
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
+        "defaults": {},
         "overrides": []
       },
       "fontSizes": [
@@ -4017,10 +3960,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:223",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:224",
           "name": "range to text",
           "value": 2
         }
@@ -4087,7 +4032,7 @@
           ]
         }
       ],
-      "thresholds": "50,80",
+      "thresholds": "40,80",
       "tickMaps": [],
       "timeFrom": null,
       "timeShift": null,
@@ -5283,6 +5228,7 @@
       ],
       "valueMaps": [
         {
+          "$$hashKey": "object:226",
           "op": "=",
           "text": "N/A",
           "value": "null"
@@ -5298,25 +5244,7 @@
       "datasource": null,
       "decimals": null,
       "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": null
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
+        "defaults": {},
         "overrides": []
       },
       "fontSizes": [
@@ -6715,27 +6643,9 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": null,
-      "decimals": null,
+      "decimals": 2,
       "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": null
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
+        "defaults": {},
         "overrides": []
       },
       "fontSizes": [
@@ -8132,9 +8042,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
           "mappings": [
             {
               "from": "0.1",
@@ -8146,22 +8053,17 @@
             {
               "from": "0",
               "id": 1,
-              "text": "Ok",
+              "text": " ",
               "to": "0.1",
               "type": 2
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "rgba(87, 148, 242, 0.11)",
                 "value": null
-              },
-              {
-                "color": "green",
-                "value": 0
               },
               {
                 "color": "red",
@@ -8181,10 +8083,6 @@
               {
                 "id": "noValue",
                 "value": "0"
-              },
-              {
-                "id": "custom.width",
-                "value": 123
               }
             ]
           },
@@ -8197,10 +8095,6 @@
               {
                 "id": "noValue",
                 "value": "0"
-              },
-              {
-                "id": "custom.width",
-                "value": 124
               }
             ]
           },
@@ -8213,10 +8107,6 @@
               {
                 "id": "noValue",
                 "value": "0"
-              },
-              {
-                "id": "custom.width",
-                "value": 149
               }
             ]
           },
@@ -8241,18 +8131,6 @@
               {
                 "id": "noValue",
                 "value": "0"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 200
               }
             ]
           }
@@ -8286,9 +8164,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "groupBy": [],
@@ -8390,31 +8269,27 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
           "mappings": [
             {
               "from": "0.1",
               "id": 0,
-              "text": "Aktiv",
+              "text": "On",
               "to": "10000",
               "type": 2
             },
             {
               "from": "-1",
               "id": 1,
-              "text": "Inaktiv",
+              "text": " Off",
               "to": "0.1",
               "type": 2
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "#5794F2",
+                "color": "rgba(87, 148, 242, 0.11)",
                 "value": null
               },
               {
@@ -8502,7 +8377,7 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 4,
+        "w": 3,
         "x": 20,
         "y": 5
       },
@@ -8528,9 +8403,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "groupBy": [],
@@ -8673,7 +8549,6 @@
       "datasource": "-- Mixed --",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -8704,7 +8579,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -8720,7 +8595,7 @@
       "targets": [
         {
           "alias": "PIKO",
-          "datasource": "InfluxDB",
+          "datasource": "InfluxDB Daily",
           "groupBy": [
             {
               "params": [
@@ -8738,6 +8613,8 @@
           "measurement": "pvinverter",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "SELECT last(\"AcPower\") FROM \"pvinverter\" WHERE (\"instance\" = 'PIKO') AND $timeFilter GROUP BY time($__interval) fill(previous)",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -8750,7 +8627,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -8764,7 +8641,7 @@
         },
         {
           "alias": "SMA",
-          "datasource": "InfluxDB",
+          "datasource": "InfluxDB Daily",
           "groupBy": [
             {
               "params": [
@@ -8794,7 +8671,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -8808,7 +8685,7 @@
         },
         {
           "alias": "Gesamt",
-          "datasource": "InfluxDB",
+          "datasource": "InfluxDB Daily",
           "groupBy": [
             {
               "params": [
@@ -8838,7 +8715,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -8851,8 +8728,46 @@
           ]
         },
         {
-          "datasource": "Sun and Moon",
+          "datasource": "InfluxDB Daily",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
           "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [],
+          "target": "sun_altitude"
+        },
+        {
+          "datasource": "Sun and Moon",
+          "hide": false,
+          "refId": "E",
           "target": "sun_altitude"
         }
       ],
@@ -8910,9 +8825,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
           "mappings": [],
           "max": 6000,
           "min": 0,
@@ -8920,14 +8832,35 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-green",
                 "value": null
               }
             ]
           },
           "unit": "watt"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "BatterieTemp"
+            },
+            "properties": [
+              {
+                "id": "max",
+                "value": 50
+              },
+              {
+                "id": "min",
+                "value": -20
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 5,
@@ -8946,9 +8879,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "alias": "PIKO",
@@ -8961,7 +8895,7 @@
             },
             {
               "params": [
-                "previous"
+                "null"
               ],
               "type": "fill"
             }
@@ -9004,7 +8938,7 @@
             },
             {
               "params": [
-                "previous"
+                "null"
               ],
               "type": "fill"
             }
@@ -9047,35 +8981,51 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
-          "decimals": 1,
+          "decimals": 0,
           "mappings": [],
-          "max": 120,
-          "min": 0,
+          "max": 80,
+          "min": -20,
           "thresholds": {
             "mode": "percentage",
             "steps": [
               {
-                "color": "green",
+                "color": "dark-green",
                 "value": null
               },
               {
-                "color": "#EAB839",
-                "value": 60
+                "color": "dark-yellow",
+                "value": 75
               },
               {
-                "color": "red",
-                "value": 80
+                "color": "dark-red",
+                "value": 95
               }
             ]
           },
           "unit": "celsius"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Batterie"
+            },
+            "properties": [
+              {
+                "id": "max",
+                "value": 50
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 5,
-        "w": 5,
+        "w": 8,
         "x": 16,
         "y": 11
       },
@@ -9090,12 +9040,57 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "text": {}
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
-          "alias": "Cpu",
+          "alias": "Batterie",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "vebus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Dc0Temperature"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "MultiPlus-II"
+            }
+          ]
+        },
+        {
+          "alias": "Raspi Cpu",
           "groupBy": [
             {
               "params": [
@@ -9125,7 +9120,7 @@
               },
               {
                 "params": [],
-                "type": "last"
+                "type": "first"
               }
             ]
           ],
@@ -9138,7 +9133,7 @@
           ]
         },
         {
-          "alias": "Gehäuse",
+          "alias": "Raspi Gehäuse",
           "groupBy": [
             {
               "params": [
@@ -9168,7 +9163,7 @@
               },
               {
                 "params": [],
-                "type": "last"
+                "type": "first"
               }
             ]
           ],
@@ -9181,21 +9176,240 @@
           ]
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "4w",
       "timeShift": null,
-      "title": "Raspi Cpu Temperatur",
+      "title": "Temperaturen",
       "transparent": true,
       "type": "gauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 11,
+        "x": 10,
+        "y": 16
+      },
+      "hiddenSeries": false,
+      "id": 14,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.5.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "Leistung",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "DcBatteryPower"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            }
+          ]
+        },
+        {
+          "alias": "MultiPlus Dc",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": true,
+          "measurement": "vebus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Dc0Power"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "MultiPlus-II"
+            }
+          ]
+        },
+        {
+          "alias": "MultiPlus Ac",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": true,
+          "measurement": "vebus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcActiveInL1P"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "MultiPlus-II"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Batterie Leistung",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1612",
+          "format": "watt",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1613",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "datasource": null,
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": "left",
-            "displayMode": "auto"
-          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -9211,38 +9425,13 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 0.001
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Boot Time"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 1500
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 2,
         "w": 3,
         "x": 21,
-        "y": 11
+        "y": 16
       },
       "hideTimeOverride": true,
       "id": 54,
@@ -9258,9 +9447,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "groupBy": [],
@@ -9308,7 +9498,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -9330,7 +9519,7 @@
         "h": 8,
         "w": 3,
         "x": 21,
-        "y": 13
+        "y": 18
       },
       "hideTimeOverride": true,
       "id": 18,
@@ -9344,9 +9533,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "text": {}
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "groupBy": [],
@@ -9437,7 +9627,7 @@
           ]
         }
       ],
-      "timeFrom": "1h",
+      "timeFrom": "4w",
       "timeShift": null,
       "title": "Cpu Last %",
       "transparent": true,
@@ -9451,229 +9641,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 11,
-        "x": 10,
-        "y": 16
-      },
-      "hiddenSeries": false,
-      "id": 14,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.2.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "Gateway Dc",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "system",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "DcBatteryPower"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Gateway"
-            }
-          ]
-        },
-        {
-          "alias": "MultiPlus Dc",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "vebus",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Dc0Power"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "MultiPlus-II"
-            }
-          ]
-        },
-        {
-          "alias": "MultiPlus Ac",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "vebus",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "AcActiveInL1P"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "MultiPlus-II"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Batterie Leistung",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1612",
-          "format": "watt",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1613",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -9704,7 +9671,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -9744,7 +9711,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -9787,7 +9754,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -9830,7 +9797,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -9873,7 +9840,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -9932,12 +9899,292 @@
       }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 11,
+        "x": 10,
+        "y": 24
+      },
+      "hiddenSeries": false,
+      "id": 22,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.5.4",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "$$hashKey": "object:273",
+          "alias": "MultiPlus-Strom",
+          "yaxis": 2
+        },
+        {
+          "$$hashKey": "object:274",
+          "alias": "Strom",
+          "yaxis": 2
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "MultiPlus-Spannung",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": true,
+          "measurement": "vebus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Dc0Voltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "MultiPlus-II"
+            }
+          ]
+        },
+        {
+          "alias": "MultiPlus-Strom",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": true,
+          "measurement": "vebus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Dc0Current"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "MultiPlus-II"
+            }
+          ]
+        },
+        {
+          "alias": "Spannung",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "DcBatteryVoltage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            }
+          ]
+        },
+        {
+          "alias": "Strom",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "system",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "DcBatteryCurrent"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Gateway"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Batterie Spannung und Strom",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": true,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:1812",
+          "decimals": 1,
+          "format": "volt",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:1813",
+          "decimals": 1,
+          "format": "amp",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
           "mappings": [],
           "min": 0,
           "thresholds": {
@@ -9956,7 +10203,7 @@
         "h": 5,
         "w": 3,
         "x": 21,
-        "y": 21
+        "y": 26
       },
       "hideTimeOverride": true,
       "id": 26,
@@ -9970,9 +10217,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": false
+        "showUnfilled": false,
+        "text": {}
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "alias": "total",
@@ -10128,7 +10376,7 @@
           ]
         }
       ],
-      "timeFrom": "1d",
+      "timeFrom": "4w",
       "timeShift": null,
       "title": "RAM in GB",
       "transparent": true,
@@ -10142,490 +10390,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 11,
-        "x": 10,
-        "y": 24
-      },
-      "hiddenSeries": false,
-      "id": 22,
-      "legend": {
-        "alignAsTable": false,
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.2.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "MultiPlus-Strom",
-          "yaxis": 2
-        },
-        {
-          "alias": "System-Strom",
-          "yaxis": 2
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "MultiPlus-Spannung",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "vebus",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Dc0Voltage"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "MultiPlus-II"
-            }
-          ]
-        },
-        {
-          "alias": "MultiPlus-Strom",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "vebus",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Dc0Current"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "MultiPlus-II"
-            }
-          ]
-        },
-        {
-          "alias": "System-Spannung",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": true,
-          "measurement": "system",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "DcBatteryVoltage"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Gateway"
-            }
-          ]
-        },
-        {
-          "alias": "System-Strom",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "previous"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": true,
-          "measurement": "system",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "DcBatteryCurrent"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Gateway"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Batterie Spannung und Strom",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1812",
-          "decimals": 1,
-          "format": "volt",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1813",
-          "decimals": 1,
-          "format": "amp",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": null
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 21,
-        "y": 26
-      },
-      "hideTimeOverride": true,
-      "id": 24,
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true
-      },
-      "pluginVersion": "7.2.2",
-      "targets": [
-        {
-          "alias": "total",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Total"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/root"
-            }
-          ]
-        },
-        {
-          "alias": "belegt",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Used"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/root"
-            }
-          ]
-        },
-        {
-          "alias": "frei",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Free"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/root"
-            }
-          ]
-        }
-      ],
-      "timeFrom": "1d",
-      "timeShift": null,
-      "title": "SSD in GB",
-      "transparent": true,
-      "type": "bargauge"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -10656,7 +10420,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -10696,7 +10460,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -10739,7 +10503,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -10782,7 +10546,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -10825,7 +10589,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -10886,9 +10650,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "align": null
-          },
           "mappings": [],
           "min": 0,
           "thresholds": {
@@ -10910,7 +10671,7 @@
         "y": 31
       },
       "hideTimeOverride": true,
-      "id": 25,
+      "id": 24,
       "options": {
         "displayMode": "gradient",
         "orientation": "auto",
@@ -10921,9 +10682,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "text": {}
       },
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "targets": [
         {
           "alias": "total",
@@ -10962,7 +10724,7 @@
               },
               {
                 "params": [
-                  " / 1024"
+                  " / 1048576"
                 ],
                 "type": "math"
               }
@@ -10972,7 +10734,7 @@
             {
               "key": "instance",
               "operator": "=",
-              "value": "/dev/mmcblk0p1"
+              "value": "/dev/root"
             }
           ]
         },
@@ -11013,7 +10775,7 @@
               },
               {
                 "params": [
-                  " / 1024"
+                  " / 1048576"
                 ],
                 "type": "math"
               }
@@ -11023,7 +10785,7 @@
             {
               "key": "instance",
               "operator": "=",
-              "value": "/dev/mmcblk0p1"
+              "value": "/dev/root"
             }
           ]
         },
@@ -11064,7 +10826,7 @@
               },
               {
                 "params": [
-                  " / 1024"
+                  " / 1048576"
                 ],
                 "type": "math"
               }
@@ -11074,14 +10836,14 @@
             {
               "key": "instance",
               "operator": "=",
-              "value": "/dev/mmcblk0p1"
+              "value": "/dev/root"
             }
           ]
         }
       ],
-      "timeFrom": "1d",
+      "timeFrom": "4w",
       "timeShift": null,
-      "title": "SD in MB",
+      "title": "SSD in GB",
       "transparent": true,
       "type": "bargauge"
     },
@@ -11093,7 +10855,6 @@
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "links": []
         },
         "overrides": []
@@ -11124,7 +10885,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.2.2",
+      "pluginVersion": "7.5.4",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -11139,7 +10900,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "System",
+          "alias": "System-SoC",
           "groupBy": [
             {
               "params": [
@@ -11169,7 +10930,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -11197,6 +10958,7 @@
               "type": "fill"
             }
           ],
+          "hide": true,
           "measurement": "vebus",
           "orderByTime": "ASC",
           "policy": "default",
@@ -11225,7 +10987,7 @@
           ]
         },
         {
-          "alias": "BMV-700",
+          "alias": "BMV-700-SoC",
           "groupBy": [
             {
               "params": [
@@ -11255,7 +11017,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -11298,7 +11060,7 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -11398,10 +11160,211 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 36
+      },
+      "hideTimeOverride": true,
+      "id": 25,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "pluginVersion": "7.5.4",
+      "targets": [
+        {
+          "alias": "total",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Total"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1024"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/mmcblk0p1"
+            }
+          ]
+        },
+        {
+          "alias": "belegt",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Used"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1024"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/mmcblk0p1"
+            }
+          ]
+        },
+        {
+          "alias": "frei",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Free"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1024"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/mmcblk0p1"
+            }
+          ]
+        }
+      ],
+      "timeFrom": "4w",
+      "timeShift": null,
+      "title": "SD in MB",
+      "transparent": true,
+      "type": "bargauge"
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 26,
+  "schemaVersion": 27,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -11427,5 +11390,5 @@
   "timezone": "Europe/Berlin",
   "title": "Erweitert",
   "uid": "Gw2MqQkRk",
-  "version": 288
+  "version": 318
 }

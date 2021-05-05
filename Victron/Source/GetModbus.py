@@ -16,12 +16,28 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if (bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
     ImportError = None
-    import ctypes
     import sys
+    import ctypes
     import os
     from datetime import datetime
     from pymodbus.client.sync import ModbusTcpClient as ModbusClient
@@ -35,6 +51,8 @@ except Exception as e:
 # #################################################################################################
 try:
     PrivateImportError = None
+
+    sys.path.insert(0, importPath)
     from configuration import Global as _conf
 
 except Exception as e:
@@ -155,14 +173,14 @@ class ModBusHandler():
                 if (self.SunSpecUnit == Unit):
                     adrOfs = 1
 
-                PikoProfil = (
+                SmaProfil = (
                                 ('    Tagesertrag',30535, 2,0),
                                 ('   Gesamtertrag',30529, 2,0)
                             )
 
-                PikoProfilData = {}
+                SmaProfilData = {}
 
-                for dataSet in PikoProfil:
+                for dataSet in SmaProfil:
                     des = dataSet[0]
                     adr = dataSet[1] - adrOfs
                     leng = dataSet[2]
@@ -223,7 +241,7 @@ class ModBusHandler():
                             if (Translate.u16 == 0xFFFF) or (Translate.u16 == 0x8000):
                                 val = 0
 
-                        PikoProfilData[str(adr + adrOfs)] = val
+                        SmaProfilData[str(adr + adrOfs)] = val
 
                 self.modbusSma.close()
 
@@ -235,7 +253,7 @@ class ModBusHandler():
                 for info in sys.exc_info():
                     self.log.error("{}".format(info))
 
-            return PikoProfilData
+            return SmaProfilData
 
     # # Ende Funktion: ' FetchSmaData(' ###################################################################
 

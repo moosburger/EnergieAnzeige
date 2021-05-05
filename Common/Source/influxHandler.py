@@ -16,6 +16,22 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = True
+bDebugOnLinux = True
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if (bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
@@ -42,6 +58,8 @@ _SensorData = NamedTuple('SensorData', 'device instance type value timestamp')
 # #################################################################################################
 try:
     PrivateImportError = None
+
+    sys.path.insert(0, importPath)
     import Error
     import Utils
     from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
@@ -218,11 +236,11 @@ class influxIO(object):
 
             json.json_body = [
                 {
-                    "measurement": sensor_data.device,
+                    "measurement": sensor_data.device,          # pvinverter
                     "tags": {
-                                "instance": sensor_data.instance
+                                "instance": sensor_data.instance # Piko, SMA
                     },
-                    "fields": {
+                    "fields": {                                 # AcEnergyForwardDaySoFar: 1000.0
                     },
                     "time": sensor_data.timestamp
                 }

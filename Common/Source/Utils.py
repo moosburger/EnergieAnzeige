@@ -137,6 +137,30 @@ def GetEnvironVars(EnvironVar, env):
 # # Ende Funktion: ' GetEnvironVars ' ############################################################################
 
 # #################################################################################################
+# #  Funktion: '_check_Data_Type '
+## 	\details    -
+#   \param[in] 	myVal
+#   \return 	myVal
+# #################################################################################################
+def _check_Data_Type(myVal):
+
+    #float, int, str, list, dict, tuple
+    if (isinstance(myVal, basestring)):
+        pass
+    elif (isinstance(myVal, int)):
+        myVal = float(myVal)
+    elif (isinstance(myVal, long)):
+        myVal = float(myVal)
+    elif (isinstance(myVal, float)):
+        myVal = float(myVal)
+    else:
+        myVal = str(myVal)
+
+    return myVal
+
+# # Ende Funktion: _check_Data_Type ############################################################
+
+# #################################################################################################
 # # Anfang Funktion: ' ErsetzeUmlaute '
 ## \details Ersetzt  die Umlaute
 #   \param[in]  Stream

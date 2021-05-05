@@ -16,19 +16,34 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
+    import sys
     import time
     import threading
+
+    # Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+    if (bDebug == False):
+        importPath = '/mnt/dietpi_userdata/Common'
+
+    elif(bDebugOnLinux == True):
+        importPath = '/home/users/Grafana/Common'
+
+    else:
+        importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+    sys.path.insert(0, importPath)
     from configuration import Global as _conf
 
 except:
     raise
-
-# #################################################################################################
-# # Python Imports (site-packages)
-# #################################################################################################
 
 # #################################################################################################
 # # private Imports

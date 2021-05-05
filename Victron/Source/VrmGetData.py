@@ -23,32 +23,40 @@
 #########
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if(bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
     PublicImport = True
-    from importlib import reload
     import sys
+    from logging.config import fileConfig
+    from importlib import reload
     import os
     import json
     import ssl
     import logging
-    from logging.config import fileConfig
     from datetime import datetime
     import time
     import paho.mqtt.client as mqtt
-    from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
 
 except ImportError as e:
     PublicImport = False
     ErrorMsg = e
-
-#reload(sys)
-#sys.setdefaultencoding("utf-8")
-
-# #################################################################################################
-# # Python Imports (site-packages)
-# #################################################################################################
 
 # #################################################################################################
 # # private Imports
@@ -56,11 +64,14 @@ except ImportError as e:
 try:
     PrivateImport = True
     from VrmKeepAlive import KeepAlive
+    from Host import Raspi_CallBack
+    from CalcPercentage import CalcPercentageBreakdown
+
+    sys.path.insert(0, importPath)
+    from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
+    from influxHandler import influxIO, _SensorData as SensorData
     import Error
     import Utils
-    from Host import Raspi_CallBack
-    from influxHandler import influxIO, _SensorData as SensorData
-    from CalcPercentage import CalcPercentageBreakdown
 
 except ImportError as e:
     PrivateImport = False
@@ -237,6 +248,7 @@ def on_log(client, userdata, level, buf):
 def on_Raspi(obj, Raspi):
 
     timestamp = datetime.utcnow()
+    timestamp = _conf.RASPITIMESTAMP.format(timestamp.year, timestamp.month)
     retVal = True
 
     _cpuLabel = 'Cpu'

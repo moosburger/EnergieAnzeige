@@ -24,13 +24,8 @@ from pymodbus.register_read_message import ReadHoldingRegistersResponse
 import ctypes
 import sys
 import os
-import configuration as _conf
+import locConfiguration as _conf
 from datetime import datetime
-
-# ------------------------------------------------------------------------#
-# Define UNIT ID
-# ------------------------------------------------------------------------#
-UNIT = 126  # default according to the manual, see below
 
 # ------------------------------------------------------------------------#
 # Define client
@@ -38,7 +33,6 @@ UNIT = 126  # default according to the manual, see below
 #SMA
 modbus = ModbusClient('192.168.2.43' , port=_conf.MODBUS_PORT)
 modbus.connect()
-
 
 # #################################################################################################
 # These classes/structures/unions, allow easy conversion between
@@ -147,47 +141,58 @@ class TotalSmaEnergy():
 # #################################################################################################
     def FetchSmaTotal(self, WriteOut):
 
+        SunSpecUnit = 126
+        SmaUnit = 3
+        SmaProfil = ()
+
         try:
             if (WriteOut == False):
-                return
-
-            sunSpec = (
-                        ('   Seriennummer',40053,16,0),
-                        ('  Softwarepaket',40045, 8,0),
-                        ('    Geraetetyp1',40240, 1,0),
-                        ('    Geraetetyp2',40037, 8,0),
-                        ('  Gesamtertrag1',40303, 4,0),
-                        ('  Gesamtertrag2',40210, 2,40212),
-                        ('       Leistung',40200, 1,40201),
-                        ('   Ac1 Spannung',40196, 1,40199),
-                        ('   Ac2 Spannung',40197, 1,40199),
-                        ('   Ac3 Spannung',40198, 1,40199),
-                        ('      Ac1 Strom',40189, 1,40192),
-                        ('      Ac2 Strom',40190, 1,40192),
-                        ('      Ac3 Strom',40191, 1,40192),
-                        ('Innentemperatur',40219, 1,0),
-                        ('   Dc1 Spannung',40642, 1,40625),
-                        ('   Dc2 Spannung',40662, 1,40625),
-                        ('      Dc1 Strom',40641, 1,40624),
-                        ('      Dc2 Strom',40661, 1,40624),
-                        ('   Dc1 Leistung',40643, 1,40626),
-                        ('   Dc2 Leistung',40663, 1,40626),
-                        (' Betriebsstatus',40224, 1,0),
-                        (' Ereignisnummer',40226, 2,0),
-                        ('    MAC-Adresse',40076, 4,0),
-                        ('     IP-Adresse',40097, 8,0,)
-                      )
+                SmaProfil = (('    Tagesertrag',30535, 2,0, SmaUnit))
+            else:
+                SmaProfil = (
+                            ('   Seriennummer',40053,16,0, SunSpecUnit),
+                            ('  Softwarepaket',40045, 8,0, SunSpecUnit),
+                            ('    Geraetetyp1',40240, 1,0, SunSpecUnit),
+                            ('    Geraetetyp2',40037, 8,0, SunSpecUnit),
+                            ('  Gesamtertrag1',40303, 4,0, SunSpecUnit),
+                            ('  Gesamtertrag2',40210, 2,40212, SunSpecUnit),
+                            ('       Leistung',40200, 1,40201, SunSpecUnit),
+                            ('   Ac1 Spannung',40196, 1,40199, SunSpecUnit),
+                            ('   Ac2 Spannung',40197, 1,40199, SunSpecUnit),
+                            ('   Ac3 Spannung',40198, 1,40199, SunSpecUnit),
+                            ('      Ac1 Strom',40189, 1,40192, SunSpecUnit),
+                            ('      Ac2 Strom',40190, 1,40192, SunSpecUnit),
+                            ('      Ac3 Strom',40191, 1,40192, SunSpecUnit),
+                            ('Innentemperatur',40219, 1,0, SunSpecUnit),
+                            ('   Dc1 Spannung',40642, 1,40625, SunSpecUnit),
+                            ('   Dc2 Spannung',40662, 1,40625, SunSpecUnit),
+                            ('      Dc1 Strom',40641, 1,40624, SunSpecUnit),
+                            ('      Dc2 Strom',40661, 1,40624, SunSpecUnit),
+                            ('   Dc1 Leistung',40643, 1,40626, SunSpecUnit),
+                            ('   Dc2 Leistung',40663, 1,40626, SunSpecUnit),
+                            (' Betriebsstatus',40224, 1,0, SunSpecUnit),
+                            (' Ereignisnummer',40226, 2,0, SunSpecUnit),
+                            ('    MAC-Adresse',40076, 4,0, SunSpecUnit),
+                            ('     IP-Adresse',40097, 8,0, SunSpecUnit),
+                            #('  Gesamtertrag3',30529, 2,0, SmaUnit),
+                            ('    Tagesertrag',30535, 2,0, SmaUnit)
+                            )
 
             sunSpecData = {}
 
             self.Data['Now'] = datetime.now()
 
-            for dataSet in sunSpec:
-                des = dataSet[0]
-                adr = dataSet[1] - 1
-                leng = dataSet[2]
-                skr = dataSet[3] - 1
+            for dataSet in SmaProfil:
+                UNIT = dataSet[4]
 
+                adrOfs = 0
+                if (SunSpecUnit == UNIT):
+                    adrOfs = 1
+
+                des = dataSet[0]
+                adr = dataSet[1] - adrOfs
+                leng = dataSet[2]
+                skr = dataSet[3] - adrOfs
                 Translate = 0
                 TranslateScale = 0
 
@@ -243,9 +248,9 @@ class TotalSmaEnergy():
                         if (Translate.u16 == 0xFFFF) or (Translate.u16 == 0x8000):
                             val = 0
 
-                    sunSpecData[str(adr + 1)] = val
+                    sunSpecData[str(adr + adrOfs)] = val
 
-                    if ((adr + 1) == 40303):
+                    if ((adr + 1) == 40303): #      Gesamtertrag1
                         timestamp = "{}.{}.{} {}:{} {}".format(self.Data['Now'].strftime("%d"), self.Data['Now'].strftime("%m"), self.Data['Now'].strftime("%Y"), self.Data['Now'].strftime("%H"), self.Data['Now'].strftime("%M"), self.Data['Now'].strftime("%S"))
                         datStream = "TimeStamp: {}    Total energy: {} Wh\n".format(timestamp, val)
 
@@ -258,61 +263,64 @@ class TotalSmaEnergy():
                             os.chmod(strFolder, 0o777)
 
                         self._write_File(fileName , datStream, "a")
-
-
-
-
             modbus.close()
 
-            self.Data['RelVer'] =    sunSpecData['40045'].replace('\00', '/00')
-            self.Data['host'] =      sunSpecData['40097']
-            self.Data['Status'] =    sunSpecData['40224']
-            #self.Data['StatusTxt'] = sunSpecData['aaa']
-            self.Data['InvName'] =   'PowerDorf'
-            self.Data['InvSN'] =     sunSpecData['40053']
-            self.Data['InvModel'] =  'Sunnboy 3.0'
-            self.Data['InvString'] = '2'
-            self.Data['InvPhase'] =  '1'
-            self.Data['TotalWh'] =   sunSpecData['40303']
+            # Sma löscht die Tagesleistung um Mitternacht...
+            if (sunSpecData['30535'] > 0):
+                self.Data['TodayWh'] = sunSpecData['30535']
 
-            self.Data['CC_P'] =      sunSpecData['40643'] + sunSpecData['40663']
-            self.Data['CA_P'] =      sunSpecData['40200']
+            if (WriteOut == False):
+                self.Data['RelVer'] =    sunSpecData['40045'].replace('\00', '/00')
+                self.Data['host'] =      sunSpecData['40097']
+                self.Data['Status'] =    sunSpecData['40224']
+                #self.Data['StatusTxt'] = sunSpecData['aaa']
+                self.Data['InvName'] =   'PowerDorf'
+                self.Data['InvSN'] =     sunSpecData['40053']
+                self.Data['InvModel'] =  'Sunnboy 3.0'
+                self.Data['InvString'] = '2'
+                self.Data['InvPhase'] =  '1'
+                self.Data['TotalWh'] =   sunSpecData['40303']
+                #self.Data['TotalWh2'] =   sunSpecData['30529']
 
-            self.Data['CC1_U'] =   sunSpecData['40642']
-            self.Data['CC1_I'] =   sunSpecData['40641']
-            self.Data['CC1_P'] =   sunSpecData['40643']
-            self.Data['CC1_T'] =   sunSpecData['40219']
+                self.Data['CC_P'] =    sunSpecData['40643'] + sunSpecData['40663']
+                self.Data['CA_P'] =    sunSpecData['40200']
 
-            self.Data['CC2_U'] =   sunSpecData['40662']
-            self.Data['CC2_I'] =   sunSpecData['40661']
-            self.Data['CC2_P'] =   sunSpecData['40663']
-            self.Data['CC2_T'] =   sunSpecData['40219']
+                self.Data['CC1_U'] =   sunSpecData['40642']
+                self.Data['CC1_I'] =   sunSpecData['40641']
+                self.Data['CC1_P'] =   sunSpecData['40643']
+                self.Data['CC1_T'] =   sunSpecData['40219']
 
-            self.Data['CA1_U'] =   sunSpecData['40196']
-            self.Data['CA1_I'] =   sunSpecData['40189']
-            self.Data['CA1_P'] =   sunSpecData['40200']
-            self.Data['CA1_T'] =   sunSpecData['40219']
+                self.Data['CC2_U'] =   sunSpecData['40662']
+                self.Data['CC2_I'] =   sunSpecData['40661']
+                self.Data['CC2_P'] =   sunSpecData['40663']
+                self.Data['CC2_T'] =   sunSpecData['40219']
 
-            self.log.info("")
-            self.log.info("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(self.Data['Now']))
-            self.log.info("Comm software   : SMA v%s" % (self.Data['RelVer']))
-            self.log.info("Comm host       : %s" % self.Data['host'])
-            self.log.info("Inverter Status : %d" % self.Data['Status'])
-            self.log.info("Inverter Name   : %s" % self.Data['InvName'])
-            self.log.info("Inverter SN     : %s" % self.Data['InvSN'])
-            self.log.info("Inverter Model  : %s" % self.Data['InvModel'])
-            self.log.info("Inverter String : %s" % self.Data['InvString'])
-            self.log.info("Inverter Phase  : %s" % self.Data['InvPhase'])
-            self.log.info("Total energy    : %d Wh" % self.Data['TotalWh'])
-            self.log.info("DC Power        : %5d W\tAC Power : %5d W" % (self.Data['CC_P'], self.Data['CA_P']))
-            self.log.info('DC String 1     : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (self.Data['CC1_U'], self.Data['CC1_I'], self.Data['CC1_P'], self.Data['CC1_T']))
-            self.log.info('DC String 2     : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (self.Data['CC2_U'], self.Data['CC2_I'], self.Data['CC2_P'], self.Data['CC2_T']))
-            self.log.info('AC Phase 1      : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (self.Data['CA1_U'], self.Data['CA1_I'], self.Data['CA1_P'], self.Data['CA1_T']))
+                self.Data['CA1_U'] =   sunSpecData['40196']
+                self.Data['CA1_I'] =   sunSpecData['40189']
+                self.Data['CA1_P'] =   sunSpecData['40200']
+                self.Data['CA1_T'] =   sunSpecData['40219']
 
+                self.log.info("")
+                self.log.info("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(self.Data['Now']))
+                self.log.info("Comm software   : SMA v%s" % (self.Data['RelVer']))
+                self.log.info("Comm host       : %s" % self.Data['host'])
+                self.log.info("Inverter Status : %d" % self.Data['Status'])
+                self.log.info("Inverter Name   : %s" % self.Data['InvName'])
+                self.log.info("Inverter SN     : %s" % self.Data['InvSN'])
+                self.log.info("Inverter Model  : %s" % self.Data['InvModel'])
+                self.log.info("Inverter String : %s" % self.Data['InvString'])
+                self.log.info("Inverter Phase  : %s" % self.Data['InvPhase'])
+                self.log.info("Total energy    : %d Wh" % self.Data['TotalWh'])
+                #self.log.info("Total energy2   : %d Wh" % self.Data['TotalWh2'])
+                self.log.info("Today energy    : %d Wh" % self.Data['TodayWh'])
+                self.log.info("DC Power        : %5d W\tAC Power : %5d W" % (self.Data['CC_P'], self.Data['CA_P']))
+                self.log.info('DC String 1     : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (self.Data['CC1_U'], self.Data['CC1_I'], self.Data['CC1_P'], self.Data['CC1_T']))
+                self.log.info('DC String 2     : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (self.Data['CC2_U'], self.Data['CC2_I'], self.Data['CC2_P'], self.Data['CC2_T']))
+                self.log.info('AC Phase 1      : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (self.Data['CA1_U'], self.Data['CA1_I'], self.Data['CA1_P'], self.Data['CA1_T']))
 
         except:
             for info in sys.exc_info():
-                log.error("Fehler: {}".format(info))
+                self.log.error("Fehler: {}".format(info))
                 print("Fehler: {}".format(info))
 
 

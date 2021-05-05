@@ -66,6 +66,15 @@ class Global():
 # #################################################################################################
 # # Query auf Influx für zsätzliche Infos aus Berechnungen
 # #################################################################################################
+    DAYSOFARTIMESTAMP    = "'{}-{:02}-{:02}T01:00:00.0Z'"
+    MONTHSOFARTIMESTAMP  = "'{}-{:02}-01T01:00:00.0Z'"
+    YEARSOFARTIMESTAMP   = "'{}-01-01T01:00:00.0Z'"
+
+    MONTHTIMESTAMP       = "'{}-{:02}-01T00:30:00.0Z'"
+    YEARTIMESTAMP        = "'{}-01-01T00:30:00.0Z'"
+
+    RASPITIMESTAMP       = "'{}-{}-01T00:45:00.0Z'"
+
     #PIKO = "SELECT last(AcPower) FROM pvinverter where instance='PIKO'"
     #PIKO_VL1 = "SELECT last(AcL1Voltage) FROM pvinverter where instance='PIKO'"
     #PIKO_VL2 = "SELECT last(AcL2Voltage) FROM pvinverter where instance='PIKO'"

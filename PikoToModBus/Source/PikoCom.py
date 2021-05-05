@@ -43,16 +43,12 @@
 # #################################################################################################
 import sys
 import socket
-#import urllib2
 import csv
 import os
 
 from optparse import OptionParser, OptionGroup
 from datetime import datetime, timedelta
-import configuration as _conf
-
-#reload(sys)
-#sys.setdefaultencoding("utf-8")
+import locConfiguration as _conf
 
 # #################################################################################################
 # # Python Imports (site-packages)

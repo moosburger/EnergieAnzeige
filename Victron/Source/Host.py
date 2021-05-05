@@ -16,10 +16,27 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if (bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 try:
     ImportError = None
+    import sys
     import threading
     import time
     import os
@@ -45,6 +62,8 @@ CpuInfo = NamedTuple('CpuInfo', 'physical total max min current usage temp DStem
 # #################################################################################################
 try:
     PrivateImportError = None
+
+    sys.path.insert(0, importPath)
     import Error
     from configuration import Global as _conf
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # #################################################################################################
@@ -19,8 +19,12 @@
 # #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-import math
-import time
+try:
+    import math
+    import time
+
+except:
+    raise
 
 # #################################################################################################
 # # UmgebungsVariablen
@@ -157,20 +161,26 @@ def Sonnenauf_untergang (JD, Zeitzone):
     return AM, UM
 
 # #################################################################################################
-# #  Funktion: ' _Conf_Two_Register '
+# #  Funktion: ' get_Info '
 ## \details        -
 #   \param[in]     -
 #   \param[in]     -
 #   \return          -
 # #################################################################################################
-def get_Info ():
+def get_Info (lt_info):
 
-    lt = time.localtime() # Aktuelle, lokale Zeit als Tupel
-    # Entpacken des Tupels
-    lt_jahr, lt_monat, lt_tag = lt[0:3]        # Datum
-    lt_h, lt_m, lt_s = lt[3:6]
-    lt_dst = lt[8]                             # Sommerzeit
+    if len(lt_info) == 0:
+        lt = time.localtime() # Aktuelle, lokale Zeit als Tupel
+        # Entpacken des Tupels
+        lt_jahr, lt_monat, lt_tag = lt[0:3]        # Datum
+        lt_h, lt_m, lt_s = lt[3:6]
+        lt_dst = lt[8]                             # Sommerzeit
 
+    else:
+        lt_jahr, lt_monat, lt_tag, lt_h, lt_m, lt_s = lt_info  # Datum
+        t = (lt_jahr, lt_monat, lt_tag, lt_h, lt_m, lt_s, 0, 0, 0)
+        d = time.mktime(t)
+        lt_dst =time.localtime(d).tm_isdst
 
     #print("Heute ist der {0:02d}.{1:02d}.{2:4d}".format(lt_tag, lt_monat, lt_jahr))
     #if lt_dst == 1:
@@ -179,6 +189,8 @@ def get_Info ():
     #    print("Winterzeit")
     #else:
     #    print("Keine Sommerzeitinformation vorhanden")
+
+    #print('TimeStamp: {:02}.{:02}.{}'.format(lt_tag, lt_monat, lt_jahr))
 
     AM, UM = Sonnenauf_untergang (JulianischesDatum(lt_jahr, lt_monat, lt_tag, 12, 0, 0), lt_dst + 1)
 

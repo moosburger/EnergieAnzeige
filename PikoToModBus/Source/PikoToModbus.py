@@ -16,11 +16,29 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if(bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-import ctypes
 import sys
+import ctypes
 import time
+import logging
+from logging.config import fileConfig
 
 # --------------------------------------------------------------------------- #
 # import the modbus libraries we need
@@ -35,30 +53,22 @@ from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
 # --------------------------------------------------------------------------- #
 from twisted.internet.task import LoopingCall
 # --------------------------------------------------------------------------- #
-# import the logging libraries we need
-# --------------------------------------------------------------------------- #
-import logging
-from logging.config import fileConfig
-
-#reload(sys)
-#sys.setdefaultencoding("utf-8")
-
-# #################################################################################################
-# # Python Imports (site-packages)
-# #################################################################################################
 
 # #################################################################################################
 # # private Imports
 # #################################################################################################
-#try:
-PrivateImport = True
-import configuration as _conf
-from PikoCom import PikoWebRead
-from PreparePikoData import (PrepareData)
-from GetSmaTotal import TotalSmaEnergy
-import SunRiseSet
-#except:
-PrivateImport = False
+try:
+    PrivateImport = True
+    import locConfiguration as _conf
+    from PikoCom import PikoWebRead
+    from PreparePikoData import (PrepareData)
+    from GetSmaTotal import TotalSmaEnergy
+
+    # Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+    sys.path.insert(0, importPath)
+    import SunRiseSet
+except:
+    PrivateImport = False
 
 # #################################################################################################
 # # UmgebungsVariablen / Globals
@@ -76,6 +86,7 @@ log = logging.getLogger('PikoToModbus')
 # #################################################################################################
 _FirstRun = True
 _FirstDayRun = True
+_LastUpdateForDay = True
 
 # #################################################################################################
 # #  Funktion: ' _Fetch_Piko_Data '
@@ -97,9 +108,10 @@ def _Fetch_Piko_Data(a):
         Data = a[3]
         global _FirstRun
         global _FirstDayRun
+        global _LastUpdateForDay
 
         # Tagsueber oder nachts
-        AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info()
+        AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
         log.debug("\tTimeStamp {0:02d}.{1:02d}.{2:4d} {3:02d}:{4:02d}:{5:02d}".format(lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s))
 
         sunRise = AMh  * 60 + AMm
@@ -108,6 +120,10 @@ def _Fetch_Piko_Data(a):
         #print sunRise
         #print locNow
         #print sunSet
+
+        if ((locNow > sunSet) and (_LastUpdateForDay == True) and (_FirstRun == False)):
+            Sma.FetchSmaTotal(False)
+            _LastUpdateForDay = False
 
         if ((locNow < sunRise) or (locNow > sunSet)) and (_FirstRun == False):
             _FirstDayRun = True
@@ -126,7 +142,9 @@ def _Fetch_Piko_Data(a):
 
         pikoData = Piko.GetFetchedData(_FirstDayRun)
         #Data.Dbg_Print(Piko, pikoData)
-        Sma.FetchSmaTotal(_FirstDayRun)
+        # Sma Werte fürs tägliche Log
+        if(_FirstDayRun == True):
+            Sma.FetchSmaTotal(_FirstDayRun)
 
         sunSpec = Data.Prepare(Piko, pikoData, _FirstRun)
         for dataSet in sunSpec:
@@ -148,6 +166,7 @@ def _Fetch_Piko_Data(a):
 
         _FirstRun = False
         _FirstDayRun = False
+        _LastUpdateForDay = True
         #print '\n\nFIRSTRUN 2 %s\n\n' %(str(_FirstRun))
 
     except:
@@ -208,6 +227,8 @@ def _main(argv):
 
     _FirstRun = True
     _FirstDayRun = True
+    _LastUpdateForDay = True
+
     try:
         log.info("gestartet mit Intervall {} sek.".format(_conf.SCHED_INTERVAL))
 
