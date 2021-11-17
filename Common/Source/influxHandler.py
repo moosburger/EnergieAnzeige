@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+#
+#
+#   pip / pip3 freeze gibt die Versionen aller Libs zurück
+#
+#
 # #################################################################################################
 ## \brief     Main zur Abfrage des Vrm mqtt Brokers in der CCGX/VenusGX
 #  \details   Sortiert die Werte dann in die InfluxDatenbank ein
@@ -90,7 +94,7 @@ class influxIO(object):
             raise IOError(ImportError)
     # #################################################################################################
     # # Funktion: ' Constructor '
-    ## \details Die Initialisierung der Klasse KeepAlive
+    ## \details Die Initialisierung der Klasse influxIO
     #   \param[in]  self der Objectpointer
     #   \param[in]  interval
     #   \param[in]  mqttClient
@@ -107,7 +111,9 @@ class influxIO(object):
             self.password = _password
             self.database = _database
             self.gzip = _gzip
+            self.IsConnected = False
             self.influxdb_client = None
+            self.callee = ''
 
     # # Ende Funktion: ' Constructor ' ################################################################
 
@@ -125,6 +131,23 @@ class influxIO(object):
     # #################################################################################################
 
     # #################################################################################################
+    # #  Funktion: '_close_connection '
+    ## \details     Initialisiert die vorhandene Database, bzw. erzeugt eine neue.
+    #   \param[in]     -
+    #   \return          -
+    # #################################################################################################
+        def _close_connection(self, _database, callee):
+
+             # close connection if reload
+            if (self.influxdb_client is not None) and (self.IsConnected == True):
+                self.log.info("")
+                self.log.info("{} schließt die Datenbank: {}".format(callee, _database))
+                self.influxdb_client.close()
+                self.influxdb_client = None
+                self.IsConnected = False
+                self.log.info("self-{} - {} (Close)".format(self.callee, callee))
+
+    # #################################################################################################
     # #  Funktion: '_init_influxdb_database '
     ## \details     Initialisiert die vorhandene Database, bzw. erzeugt eine neue.
     #   \param[in]     -
@@ -132,9 +155,13 @@ class influxIO(object):
     # #################################################################################################
         def _init_influxdb_database(self, _database, callee):
 
+            self.callee = callee
+
              # close connection if reload
-            if self.influxdb_client is not None:
+            if (self.influxdb_client is not None) and (self.IsConnected == True):
                 self.influxdb_client.close()
+                self.influxdb_client = None
+                self.IsConnected = False
                 time.sleep(1)   #Login
 
             ver = None
@@ -162,7 +189,7 @@ class influxIO(object):
                 #    self.log.info("Setzte CalculationsMonth Retention Policy: {}".format(_database))
                     #self.influxdb_client.alter_retention_policy('daily', database = self.database, duration = '52w', replication = 0, default = True)
                     #self.influxdb_client.create_retention_policy('sechs_monate', database = _database, duration = '26w', replication = 1, default = True)
-                    self.influxdb_client.create_retention_policy('daily', database = _database, duration = '52w', replication = 1, default = True)
+                    #self.influxdb_client.create_retention_policy('daily', database = _database, duration = '52w', replication = 1, default = True)
 
                     #self.log.info("Setzte Continuous query: {}".format(_database))
                     #select_clause = 'SELECT mean("AcPvOnGridPower") INTO "PvInvertersAcEnergyForwardDay" FROM "system" WHERE ("instance" = "Gateway") GROUP BY time(1d)'
@@ -183,16 +210,21 @@ class influxIO(object):
                     queryList = self.influxdb_client.get_list_continuous_queries()
                     self.log.info("CalculationsMonth {} Continuous query: {}".format(_database, queryList))
 
+                self.IsConnected = True
+                self.log.info("self.{} (Init)".format(self.callee))
+
             except requestException.ConnectionError as e:
-                self.log.error("ConnectionError (Init) : {}".format(e))
+                self.log.error("ConnectionError (Init) von {}: {}".format(callee, e))
+                self.IsConnected = False
                 #for info in sys.exc_info():
                  #   self.log.error("{}".format(info))
 
             except:
-                self.log.error("Start Sequenz  (Init)")
+                self.log.error("Start Sequenz (Init)")
                 for info in sys.exc_info():
                     self.log.error("{}".format(info))
                 self.log.error("Ende Sequenz\nSonstiger Error")
+                self.IsConnected = False
 
             return ver
 
@@ -232,7 +264,7 @@ class influxIO(object):
     #   \param[in]     sensor_data
     #   \return          -
     # #################################################################################################
-        def _send_sensor_data_to_influxdb(self, sensor_data):
+        def _send_sensor_data_to_influxdb(self, sensor_data, callee):
 
             json.json_body = [
                 {
@@ -257,34 +289,38 @@ class influxIO(object):
             self.log.debug("json_body: {}".format(json.json_body[0], valueCnt))
 
             retVal = False
+            if (self.IsConnected == False):
+                self.log.error("NoConnecion (Write) von self.{} - {}".format(self.callee, callee))
+                return "NoConnecion"
+
             try:
                 retVal = self.influxdb_client.write_points(json.json_body)
 
             except requestException.ChunkedEncodingError as e:
-                self.log.error("ChunkedEncodingError (Write): {}\nAnzahl Daten: {} e: {}".format(json.json_body, valueCnt, e))
+                self.log.error("ChunkedEncodingError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
                 #for info in sys.exc_info():
                 #    self.log.error("{}".format(info))
 
             except DbException.InfluxDBServerError as e:
-                self.log.error("ServerError (Write): {}\nAnzahl Daten: {} e: {}".format(json.json_body, valueCnt, e))
+                self.log.error("ServerError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
                 #for info in sys.exc_info():
                 #    self.log.error("{}".format(info))
 
             except DbException.InfluxDBClientError as e:
-                self.log.error("CientError (Write): {}\nAnzahl Daten: {} e: {}".format(json.json_body, valueCnt, e))
+                self.log.error("CientError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
                 #for info in sys.exc_info():
                 #    self.log.error("{}".format(info))
 
             except requestException.ConnectionError as e:
-                self.log.error("ConnectionError (Write): {}\nAnzahl Daten: {} e: {}".format(json.json_body, valueCnt, e))
+                self.log.error("ConnectionError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
                 #for info in sys.exc_info():
                 #    self.log.error("{}".format(info))
 
             except:
-                self.log.error("Start Sequenz")
+                self.log.error("Start Sequenz (Write)")
                 for info in sys.exc_info():
                     self.log.error("{}".format(info))
-                self.log.error("Ende Sequenz\nSonstiger Error (Write): {}\nAnzahl Daten: {}".format(json.json_body, valueCnt))
+                self.log.error("Ende Sequenz\nSonstiger Error (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
 
             return retVal
 
@@ -296,7 +332,7 @@ class influxIO(object):
     #   \param[in]     -
     #   \return          -
     # #################################################################################################
-        def _Query_influxDb(self, queries, measurement, searchFor):
+        def _Query_influxDb(self, queries, measurement, searchFor, callee):
 
             try:
                 retVal = []
@@ -305,6 +341,12 @@ class influxIO(object):
                 errQuery = ''
                 errPoint = ''
                 errResult = ''
+
+                if (self.IsConnected == False):
+                    # _Query_influxDb wird im Augenblick nur von der  CalcPercentage.py benutzt beim lesen für die berechneten Daten
+                    self.log.error("NoConnecion (Query) von self.{} - {}".format(self.callee, callee))
+                    retVal.append("NoConnecion")
+                    return retVal
 
                 for query in queries:
                     errQuery = query
@@ -325,7 +367,49 @@ class influxIO(object):
                         retVal.append(point[0][searchFor])
                     else:
                         retVal.append(0)
+
+            except requestException.ChunkedEncodingError as e:
+                if (errQuery != ''):
+                    self.log.error("ChunkedEncodingError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+
+                # fraglich ob die Fehler hier auftreten
+                if (errPoint != ''):
+                    self.log.error("ChunkedEncodingError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                if (errResult != ''):
+                    self.log.error("ChunkedEncodingError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+
+            except DbException.InfluxDBServerError as e:
+                if (errQuery != ''):
+                    self.log.error("ServerError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+
+                # fraglich ob die Fehler hier auftreten
+                if (errPoint != ''):
+                    self.log.error("ServerError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                if (errResult != ''):
+                    self.log.error("ServerError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+
+            except DbException.InfluxDBClientError as e:
+                if (errQuery != ''):
+                    self.log.error("CientError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+
+                # fraglich ob die Fehler hier auftreten
+                if (errPoint != ''):
+                    self.log.error("CientError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                if (errResult != ''):
+                    self.log.error("CientError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+
+            except requestException.ConnectionError as e:
+                if (errQuery != ''):
+                    self.log.error("ConnectionError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+
+                # fraglich ob die Fehler hier auftreten
+                if (errPoint != ''):
+                    self.log.error("ConnectionError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                if (errResult != ''):
+                    self.log.error("ConnectionError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+
             except:
+                self.log.error("Start Sequenz (Read) von self.{} - {}".format(self.callee, callee))
                 for info in sys.exc_info():
                     self.log.error("{}".format(info))
                 self.log.error("errQuery: {}".format(errQuery))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # #################################################################################################
@@ -12,10 +12,16 @@
 #             emoncms export code by Peter Hasse (peter.hasse@fokus.fraunhofer.de)
 #  \Licence   GPL v3
 #
-#  \version   1.4.1  -  3.07.2018
+#  \version   1.6.1  -  15.11.2021
+#  \URL:      https://sourceforge.net/projects/piko/files/
 #
 # <History\> ######################################################################################
 # Version     Datum       Kuerzel      Ticket#     Beschreibung
+#           : 1.6.0 - 20200607 - Migrate to Python 3 and bug fixes
+#           : 1.5.1 - 20160225 - Add MQTT support
+#                                More robust parsing code
+#                                Display running in days as well
+#           : 1.4.1 - 20160218 - Add MySQL support
 #           : 1.3.3 - 20140117 - Exception handling on emoncms
 #                    20140110 - Added support for emoncms export (http://emoncms.org)
 #                               json and requests modules depencies added
@@ -127,15 +133,15 @@ class PikoWebRead(object):
     # Inverter Error
     self.Data['ErrorCode'] = 0
     # Total energy
-    self.Data['TotalWh'] = 17612176
+    self.Data['TotalWh'] = 0
     # Today energy
-    self.Data['TodayWh'] = 11629
+    self.Data['TodayWh'] = 0
     # DC Power
-    self.Data['CC_P'] = 660
+    self.Data['CC_P'] = 0
     # AC Power
-    self.Data['CA_P'] = 600
+    self.Data['CA_P'] = 0
     # nEfficiency
-    self.Data['Eff'] = 90.9
+    self.Data['Eff'] = 0
     # Inverter Name
     self.Data['InvName'] = 'PowerDorf'
     # Inverter SN
@@ -163,68 +169,68 @@ class PikoWebRead(object):
 
     # DC String 1
     # Spannung
-    self.Data['CC1_U'] = 432.7
+    self.Data['CC1_U'] = 0.0
     # Strom
-    self.Data['CC1_I'] = 1.52
+    self.Data['CC1_I'] = 0.0
     # Leistung
-    self.Data['CC1_P'] = 660
+    self.Data['CC1_P'] = 0.0
     # Temperatur
-    self.Data['CC1_T'] = 0x5620
+    self.Data['CC1_T'] = 0x0
     # S?
-    self.Data['CC1_S'] = 0x4009
+    self.Data['CC1_S'] = 0x0
     # DC String 2
     # Spannung
-    self.Data['CC2_U'] = 0
+    self.Data['CC2_U'] = 0.0
     # Strom
-    self.Data['CC2_I'] = 0
+    self.Data['CC2_I'] = 0.0
     # Leistung
-    self.Data['CC2_P'] = 0
+    self.Data['CC2_P'] = 0.0
     # Temperatur
-    self.Data['CC2_T'] = 0x5fc0
+    self.Data['CC2_T'] = 0x0
     # S?
-    self.Data['CC2_S'] = 0x9002
+    self.Data['CC2_S'] = 0x0
     # DC String 3
     # Spannung
-    self.Data['CC3_U'] = 0
+    self.Data['CC3_U'] = 0.0
     # Strom
-    self.Data['CC3_I'] = 0
+    self.Data['CC3_I'] = 0.0
     # Leistung
-    self.Data['CC3_P'] = 0
+    self.Data['CC3_P'] = 0.0
     # Temperatur
-    self.Data['CC3_T'] = 0xf6a0
+    self.Data['CC3_T'] = 0x0
     # S?
-    self.Data['CC3_S'] = 0x0003
+    self.Data['CC3_S'] = 0x0
 
     # AC Phase 1
     # Spannung
-    self.Data['CA1_U'] = 230.9
+    self.Data['CA1_U'] = 0.0
     # Strom
-    self.Data['CA1_I'] = 1.06
+    self.Data['CA1_I'] = 0.0
     # Leistung
-    self.Data['CA1_P'] = 202
+    self.Data['CA1_P'] = 0
     # Temperatur
-    self.Data['CA1_T'] = 5520
+    self.Data['CA1_T'] = 0x0
     # AC Phase 2
     # Spannung
-    self.Data['CA2_U'] = 230.7
+    self.Data['CA2_U'] = 0.0
     # Strom
-    self.Data['CA2_I'] = 1.05
+    self.Data['CA2_I'] = 0.0
     # Leistung
-    self.Data['CA2_P'] = 198
+    self.Data['CA2_P'] = 0
     # Temperatur
-    self.Data['CA2_T'] = 0x55a0
+    self.Data['CA2_T'] = 0x0
     # AC Phase 3
     # Spannung
-    self.Data['CA3_U'] = 232.1
+    self.Data['CA3_U'] = 0.0
     # Strom
-    self.Data['CA3_I'] = 1.06
+    self.Data['CA3_I'] = 0.0
     # Leistung
-    self.Data['CA3_P'] = 200
+    self.Data['CA3_P'] = 0
     # Temperatur
-    self.Data['CA3_T'] = 5700
+    self.Data['CA3_T'] = 0x0
 
     # AC Status
-    self.Data['CA_S'] = 0x003c
+    self.Data['CA_S'] = 0x0
 
 # # Ende Funktion: ' Constructor ' ################################################################
 
@@ -244,14 +250,14 @@ class PikoWebRead(object):
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-  def _PrintHexa(self, Txt, St):
+  def _PrintHexa(self, Txt, Packet):
     HexSt=''; TxtSt='';
-    for i in range(len(St)):
-      HexSt += "%02x" % ord(St[i])
-      if ((ord(St[i])>=0x20) and (ord(St[i])<0x7f)):
-        TxtSt+=St[i];
-      else:
-        TxtSt+='.';
+    for i in range(len(Packet)):
+        HexSt += "%02x" % Packet[i]
+        if ((Packet[i]>=0x20) and (Packet[i]<0x7f)):
+            TxtSt+=chr(Packet[i]);
+        else:
+            TxtSt+='.';
     #print "%s%s %s" % (Txt, HexSt, TxtSt)
     print("%s%s" % (Txt, HexSt))
 
@@ -266,9 +272,9 @@ class PikoWebRead(object):
     if fmt==1: Space=" "
     d = datetime(1,1,1)+timedelta(seconds=Timer)
     if Timer>86400:
-      St = "%s%dh%s%02dm%s%02ds" % (Txt, (Timer//86400)*24+d.hour, Space, d.minute, Space, d.second)
+        St = "%s%dh%s%02dm%s%02ds" % (Txt, (Timer//86400)*24+d.hour, Space, d.minute, Space, d.second)
     else:
-      St = "%s%02dh%s%02dm%s%02ds" % (Txt, d.hour, Space, d.minute, Space, d.second)
+        St = "%s%02dh%s%02dm%s%02ds" % (Txt, d.hour, Space, d.minute, Space, d.second)
     return St
 
 # #################################################################################################
@@ -278,28 +284,28 @@ class PikoWebRead(object):
 #   \return     -
 # #################################################################################################
   def _SndRecv(self, Addr, Snd, Dbg) :
-    Snd="\x62"+chr(Addr)+"\x03"+chr(Addr)+Snd
-    Snd+=chr(self._CalcChkSum(Snd))+"\x00"
+    Snd=b'\x62'+bytes([Addr])+b'\x03'+bytes([Addr])+Snd
+    Snd+=bytes([self._CalcChkSum(Snd)])+b"\x00"
     self.SocketStream.send(Snd)
     i = 0
-    Recv = ''
-    data = ''
+    Recv = b''
+    data = b''
     while (1):
-      try :
-        data = self.SocketStream.recv(4096)
-      except :
-        Recv += data
-        break
-      if (i < 5):
-          Recv += data
-          data = ''
-      if not data:
-          break
-    if (len(Recv)>0) and (ord(Recv[0])==255):
-      Recv=""
-    if Dbg and (len(Recv)>0) and (ord(Recv[0])!=255):
-      self._PrintHexa("Sent:", Snd)
-      self._PrintHexa("Recv:", Recv)
+        try :
+            data = self.SocketStream.recv(4096)
+        except :
+            Recv += data
+            break
+        if (i < 5):
+            Recv += data
+            data = b''
+        if not data:
+            break
+    if (len(Recv)>0) and (Recv[0]==255):
+        Recv=""
+    if Dbg and (len(Recv)>0) and (Recv[0]!=255):
+        self._PrintHexa("Sent:", Snd)
+        self._PrintHexa("Recv:", Recv)
     return Recv
 
 # #################################################################################################
@@ -308,16 +314,16 @@ class PikoWebRead(object):
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-  def _ChkSum(self, St):
+  def _ChkSum(self, Packet):
     Chk = 0
-    if len(St) == 0: return 0
-    for i in range(len(St)):
-      Chk += ord(St[i])
-      Chk %= 256
+    if len(Packet) == 0: return 0
+    for i in range(len(Packet)):
+        Chk += Packet[i]
+        Chk %= 256
     if Chk == 0:
-      return 1
+        return 1
     else:
-      return 0
+        return 0
 
 # #################################################################################################
 # #  Funktion: ' _CalcChkSum '
@@ -325,12 +331,12 @@ class PikoWebRead(object):
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-  def _CalcChkSum(self, St):
+  def _CalcChkSum(self, Packet):
     Chk = 0
-    if len(St) == 0: return 0
-    for i in range(len(St)):
-      Chk -= ord(St[i])
-      Chk %= 256
+    if len(Packet) == 0: return 0
+    for i in range(len(Packet)):
+        Chk -= Packet[i]
+        Chk %= 256
     return Chk
 
 # #################################################################################################
@@ -339,9 +345,9 @@ class PikoWebRead(object):
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-  def _GetWord(self, St, Idx):
+  def _GetWord(self, Packet, Idx):
     Val = 0
-    Val = ord(St[Idx])+256*ord(St[Idx+1])
+    Val = Packet[Idx] + 256 * Packet[Idx+1]
     return Val
 
 # #################################################################################################
@@ -350,9 +356,9 @@ class PikoWebRead(object):
 #   \param[in]	-
 #   \return     -
 # #################################################################################################
-  def _GetDWord(self, St, Idx):
+  def _GetDWord(self, Packet, Idx):
     Val = 0
-    Val = ord(St[Idx])+256*ord(St[Idx+1])+65536*ord(St[Idx+2])+256*65536*ord(St[Idx+3])
+    Val = Packet[Idx] + 256 * Packet[Idx+1] + 65536 * Packet[Idx+2] + 256 * 65536 * Packet[Idx+3]
     return Val
 
 # #################################################################################################
@@ -412,7 +418,7 @@ class PikoWebRead(object):
   def _GetHistInt(self, St):
     St = St.strip()
     if len(St) > 0:
-      return int(St.replace(".", ""))
+        return int(St.replace(".", ""))
     else: return 0;
 
 # #################################################################################################
@@ -524,31 +530,31 @@ class PikoWebRead(object):
 
     # Total Running time
     self.Data['InvRunTime'] = 0
-    Recv=""; Snd="\x00\x46"
+    Recv=b""; Snd=b"\x00\x46"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      self.Data['InvRunTime']=self._GetDWord(Recv, 5)
+        self.Data['InvRunTime']=self._GetDWord(Recv, 5)
 
     # Total Install time
     self.Data['InvInstTime'] = 0
-    Recv=""; Snd="\x00\x5b"
+    Recv=b""; Snd=b"\x00\x5b"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      self.Data['InvInstTime']=self._GetDWord(Recv, 5)
+        self.Data['InvInstTime']=self._GetDWord(Recv, 5)
 
     # Last history update time and interval
     self.Data['InvHistTime'] = 0
-    Recv=""; Snd="\x00\x5d"
+    Recv=b""; Snd=b"\x00\x5d"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      self.Data['InvHistTime']=self.Data['InvInstTime'] - self._GetDWord(Recv, 5)
-      if self.Data['InvHistTime'] < 0: self.Data['InvHistTime'] = 0
+        self.Data['InvHistTime']=self.Data['InvInstTime'] - self._GetDWord(Recv, 5)
+        if self.Data['InvHistTime'] < 0: self.Data['InvHistTime'] = 0
     self.Data['InvHistStep'] = 0
-    Recv=""; Snd="\x00\x5e"
+    Recv=b""; Snd=b"\x00\x5e"
 
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      self.Data['InvHistStep']=self._GetDWord(Recv, 5)
+        self.Data['InvHistStep']=self._GetDWord(Recv, 5)
 
 # #################################################################################################
 # #  Funktion: ' _GetPikoPortalData '
@@ -560,17 +566,17 @@ class PikoWebRead(object):
 
     # Portal Name & Update Timer
     self.Data['InvPortalTime'] = 0
-    Recv=""; Snd="\x00\x92"
+    Recv=b""; Snd=b"\x00\x92"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      self.Data['InvPortalTime']=self._GetDWord(Recv, 5)
-      if self.Data['InvPortalTime']==0xffffffff: self.Data['InvPortalTime']=0;
+        self.Data['InvPortalTime']=self._GetDWord(Recv, 5)
+        if self.Data['InvPortalTime']==0xffffffff: self.Data['InvPortalTime']=0;
     InvPortalName = ""
-    Recv=""; Snd="\x00\xa6"
+    Recv=b""; Snd=b"\x00\xa6"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
-    if self._ChkSum(Recv) != 0:
-      for i in range(32):
-        if 0x20 <= ord(Recv[5+i]) <= 0x7f: InvPortalName+=Recv[5+i]
+    if self._ChkSum(Recv) != 0and len(Recv)>=37:
+        for i in range(32):
+            if 0x20 <= Recv[5+i] <= 0x7f: InvPortalName+=chr(Recv[5+i])
 
 # #################################################################################################
 # #  Funktion: ' _GetPikoHeader '
@@ -584,56 +590,56 @@ class PikoWebRead(object):
     self.Data['InvModel'] = ""
     self.Data['InvString'] = 1
     self.Data['InvPhase'] = 1
-    Snd="\x00\x90"
+    Snd=b"\x00\x90"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0 and len(Recv)>=21:
-      for i in range(16):
-        if 0x20 <= ord(Recv[5+i]) <= 0x7f: self.Data['InvModel']+=Recv[5+i]
-      self.Data['InvString'] = ord(Recv[5+16])
-      self.Data['InvPhase'] = ord(Recv[5+23])
+        for i in range(16):
+            if 0x20 <= Recv[5+i] <= 0x7f: self.Data['InvModel']+=chr(Recv[5+i])
+        self.Data['InvString'] = Recv[5+16]
+        self.Data['InvPhase'] = Recv[5+23]
 
     # Get Inverter Version
     InvVer1 = InvVer2 = InvVer3 = 0
     self.Data['InvVer'] = ""
-    Recv=""; Snd="\x00\x8a"
+    Recv=b""; Snd=b"\x00\x8a"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0 and len(Recv)==13:
-      InvVer1 = self._GetWord(Recv, 5)
-      InvVer2 = self._GetWord(Recv, 7)
-      InvVer3 = self._GetWord(Recv, 9)
-      self.Data['InvVer'] = "%04x %02x.%02x %02x.%02x" % (InvVer1, InvVer2//256, InvVer2%256, InvVer3//256, InvVer3%256)
+        InvVer1 = self._GetWord(Recv, 5)
+        InvVer2 = self._GetWord(Recv, 7)
+        InvVer3 = self._GetWord(Recv, 9)
+        self.Data['InvVer'] = "%04x %02x.%02x %02x.%02x" % (InvVer1, InvVer2//256, InvVer2%256, InvVer3//256, InvVer3%256)
 
     # Calc TRef (Default 0xc800)
     if self.Data['InvModel'] == "convert 10T":
-      TRef="c800"
+        TRef="c800"
     if self.Data['InvModel'] == "PIKO 8.3":
-      TRef="c800"
+        TRef="c800"
     if self.Data['InvModel'] == "PIKO 5.5":
-      TRef="8000"
+        TRef="8000"
     if self.Opt['TRef'] != "0": TRef = self.Opt['TRef']
 
     # Get Inverter Name
     self.Data['InvName'] = ""
-    Recv=""; Snd="\x00\x44"
+    Recv=b""; Snd=b"\x00\x44"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
-    if self._ChkSum(Recv) != 0:
-      for i in range(15):
-        if 0x20 <= ord(Recv[5+i]) <= 0x7f: self.Data['InvName']+=Recv[5+i]
+    if self._ChkSum(Recv) != 0 and len(Recv)>=20:
+        for i in range(15):
+          if 0x20 <= Recv[5+i] <= 0x7f: self.Data['InvName']+=chr(Recv[5+i])
 
     # Get Inverter SN
     self.Data['InvSN'] = ""; self.Data['InvRef'] = ""
-    Recv=""; Snd="\x00\x50"
+    Recv=b""; Snd=b"\x00\x50"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      if len(Recv) == 20:
-        for i in range(13):
-          if 0x20 <= ord(Recv[5+i]) <= 0x7f: self.Data['InvSN']+=Recv[5+i]
-      if len(Recv) == 12:
-        SN1=ord(Recv[5]); SN2=ord(Recv[6]); SN3=ord(Recv[7]); SN4=ord(Recv[8]); SN5=ord(Recv[9])
-        self.Data['InvSN']+="%1x%1x%1x%1x%1x%1x%1x%1x%1x" % (SN1//16, SN1%16, SN3%16, SN2//16, SN2%16, SN5//16, SN5%16, SN4//16, SN4%16)
+        if len(Recv) == 20:
+            for i in range(13):
+                if 0x20 <= Recv[5+i] <= 0x7f: self.Data['InvSN']+=chr(Recv[5+i])
+        if len(Recv) == 12:
+            SN1=Recv[5]; SN2=Recv[6]; SN3=Recv[7]; SN4=Recv[8]; SN5=Recv[9]
+            self.Data['InvSN']+="%1x%1x%1x%1x%1x%1x%1x%1x%1x" % (SN1//16, SN1%16, SN3%16, SN2//16, SN2%16, SN5//16, SN5%16, SN4//16, SN4%16)
 
     # Get Inverter Ref
-    Recv=""; Snd="\x00\x51"
+    Recv=b""; Snd=b"\x00\x51"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
       self.Data['InvRef']=self._GetDWord(Recv, 5)
@@ -648,63 +654,63 @@ class PikoWebRead(object):
 
     # Get Total Wh
     self.Data['TotalWh'] = -1
-    Recv=""; Snd="\x00\x45"
+    Recv=b""; Snd=b"\x00\x45"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      self.Data['TotalWh']=self._GetDWord(Recv, 5)
+        self.Data['TotalWh']=self._GetDWord(Recv, 5)
 
     # Get Today Wh
     self.Data['TodayWh'] = -1
-    Recv=""; Snd="\x00\x9d"
+    Recv=b""; Snd=b"\x00\x9d"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0:
-      self.Data['TodayWh']=self._GetDWord(Recv, 5)
+        self.Data['TodayWh']=self._GetDWord(Recv, 5)
 
     # Debug self.Options
     if self.Opt['Dbg'] :
-      for i in range(256):
-        if (i != 0x50) and (i != 81):
-          Recv=""; Snd="\x00"+chr(i)
-          Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
+        for i in range(256):
+            if (i != 0x50) and (i != 81):
+                Recv=b""; Snd=b"\x00"+bytes([i])
+                Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
 
     # Get Technical data
     self.Data['TechData'] = -1
-    Recv=""; Snd="\x00\x43"
+    Recv=b""; Snd=b"\x00\x43"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
     if self._ChkSum(Recv) != 0 and (len(Recv)>65):
-      self.Data['TechData'] = 1
-      self.Data['CC1_U']=self._GetWord(Recv, 5)*1.0/10
-      self.Data['CC1_I']=self._GetWord(Recv, 7)*1.0/100
-      self.Data['CC1_P']=self._GetWord(Recv, 9)
-      self.Data['CC1_T']=self._GetWord(Recv, 11)
-      self.Data['CC1_S']=self._GetWord(Recv, 13)
-      self.Data['CC2_U']=self._GetWord(Recv, 15)*1.0/10
-      self.Data['CC2_I']=self._GetWord(Recv, 17)*1.0/100
-      self.Data['CC2_P']=self._GetWord(Recv, 19)
-      self.Data['CC2_T']=self._GetWord(Recv, 21)
-      self.Data['CC2_S']=self._GetWord(Recv, 23)
-      self.Data['CC3_U']=self._GetWord(Recv, 25)*1.0/10
-      self.Data['CC3_I']=self._GetWord(Recv, 27)*1.0/100
-      self.Data['CC3_P']=self._GetWord(Recv, 29)
-      self.Data['CC3_T']=self._GetWord(Recv, 31)
-      self.Data['CC3_S']=self._GetWord(Recv, 33)
-      self.Data['CA1_U']=self._GetWord(Recv, 35)*1.0/10
-      self.Data['CA1_I']=self._GetWord(Recv, 37)*1.0/100
-      self.Data['CA1_P']=self._GetWord(Recv, 39)
-      self.Data['CA1_T']=self._GetWord(Recv, 41)
-      self.Data['CA2_U']=self._GetWord(Recv, 43)*1.0/10
-      self.Data['CA2_I']=self._GetWord(Recv, 45)*1.0/100
-      self.Data['CA2_P']=self._GetWord(Recv, 47)
-      self.Data['CA2_T']=self._GetWord(Recv, 49)
-      self.Data['CA3_U']=self._GetWord(Recv, 51)*1.0/10
-      self.Data['CA3_I']=self._GetWord(Recv, 53)*1.0/100
-      self.Data['CA3_P']=self._GetWord(Recv, 55)
-      self.Data['CA3_T']=self._GetWord(Recv, 57)
-      self.Data['CA_S']=self._GetWord(Recv, 61)
-      self.Data['CC_P']=self.Data['CC1_P']+self.Data['CC2_P']+self.Data['CC3_P']
-      self.Data['CA_P']=self.Data['CA1_P']+self.Data['CA2_P']+self.Data['CA3_P']
-      if self.Data['CC_P']<1: self.Data['Eff']=0
-      else : self.Data['Eff']=self.Data['CA_P']*100.0/self.Data['CC_P']
+        self.Data['TechData'] = 1
+        self.Data['CC1_U']=self._GetWord(Recv, 5)*1.0/10
+        self.Data['CC1_I']=self._GetWord(Recv, 7)*1.0/100
+        self.Data['CC1_P']=self._GetWord(Recv, 9)
+        self.Data['CC1_T']=self._GetWord(Recv, 11)
+        self.Data['CC1_S']=self._GetWord(Recv, 13)
+        self.Data['CC2_U']=self._GetWord(Recv, 15)*1.0/10
+        self.Data['CC2_I']=self._GetWord(Recv, 17)*1.0/100
+        self.Data['CC2_P']=self._GetWord(Recv, 19)
+        self.Data['CC2_T']=self._GetWord(Recv, 21)
+        self.Data['CC2_S']=self._GetWord(Recv, 23)
+        self.Data['CC3_U']=self._GetWord(Recv, 25)*1.0/10
+        self.Data['CC3_I']=self._GetWord(Recv, 27)*1.0/100
+        self.Data['CC3_P']=self._GetWord(Recv, 29)
+        self.Data['CC3_T']=self._GetWord(Recv, 31)
+        self.Data['CC3_S']=self._GetWord(Recv, 33)
+        self.Data['CA1_U']=self._GetWord(Recv, 35)*1.0/10
+        self.Data['CA1_I']=self._GetWord(Recv, 37)*1.0/100
+        self.Data['CA1_P']=self._GetWord(Recv, 39)
+        self.Data['CA1_T']=self._GetWord(Recv, 41)
+        self.Data['CA2_U']=self._GetWord(Recv, 43)*1.0/10
+        self.Data['CA2_I']=self._GetWord(Recv, 45)*1.0/100
+        self.Data['CA2_P']=self._GetWord(Recv, 47)
+        self.Data['CA2_T']=self._GetWord(Recv, 49)
+        self.Data['CA3_U']=self._GetWord(Recv, 51)*1.0/10
+        self.Data['CA3_I']=self._GetWord(Recv, 53)*1.0/100
+        self.Data['CA3_P']=self._GetWord(Recv, 55)
+        self.Data['CA3_T']=self._GetWord(Recv, 57)
+        self.Data['CA_S']=self._GetWord(Recv, 61)
+        self.Data['CC_P']=self.Data['CC1_P']+self.Data['CC2_P']+self.Data['CC3_P']
+        self.Data['CA_P']=self.Data['CA1_P']+self.Data['CA2_P']+self.Data['CA3_P']
+        if self.Data['CC_P']<1: self.Data['Eff']=0
+        else : self.Data['Eff']=self.Data['CA_P']*100.0/self.Data['CC_P']
 
 # #################################################################################################
 # #  Funktion: ' FetchData '
@@ -729,11 +735,11 @@ class PikoWebRead(object):
     # Get Inverter Status (0=Stop; 1=dry-run; 3..5=running)
     Status = -1; self.Data['ErrorCode'] = 0;
     if self.Data['NetStatus'] == 0:
-      Snd="\x00\x57"
+      Snd=b"\x00\x57"
       Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
       if self._ChkSum(Recv) != 0:
-        Status = ord(Recv[5]);
-        Error = ord(Recv[6]);
+        Status = Recv[5]
+        Error = Recv[6]
         self.Data['ErrorCode'] = self._GetWord(Recv, 7)
       if (Status > 5): Status = -1
 
@@ -743,13 +749,14 @@ class PikoWebRead(object):
     self.Data['StatusTxt'] = self._CnvStatusTxt(Status)
 
     if Status != -1:
-      if Data == True : self._GetPikoData()
-      if Timers == True : self._GetPikoTimes()
-      if Portal == True : self._GetPikoPortalData()
-      if Header == True : self._GetPikoHeader()
+        if Data == True : self._GetPikoData()
+        if Timers == True : self._GetPikoTimes()
+        if Portal == True : self._GetPikoPortalData()
+        if Header == True : self._GetPikoHeader()
 
     self.SocketStream.close()
 
+    print(Status)
     return Status
 
 # # Ende Funktion: ' FetchData ' ###################################################################

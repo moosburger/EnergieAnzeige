@@ -16,37 +16,21 @@
 # #################################################################################################
 
 # #################################################################################################
-# # Debug Einstellungen
-# #################################################################################################
-bDebug = True
-bDebugOnLinux = True
-
-# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
-if (bDebug == False):
-    importPath = '/mnt/dietpi_userdata/Common'
-
-elif(bDebugOnLinux == True):
-    importPath = '/home/gerhard/Grafana/Common'
-
-else:
-    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
-
-# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
-try:
-    ImportError = None
-    import sys
-    import json
-    import time
-    from collections import namedtuple as NamedTuple
-    from itertools import zip_longest
-    from influxdb import InfluxDBClient
-    from influxdb import exceptions as DbException
-    from requests import exceptions as requestException
+import sys
+import json
+import time
+from collections import namedtuple as NamedTuple
+from itertools import zip_longest
+from influxdb import InfluxDBClient
+from influxdb import exceptions as DbException
+from requests import exceptions as requestException
 
-except Exception as e:
-    ImportError = e
+importPath = '/mnt/dietpi_userdata/Common'
+sys.path.insert(0, importPath)
+
+from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
 
 # #################################################################################################
 # # UmgebungsVariablen / Globals
@@ -56,16 +40,7 @@ _SensorData = NamedTuple('SensorData', 'device instance type value timestamp')
 # #################################################################################################
 # # private Imports
 # #################################################################################################
-try:
-    PrivateImportError = None
 
-    sys.path.insert(0, importPath)
-    import Error
-    import Utils
-    from configuration import Global as _conf, PvInverter as PvInv, Grid, Battery, VeBus, System
-
-except Exception as e:
-    PrivateImportError = e
 
 # #################################################################################################
 # # UmgebungsVariablen
@@ -82,12 +57,6 @@ except Exception as e:
 class influxIO(object):
 
     try:
-        ## Import fehlgeschlagen
-        if (PrivateImportError):
-            raise IOError(PrivateImportError)
-
-        if (ImportError):
-            raise IOError(ImportError)
     # #################################################################################################
     # # Funktion: ' Constructor '
     ## \details Die Initialisierung der Klasse KeepAlive
@@ -127,6 +96,13 @@ class influxIO(object):
     # #################################################################################################
     # #  Funktion: '_init_influxdb_database '
     ## \details     Initialisiert die vorhandene Database, bzw. erzeugt eine neue.
+    ##
+    ## influx
+    ## DROP DATABASE MonatsEnergie
+    ## exit
+    ##
+    ##
+    ##
     #   \param[in]     -
     #   \return          -
     # #################################################################################################
@@ -323,9 +299,9 @@ class influxIO(object):
     except IOError as e:
         print('Eine der Bibliotheken konnte nicht geladen werden!\n{}!\n'.format(e))
 
-    except:
-        for info in sys.exc_info():
-            print ("Fehler: {}".format(info))
+    #except:
+    #    for info in sys.exc_info():
+    #        print ("Fehler: {}".format(info))
 
 # # Ende Klasse: ' influxIO ' ####################################################################
 

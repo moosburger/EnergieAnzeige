@@ -26,7 +26,7 @@ After=multi-user.target
 Type=simple
 RestartSec=30
 Restart=on-failure
-ExecStart=/usr/bin/python /mnt/dietpi_userdata/RaspiCooler/RaspiCooler.py
+ExecStart=/usr/bin/python3 /mnt/dietpi_userdata/RaspiCooler/RaspiCooler.py
 
 [Install]
 WantedBy=multi-user.target

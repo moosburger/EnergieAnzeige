@@ -147,7 +147,7 @@ class TotalSmaEnergy():
 
         try:
             if (WriteOut == False):
-                SmaProfil = (('    Tagesertrag',30535, 2,0, SmaUnit))
+                SmaProfil = (('    Tagesertrag',30535, 2,0, SmaUnit),)
             else:
                 SmaProfil = (
                             ('   Seriennummer',40053,16,0, SunSpecUnit),
@@ -265,11 +265,11 @@ class TotalSmaEnergy():
                         self._write_File(fileName , datStream, "a")
             modbus.close()
 
-            # Sma löscht die Tagesleistung um Mitternacht...
+            # Sma loescht die Tagesleistung um Mitternacht...
             if (sunSpecData['30535'] > 0):
                 self.Data['TodayWh'] = sunSpecData['30535']
 
-            if (WriteOut == False):
+            if (WriteOut == True):
                 self.Data['RelVer'] =    sunSpecData['40045'].replace('\00', '/00')
                 self.Data['host'] =      sunSpecData['40097']
                 self.Data['Status'] =    sunSpecData['40224']
@@ -320,8 +320,8 @@ class TotalSmaEnergy():
 
         except:
             for info in sys.exc_info():
-                self.log.error("Fehler: {}".format(info))
-                print("Fehler: {}".format(info))
+                self.log.error("FetchSmaTotal Fehler: {}".format(info))
+                print("FetchSmaTotal Fehler: {}".format(info))
 
 
     # # Ende Funktion: ' _FetchSmaTotal(' ###################################################################

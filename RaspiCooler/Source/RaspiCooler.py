@@ -28,9 +28,6 @@ import psutil
 import logging
 from logging.config import fileConfig
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
-
 # #################################################################################################
 # # Python Imports (site-packages)
 # #################################################################################################
@@ -112,7 +109,6 @@ def get_cpu_temperature():
 # #################################################################################################
 def _main(argv):
 
-	iLogCount = -1
 	#Init
 	log.info("Starte RaspiCooler mit Intervall {} sek.".format(SLEEP_TIME))
 	GPIO.setup(IMPULS_PIN, GPIO.OUT)
@@ -124,16 +120,16 @@ def _main(argv):
 		#if cpu_temp >= MAX_CPU_TEMP or sensor_temp >= MAX_SENSOR_TEMP :
 		if cpu_temp > MAX_CPU_TEMP + 2.5:
 			GPIO.output(IMPULS_PIN, True)
+			log.info("Luefter: Ein")
+			log.info("   CPU Temperatur: {}".format(cpu_temp))
+			log.info("Sensor Temperatur: {}".format(sensor_temp))
 		elif cpu_temp < MAX_CPU_TEMP - 2.5:
 			GPIO.output(IMPULS_PIN, False)
-
-		#~ if (iLogCount > 10) or (iLogCount == -1):
-			#~ log.info("   CPU Temperatur: {}".format(cpu_temp))
-			#~ log.info("Sensor Temperatur: {}".format(sensor_temp))
-			#~ iLogCount = 0
+			log.info("Luefter: Aus")
+			log.info("   CPU Temperatur: {}".format(cpu_temp))
+			log.info("Sensor Temperatur: {}".format(sensor_temp))
 
 		time.sleep(SLEEP_TIME)
-		iLogCount = iLogCount + 1
 
 # # Ende Funktion: ' main ' #######################################################################
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # #################################################################################################
@@ -134,18 +134,21 @@ def _Fetch_Piko_Data(a):
         writefunction = 0x10
         slave_id = 126 # slave address
 
-        #print 'FIRSTRUN 1 %s \n' %(str(_FirstRun))
+        #print ('FIRSTRUN 1 %s \n' %(str(_FirstRun)))
         # Daten vom Piko holen
+        #print('FetchData')
         retStat = Piko.FetchData(Timers=True, Portal=True, Header=True, Data=True)
         if ((retStat == -1) and (_conf.DEBUG == False)):
             return
 
+        #print('pikoData')
         pikoData = Piko.GetFetchedData(_FirstDayRun)
         #Data.Dbg_Print(Piko, pikoData)
         # Sma Werte fürs tägliche Log
         if(_FirstDayRun == True):
             Sma.FetchSmaTotal(_FirstDayRun)
 
+        #print('sunSpec')
         sunSpec = Data.Prepare(Piko, pikoData, _FirstRun)
         for dataSet in sunSpec:
             #print (dataSet)
@@ -156,23 +159,23 @@ def _Fetch_Piko_Data(a):
             skr = dataSet[4] - 1
             vSkr = dataSet[5]
 
-            #print "\n%s" % (des.strip())
-            #print "Wert - Adr: %d, Wert: %s" % (vAdr, str(val))
+            #print ("\n%s" % (des.strip()))
+            #print ("Wert - Adr: %d, Wert: %s" % (vAdr, str(val)))
             context[slave_id].setValues(writefunction, vAdr, val)
 
             if (skr > 0):
-                #print "Dkal - Adr: %d, Skal: %s" % (skr, str(vSkr))
+                #print ("Dkal - Adr: %d, Skal: %s" % (skr, str(vSkr)))
                 context[slave_id].setValues(writefunction, skr, vSkr)
 
         _FirstRun = False
         _FirstDayRun = False
         _LastUpdateForDay = True
-        #print '\n\nFIRSTRUN 2 %s\n\n' %(str(_FirstRun))
+        #print('\n\nFIRSTRUN 2 %s\n\n' %(str(_FirstRun)))
 
     except:
         for info in sys.exc_info():
-            log.error("Fehler: {}".format(info))
-            print("Fehler: {}".format(info))
+            log.error("Fehler _Fetch_Piko_Data: {}".format(info))
+            print("Fehler _Fetch_Piko_Data: {}".format(info))
 
 # #################################################################################################
 # #  Funktion: ' _run_modbus_server '
@@ -256,6 +259,9 @@ def _main(argv):
             #~ if (skr > 0):
                 #~ print ("Dkal - Adr: %d, Skal: %s" % (skr, str(vSkr)))
 
+        # Daten vom SMA holen
+        #_Sma.FetchSmaTotal(False)
+
         _run_modbus_server(_Sma, _Piko, _data)
 
     except IOError as e:
@@ -264,8 +270,8 @@ def _main(argv):
 
     except:
         for info in sys.exc_info():
-            log.error("Fehler: {}".format(info))
-            print("Fehler: {}".format(info))
+            log.error("Fehler _main: {}".format(info))
+            print("Fehler _main: {}".format(info))
 
 # # Ende Funktion: ' _main' #######################################################################
 

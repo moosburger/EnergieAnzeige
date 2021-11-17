@@ -58,6 +58,8 @@ class Global():
     INFLUXDB_ZIPPED = False
     INFLUXDB_DATABASE = 'EnergieAnzeige'
     INFLUXDB_DATABASE_LONG = 'MonatsAnzeige'
+    INLFUXDB_DELAY = 5
+    INLFUXDB_SHORT_DELAY = 2
 
     MODBUS_PORT = 502
     MODBUS_PIKO_IP = "192.168.100.142"
