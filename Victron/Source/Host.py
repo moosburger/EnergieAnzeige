@@ -130,8 +130,10 @@ class Raspi_CallBack():  #object
 # #################################################################################################
         def run(self, interval, funcObj):
 
-            self.log.info("Starte Raspi Callback mit Intervall {} sek.".format(interval))
             self.mBootTime = self._GetBootTime()
+            self.log.info("Starte Raspi Callback mit Intervall {} sek. @ {}".format(interval, self.mBootTime))
+            # verzögern
+            time.sleep(interval)
 
             fncCnt = 0
             while True:

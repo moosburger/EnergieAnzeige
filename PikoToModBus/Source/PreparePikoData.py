@@ -272,9 +272,9 @@ class PrepareData():
         DailyWh2 = self._Conf_Two_Register(Data['TodayWh'])
 
         CA_P  = self._Conf_Single_Register(Data['CA_P'])
-        CA1_U = self._Conf_Single_Register(Data['CA1_U'])
-        CA2_U = self._Conf_Single_Register(Data['CA2_U'])
-        CA3_U = self._Conf_Single_Register(Data['CA3_U'])
+        CA1_U = self._Conf_Single_Register(round(Data['CA1_U'], 1))
+        CA2_U = self._Conf_Single_Register(round(Data['CA2_U'], 1))
+        CA3_U = self._Conf_Single_Register(round(Data['CA3_U'], 1))
 
         CA12_U = math.sqrt(3) * Data['CA1_U']
         CA23_U = math.sqrt(3) * Data['CA2_U']
@@ -286,18 +286,19 @@ class PrepareData():
         CA23_U = self._Conf_Single_Register(CA23_U)
         CA31_U = self._Conf_Single_Register(CA31_U)
 
-        CA_I = Data['CA1_I'] + Data['CA2_I'] +Data['CA3_I']
+        CA_I = Data['CA1_I'] + Data['CA2_I'] + Data['CA3_I']
         CA_I = self._Conf_Single_Register(round(CA_I, 1))
         CA1_I = self._Conf_Single_Register(round(Data['CA1_I'], 1))
         CA2_I = self._Conf_Single_Register(round(Data['CA2_I'], 1))
         CA3_I = self._Conf_Single_Register(round(Data['CA3_I'], 1))
-        CC_T  = [int(((Piko._CnvTemp(Data['CC1_T']) + Piko._CnvTemp(Data['CC2_T'])) / 2)),]
-        CC1_U = self._Conf_Single_Register(Data['CC1_U'])
-        CC2_U = self._Conf_Single_Register(Data['CC2_U'])
-        CC1_I = self._Conf_Single_Register(Data['CC1_I'])
-        CC2_I = self._Conf_Single_Register(Data['CC2_I'])
-        CC1_P = self._Conf_Single_Register(Data['CC1_P'])
-        CC2_P = self._Conf_Single_Register(Data['CC2_P'])
+        CC1_T = int(Piko._CnvTemp(Data['CC1_T']))
+        CC2_T = int(Piko._CnvTemp(Data['CC2_T']))
+        CC1_U = self._Conf_Single_Register(round(Data['CC1_U'], 1))
+        CC2_U = self._Conf_Single_Register(round(Data['CC2_U'], 1))
+        CC1_I = self._Conf_Single_Register(round(Data['CC1_I'], 1))
+        CC2_I = self._Conf_Single_Register(round(Data['CC2_I'], 1))
+        CC1_P = self._Conf_Single_Register(round(Data['CC1_P'], 1))
+        CC2_P = self._Conf_Single_Register(round(Data['CC2_P'], 1))
         CC_P = self._Conf_Single_Register(Data['CC_P'])
 
         Data['Status'] = self._CnvStatus(Data['Status'])
@@ -309,20 +310,20 @@ class PrepareData():
                     ('Ac2 Strom',40190, 1,CA2_I[0],40192,CA_I[1]),     #Data['CA2_I']   #~ AC Phase 2      : 3.09 A
                     ('Ac3 Strom',40191, 1,CA3_I[0],40192,CA_I[1]),     #Data['CA3_I']   #~ AC Phase 3       : 3.09 A
                     ('Spannung L1 L2',40193,1,CA12_U[0],40199,CA1_U[1]),
-                    ('Spannung L2 L3',40194,1,CA12_U[0],40199,CA1_U[1]),
-                    ('Spannung L3 L1',40195,1,CA12_U[0],40199,CA1_U[1]),
+                    ('Spannung L2 L3',40194,1,CA23_U[0],40199,CA1_U[1]),
+                    ('Spannung L3 L1',40195,1,CA31_U[0],40199,CA1_U[1]),
                     ('Ac1 Spannung',40196, 1,CA1_U[0],40199,CA1_U[1]),  #Data['CA1_U']   #~ AC Phase 1      : 231.7 V
                     ('Ac2 Spannung',40197, 1,CA2_U[0],40199,CA1_U[1]),  #Data['CA2_U']   #~ AC Phase 2      : 232.4 V
                     ('Ac3 Spannung',40198, 1,CA3_U[0],40199,CA1_U[1]),  #Data['CA3_U']   #~ AC Phase 3      : 232.4 V
                     ('Leistung',40200, 1,CA_P[0],40201,CA_P[1]),        #Data['CA_P']    #~ AC Power        :  2087 W
-                    ('Frequenz',40202,1,[49.96,],40203,[0,]),
+                    ('Frequenz',40202,1,[50,],40203,[0,]),
                     ('Scheinleistung',40204,1,[240,],40205,[0,]),
                     ('Blindleistung',40206,1,[0,],40207,[0,]),
                     ('cos phi',40208,1,[0,],40209,[0,]),
                     ('Gesamtertrag',40210, 2,TotalWh2,40212,[0,]),      #Data['TotalWh'] #~ Total energy    : 17634922 Wh
                     ('DC Leistung',40217,1,CC_P[0],40218,CC_P[1]),
-                    ('Innentemperatur',40219, 1,CC_T,0,[0,]),           #(Piko._CnvTemp(Data['CC1_T']) + Piko._CnvTemp(Data['CC2_T'])) / 2 #~ Mittelwertaller Temp  der Dc Werte   #~ DC String 1     :  (94.79 C)  + #~ DC String 2     :  (78.50 C) / 2
-                    ('And. Innentemp',40222,1,[0,],40223,[0,]),
+                    ('Innentemperatur',40219,1,[CC1_T,],0,[0,]),           #(Piko._CnvTemp(Data['CC1_T'])
+                    ('And. Innentemp' ,40222,1,[CC2_T,],0,[0,]),      #(Piko._CnvTemp(Data['CC2_T'])
                     ('Betriebsstatus',40224,1,Status[0],0,Status[1]),
                     ('Ereignisnummer',40226,2,[0,],0,[0,]),
                     ('Gesamtertrag',40303, 4,TotalWh4,0,[0,]),          #Data['TotalWh'] #~ Total energy    : 17634922 Wh
@@ -597,6 +598,12 @@ class PrepareData():
         print('AC Phase 1      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA1_U'], Data['CA1_I'], Data['CA1_P'], Data['CA1_T'], Piko._CnvTemp(Data['CA1_T'])))
         print('AC Phase 2      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA2_U'], Data['CA2_I'], Data['CA2_P'], Data['CA2_T'], Piko._CnvTemp(Data['CA2_T'])))
         print('AC Phase 3      : %5.1f V   %4.2f A   %4d W   T=%04x (%5.2f C)' % (Data['CA3_U'], Data['CA3_I'], Data['CA3_P'], Data['CA3_T'], Piko._CnvTemp(Data['CA3_T'])))
+
+
+                    #('Spannung L1 L2',40193,1,CA12_U[0],40199,CA1_U[1]),
+                    #('Spannung L2 L3',40194,1,CA23_U[0],40199,CA1_U[1]),
+                    #('Spannung L3 L1',40195,1,CA31_U[0],40199,CA1_U[1]),
+
         print('#################################################################################################\n')
 
     # # Ende Funktion: ' _Dbg_print(' ###################################################################

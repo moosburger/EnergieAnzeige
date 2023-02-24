@@ -30,7 +30,7 @@ if (bDebug == False):
     importPath = '/mnt/dietpi_userdata/Common'
 
 elif(bDebugOnLinux == True):
-    importPath = '/home/users/Grafana/Common'
+    importPath = '/home/gerhard/Grafana/Common'
 
 else:
     importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
@@ -156,6 +156,7 @@ class influxIO(object):
         def _init_influxdb_database(self, _database, callee):
 
             self.callee = callee
+            self.database = _database
 
              # close connection if reload
             if (self.influxdb_client is not None) and (self.IsConnected == True):
@@ -166,49 +167,56 @@ class influxIO(object):
 
             ver = None
             try:
-                self.influxdb_client = InfluxDBClient(host = self.host, port = self.port, username =self.username, password = self.password, database = _database, gzip = self.gzip)
+                self.influxdb_client = InfluxDBClient(host = self.host, port = self.port, username =self.username, password = self.password, database = self.database, gzip = self.gzip)
                 ver = self.influxdb_client.ping()
                 self.log.info("InfluxDB Version: {}".format(ver))
 
                 databases = self.influxdb_client.get_list_database()
-                if (len(list(filter(lambda x: x['name'] == _database, databases))) == 0):
-                    self.log.info("Erstelle Datenbank: {}".format(_database))
-                    self.influxdb_client.create_database(_database)
+                if (len(list(filter(lambda x: x['name'] == self.database, databases))) == 0):
+                    self.log.info("Erstelle Datenbank: {}".format(self.database))
+                    self.influxdb_client.create_database(self.database)
+
+                    if (callee == 'VrmGetData'):
+                        self.log.info("Setzte VrmGetData Retention Policy: {}".format(self.database))
+                        self.influxdb_client.create_retention_policy('daily', database = self.database, duration = '13w', replication = 1, default = True)
+                        #self.influxdb_client.create_retention_policy('daily', database = self.database, duration = '26w', replication = 1, default = True)
+                        #self.influxdb_client.create_retention_policy('sechs_monate', database = self.database, duration = '26w', replication = 1, default = True)
+                        #self.influxdb_client.alter_retention_policy('daily', database = self.database, duration = '26w', replication = 0, default = True)
+
+                        #self.log.info("Setzte Continuous query: {}".format(self.database))
+                        #select_clause = 'SELECT mean("AcPvOnGridPower") INTO "PvInvertersAcEnergyForwardDay" FROM "system" WHERE ("instance" = "Gateway") GROUP BY time(1d)'
+                        #self.influxdb_client.create_continuous_query('PvDay', select_clause, self.database, 'EVERY 10s FOR 1d')
+
+                    #if (callee == 'CalculationsMonth'):
+                    #    self.log.info("Setzte CalculationsMonth Retention Policy: {}".format(self.database))
+                        #self.influxdb_client.alter_retention_policy('daily', database = self.database, duration = '52w', replication = 0, default = True)
+                        #self.influxdb_client.create_retention_policy('sechs_monate', database = self.database, duration = '26w', replication = 1, default = True)
+                        #self.influxdb_client.create_retention_policy('daily', database = self.database, duration = '52w', replication = 1, default = True)
+
+                        #self.log.info("Setzte Continuous query: {}".format(self.database))
+                        #select_clause = 'SELECT mean("AcPvOnGridPower") INTO "PvInvertersAcEnergyForwardDay" FROM "system" WHERE ("instance" = "Gateway") GROUP BY time(1d)'
+                        #self.influxdb_client.create_continuous_query('PvDay', select_clause, self.database, 'EVERY 10s FOR 1d')
+
+                self.influxdb_client.switch_database(self.database)
+                self.log.info("{} initialisiert die Datenbank: {}".format(callee, self.database))
 
                 if (callee == 'VrmGetData'):
-                    self.log.info("Setzte VrmGetData Retention Policy: {}".format(_database))
-                    #self.influxdb_client.alter_retention_policy('daily', database = self.database, duration = '52w', replication = 0, default = True)
-                    #self.influxdb_client.create_retention_policy('sechs_monate', database = _database, duration = '26w', replication = 1, default = True)
-                    self.influxdb_client.create_retention_policy('daily', database = _database, duration = '52w', replication = 1, default = True)
+                    policyList = self.influxdb_client.get_list_retention_policies(database = self.database)
+                    self.log.info("VrmGetData {} Retention Policies: {}".format(self.database, policyList))
+                    for policy in policyList:
+                        self.log.info("VrmGetData {} ".format(policy['name']))
+                        if (policy['name'] == 'daily'):
+                            #self.influxdb_client.alter_retention_policy('daily', database = self.database, duration = '26w', replication = 0, default = True)
+                            self.influxdb_client.alter_retention_policy('daily', database = self.database, duration = '13w', replication = 0, default = True)
 
-                    #self.log.info("Setzte Continuous query: {}".format(_database))
-                    #select_clause = 'SELECT mean("AcPvOnGridPower") INTO "PvInvertersAcEnergyForwardDay" FROM "system" WHERE ("instance" = "Gateway") GROUP BY time(1d)'
-                    #self.influxdb_client.create_continuous_query('PvDay', select_clause, _database, 'EVERY 10s FOR 1d')
-
-                #if (callee == 'CalculationsMonth'):
-                #    self.log.info("Setzte CalculationsMonth Retention Policy: {}".format(_database))
-                    #self.influxdb_client.alter_retention_policy('daily', database = self.database, duration = '52w', replication = 0, default = True)
-                    #self.influxdb_client.create_retention_policy('sechs_monate', database = _database, duration = '26w', replication = 1, default = True)
-                    #self.influxdb_client.create_retention_policy('daily', database = _database, duration = '52w', replication = 1, default = True)
-
-                    #self.log.info("Setzte Continuous query: {}".format(_database))
-                    #select_clause = 'SELECT mean("AcPvOnGridPower") INTO "PvInvertersAcEnergyForwardDay" FROM "system" WHERE ("instance" = "Gateway") GROUP BY time(1d)'
-                    #self.influxdb_client.create_continuous_query('PvDay', select_clause, _database, 'EVERY 10s FOR 1d')
-
-                self.influxdb_client.switch_database(_database)
-                self.log.info("{} initialisiert die Datenbank: {}".format(callee, _database))
-
-                if (callee == 'VrmGetData'):
-                    policyList = self.influxdb_client.get_list_retention_policies(database = _database)
-                    self.log.info("VrmGetData {} Retention Policies: {}".format(_database, policyList))
                     queryList = self.influxdb_client.get_list_continuous_queries()
-                    self.log.info("VrmGetData {} Continuous query: {}".format(_database, queryList))
+                    self.log.info("VrmGetData {} Continuous query: {}".format(self.database, queryList))
 
                 if (callee == 'CalculationsMonth'):
-                    policyList = self.influxdb_client.get_list_retention_policies(database = _database)
-                    self.log.info("CalculationsMonth {} Retention Policies: {}".format(_database, policyList))
+                    policyList = self.influxdb_client.get_list_retention_policies(database = self.database)
+                    self.log.info("CalculationsMonth {} Retention Policies: {}".format(self.database, policyList))
                     queryList = self.influxdb_client.get_list_continuous_queries()
-                    self.log.info("CalculationsMonth {} Continuous query: {}".format(_database, queryList))
+                    self.log.info("CalculationsMonth {} Continuous query: {}".format(self.database, queryList))
 
                 self.IsConnected = True
                 self.log.info("self.{} (Init)".format(self.callee))
@@ -290,37 +298,61 @@ class influxIO(object):
 
             retVal = False
             if (self.IsConnected == False):
-                self.log.error("NoConnecion (Write) von self.{} - {}".format(self.callee, callee))
+                self.log.error("NoConnecion (Write) db {} von self.{} - {}".format(self.callee, self.database, callee))
                 return "NoConnecion"
 
             try:
                 retVal = self.influxdb_client.write_points(json.json_body)
 
             except requestException.ChunkedEncodingError as e:
-                self.log.error("ChunkedEncodingError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
+                self.log.error("ChunkedEncodingError (Write) db {} von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, self.database, callee, json.json_body, valueCnt, e))
                 #for info in sys.exc_info():
                 #    self.log.error("{}".format(info))
 
             except DbException.InfluxDBServerError as e:
-                self.log.error("ServerError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
+                self.log.error("ServerError (Write) db {} von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, self.database, callee, json.json_body, valueCnt, e))
                 #for info in sys.exc_info():
                 #    self.log.error("{}".format(info))
 
             except DbException.InfluxDBClientError as e:
-                self.log.error("CientError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
-                #for info in sys.exc_info():
-                #    self.log.error("{}".format(info))
+                tmp = str(e)
+                sensor_dataNew = None
+
+                if ("is type float, already exists as type integer dropped" in tmp):
+                    tmp = []
+                    for value in sensor_data.value:
+                        tmp.append(int(value))
+                    sensor_dataNew = _SensorData(sensor_data.device, sensor_data.instance, sensor_data.type, tmp, sensor_data.timestamp)
+
+                elif ("is type integer, already exists as type float dropped" in tmp):
+                    tmp = []
+                    for value in sensor_data.value:
+                        tmp.append(float(value))
+                    sensor_dataNew = _SensorData(sensor_data.device, sensor_data.instance, sensor_data.type, tmp, sensor_data.timestamp)
+
+                elif ("is type float, already exists as type string dropped" in tmp):
+                    tmp = []
+                    for value in sensor_data.value:
+                        tmp.append(str(value))
+                    sensor_dataNew = _SensorData(sensor_data.device, sensor_data.instance, sensor_data.type, tmp, sensor_data.timestamp)
+
+                if (sensor_dataNew is not None):
+                    #self.log.info(f"Schreibe {sensor_data.type} nochmal mit Integer Wert: {sensor_dataNew}")
+                    retVal = self._send_sensor_data_to_influxdb(sensor_dataNew, callee)
+
+                if (retVal != True):
+                    self.log.error("CientError (Write) db {} von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, self.database, callee, json.json_body, valueCnt, e))
 
             except requestException.ConnectionError as e:
-                self.log.error("ConnectionError (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
-                #for info in sys.exc_info():
+                self.log.error("ConnectionError (Write) db {} von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, self.database, callee, json.json_body, valueCnt, e))
+                #for info in sys.exc_info():, self.database
                 #    self.log.error("{}".format(info))
 
             except:
                 self.log.error("Start Sequenz (Write)")
                 for info in sys.exc_info():
                     self.log.error("{}".format(info))
-                self.log.error("Ende Sequenz\nSonstiger Error (Write) von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, callee, json.json_body, valueCnt, e))
+                self.log.error("Ende Sequenz\nSonstiger Error (Write) db {} von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, self.database, callee, json.json_body, valueCnt, e))
 
             return retVal
 
@@ -334,87 +366,142 @@ class influxIO(object):
     # #################################################################################################
         def _Query_influxDb(self, queries, measurement, searchFor, callee):
 
-            try:
-                retVal = []
-                points = []
-                results = []
-                errQuery = ''
-                errPoint = ''
-                errResult = ''
+            bIsPoint = False
+            bIsQuery = False
+            bIsResult = False
+            retVal = []
+            points = []
+            results = []
+            errQuery = ''
+            errPoint = ''
+            errPointLen = 0
+            errResult = ''
+            errIndex = 0
 
+            try:
                 if (self.IsConnected == False):
                     # _Query_influxDb wird im Augenblick nur von der  CalcPercentage.py benutzt beim lesen für die berechneten Daten
-                    self.log.error("NoConnecion (Query) von self.{} - {}".format(self.callee, callee))
+                    self.log.error("NoConnecion (Query) db {} von self.{} - {}".format(self.callee, callee))
                     retVal.append("NoConnecion")
                     return retVal
 
                 for query in queries:
+                    bIsQuery = True
                     errQuery = query
                     result = self.influxdb_client.query(query)
                     results.append(result)
 
                 for result in results:
+                    bIsResult = True
                     errResult = result
                     point = list(result.get_points(measurement))
                     points.append(point)
 
                 for point in points:
+                    bIsPoint = True
                     errPoint = point
-                    if (len(point) > 1):
+                    errPointLen = len(point)
+
+                    if (len(point) == 0):
+                        #self.log.warning("Länge ist 0, searchFor:{}, callee:{}, query:{}, point:{}, points:{}".format(searchFor, callee, query, point, points))
+                        retVal.append("Zero")
+                        errIndex = 1
+                        break
+
+                    if (searchFor not in str(point)):
+                        errIndex = 2
+                        self.log.error("Key '{}' existiert nicht. {} -{}-".format(searchFor, callee, point[0]))
+                        retVal.append(point[0])
+
+                    elif (len(point) > 1):
+                        errIndex = 3
                         for k in range (0, len(point)):
-                            retVal.append(point[k][searchFor])
+                        #    if ("Zero" in str(point[k][searchFor])):
+                        #       retVal.append(0.0)
+                        #    else:
+                            retVal.append(float(point[k][searchFor]))
                     elif (len(point) > 0):
-                        retVal.append(point[0][searchFor])
+                        errIndex = 4
+                        if ("Zero" in str(point[0][searchFor])):
+                            retVal.append(0.0)
+                        else:
+                            retVal.append(float(point[0][searchFor]))
                     else:
-                        retVal.append(0)
+                        errIndex = 5
+                        retVal.append(0.0)
 
             except requestException.ChunkedEncodingError as e:
                 if (errQuery != ''):
-                    self.log.error("ChunkedEncodingError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+                    self.log.error("ChunkedEncodingError (Query) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errQuery, e))
 
                 # fraglich ob die Fehler hier auftreten
                 if (errPoint != ''):
-                    self.log.error("ChunkedEncodingError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                    self.log.error("ChunkedEncodingError (Point) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errPoint, e))
                 if (errResult != ''):
-                    self.log.error("ChunkedEncodingError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+                    self.log.error("ChunkedEncodingError (Result) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errResult, e))
+
+                retVal.append("Error")
 
             except DbException.InfluxDBServerError as e:
                 if (errQuery != ''):
-                    self.log.error("ServerError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+                    self.log.error("ServerError (Query) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errQuery, e))
 
                 # fraglich ob die Fehler hier auftreten
                 if (errPoint != ''):
-                    self.log.error("ServerError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                    self.log.error("ServerError (Point) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errPoint, e))
                 if (errResult != ''):
-                    self.log.error("ServerError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+                    self.log.error("ServerError (Result) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errResult, e))
+
+                retVal.append("Error")
 
             except DbException.InfluxDBClientError as e:
                 if (errQuery != ''):
-                    self.log.error("CientError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+                    self.log.error("CientError (Query) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errQuery, e))
 
                 # fraglich ob die Fehler hier auftreten
                 if (errPoint != ''):
-                    self.log.error("CientError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                    self.log.error("CientError (Point) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errPoint, e))
                 if (errResult != ''):
-                    self.log.error("CientError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+                    self.log.error("CientError (Result) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errResult, e))
+
+                retVal.append("Error")
 
             except requestException.ConnectionError as e:
                 if (errQuery != ''):
-                    self.log.error("ConnectionError (Query) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errQuery, e))
+                    self.log.error("ConnectionError (Query) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errQuery, e))
 
                 # fraglich ob die Fehler hier auftreten
                 if (errPoint != ''):
-                    self.log.error("ConnectionError (Point) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errPoint, e))
+                    self.log.error("ConnectionError (Point) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errPoint, e))
                 if (errResult != ''):
-                    self.log.error("ConnectionError (Result) von self.{} - {}: {}\n e: {}".format(self.callee, callee, errResult, e))
+                    self.log.error("ConnectionError (Result) db {} von self.{} - {}: {}\n e: {}".format(self.callee, self.database, callee, errResult, e))
+
+                retVal.append("Error")
+
+            except IndexError as e:
+                self.log.error("IndexError db {} von self.{} - {}".format(self.callee, self.database, callee))
+                if (errQuery != ''):
+                    self.log.error("(Query): {} e: {}".format(errQuery, e))
+                if (errPoint != ''):
+                    self.log.error("(Point): {} e: {}".format(errPoint, e))
+                if (errResult != ''):
+                    self.log.error("(Result): {} e: {}".format(errResult, e))
+
+                retVal.append("Error")
 
             except:
-                self.log.error("Start Sequenz (Read) von self.{} - {}".format(self.callee, callee))
+                self.log.error("Start Sequenz (Read) db {} von self.{} - {}".format(self.callee, self.database, callee))
                 for info in sys.exc_info():
                     self.log.error("{}".format(info))
-                self.log.error("errQuery: {}".format(errQuery))
-                self.log.error("errResult: {}".format(errResult))
-                self.log.error("errPoint: {}".format(errPoint))
+                self.log.error("errQuery: |-{}-| {}".format(errQuery, bIsQuery))
+                self.log.error("errResult: |-{}-| {}".format(errResult, bIsResult))
+                self.log.error("errPoint: |-{}-| {}".format(errPoint, bIsPoint))
+                self.log.error("errIndex: |-{}-".format(errIndex))
+                if (bIsPoint):
+                    self.log.error("errPointLen: {}".format(errPointLen))
+                    self.log.error("searchFor: {}".format(searchFor))
+
+                retVal.append("Error")
 
             return retVal
 

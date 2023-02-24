@@ -83,9 +83,9 @@ def getEnergy(datei):
 # #################################################################################################
 def writetoFile(windowsPath, Inverter, DateiName, Energie):
 
+    strStream = "Datum;{} Stand Jahr (kWh)".format(Inverter)
+    Energie.insert(0, strStream)
     filePath = '{}/{}{}'.format(windowsPath, Inverter, DateiName)
-    if (bDebug == True) and (bDebugOnLinux == False):
-        filePath = filePath.replace('/','\\')
     #print(filePath)
     #return
 
@@ -100,20 +100,15 @@ def writetoFile(windowsPath, Inverter, DateiName, Energie):
 # # Ende Funktion: writetoFile #################################################################################
 
 # #################################################################################################
-# #  Funktion: 'get_DayHistPac '
+# #  Funktion: get_InverterJahresLeistung
 ## \details
 #   \param[in]     -
 #   \return          -
 # #################################################################################################
-def get_InverterMonatsLeistung(windowsPath, Inverter, datMonat, datTagLog, year):
+def get_InverterJahresLeistung(windowsPath, Inverter, datMonat, year):
 
-    StartE = 0
-    MonthE = 0
-    lastMonth = 0
-    monatsDaten = []
-    diff = 0
-    lastDate = 0
-    datei = '{}/{}/{}{}'.format(windowsPath, year, Inverter, datTagLog)
+    YearE = 0
+    datei = '{}/{}/{}{}'.format(windowsPath, year, Inverter, datMonat)
 
     if (bDebug == True) and (bDebugOnLinux == False):
         datei = datei.replace('/','\\')
@@ -122,65 +117,36 @@ def get_InverterMonatsLeistung(windowsPath, Inverter, datMonat, datTagLog, year)
         return
     #print(datei)
 
-    dayE = getEnergy(datei)
+    monE = getEnergy(datei)
 
-    if(len(dayE) == 0):
+    if(len(monE) == 0):
         return
 
-    for line in dayE:
+    for line in monE:
         line = line.strip()
         if not line:
             continue
 
-        smaRegEx = "(TimeStamp:) (\d{2})\.(\d{2})\.(\d{4}) (\d{2})\:(\d{2}) (\d{2})(\s*)(Total Energy:)( *)(\d*)( Wh)"
+        smaRegEx = "(\d{2})\.(\d{2})\.(\d{4});(.*)"
         match = Utils.RegEx(smaRegEx, line, Utils.fndFrst, Utils.Srch, '')
         if match:
             #print(match.groups())
-            _day = int(match.group(2))
-            _mon = int(match.group(3))
-            _year = int(match.group(4))
-            _h = int(match.group(5))
-            _m = int(match.group(6))
-            _Wh = int(match.group(11))
+            _day = int(match.group(1))
+            _mon = int(match.group(2))
+            _year = int(match.group(3))
+            _Wh = int(match.group(4))
 
-            date = ('{:02}.{:02}.{}'.format(_day, _mon, _year))
+            YearE += _Wh
 
-            if (lastMonth == 0):
-                strStream = "Datum;{} Stand Monat (kWh)".format(Inverter)
-                monatsDaten.append(strStream)
-                StartE = _Wh
-                lastMonth = _mon
-
-            if(lastMonth != _mon):
-                MonthE = _Wh - StartE
-
-                datetimeFormat = '%d.%m.%Y'
-                diff = datetime.datetime.strptime(lastDate, datetimeFormat)
-
-                strStream = "{:02}.{:02}.{};{: 8}".format(diff.day, diff.month, diff.year, MonthE)
-                monatsDaten.append(strStream)
-                lastMonth = _mon
-                StartE = _Wh
-                MonthE = 0
-
-            lastDate = date
-
-    MonthE = _Wh - StartE
     egal, days = monthrange(_year, _mon)
     _Now = datetime.datetime.now()
     if(_Now.year == _year):
         days = _day
 
-    strStream = "{:02}.{:02}.{};{: 8}".format(days, _mon, _year, MonthE)
-    monatsDaten.append(strStream)
+    strStream = "{:02}.{:02}.{};{: 9}".format(days, _mon, _year, YearE)
+    return (strStream)
 
-    #print (monatsDaten)
-    windowsPath = '{}/{}'.format(windowsPath, year)
-    writetoFile(windowsPath, Inverter, datMonat, monatsDaten)
-
-    return
-
-# # Ende Funktion: 'get_InverterMonatsLeistung ' ######################################################################
+# # Ende Funktion: get_InverterMonatsLeistung ######################################################################
 
 # #################################################################################################
 # #  Funktion: ' _main '
@@ -192,9 +158,11 @@ def _main(argv):
 
     windowsPath = 'D:/Users/Download/PvAnlage/SolarExport'
     windowsPath = '/home/gerhard/Grafana/SolarExport'
+    pikoJahr = []
+    smaJahr =[]
 
-    aktJahr = [2014,2015,2016,2017,2018,2019,2020,2021]
-    #aktJahr = [2019]#,2015,2016,2017]
+    aktJahr = [2014,2015,2016,2017,2018,2019,2020,2021,2022,2023]
+    #aktJahr = [2022,2023]
 
     if (bDebug == False):
         windowsPath = '/mnt/dietpi_userdata/SolarExport'
@@ -207,9 +175,11 @@ def _main(argv):
 
     for year in aktJahr:
         print(year)
+        smaJahr.append(get_InverterJahresLeistung(windowsPath, 'Sma', 'EnergieMonat.txt',  year))
+        pikoJahr.append(get_InverterJahresLeistung(windowsPath, 'Piko', 'EnergieMonat.txt', year))
 
-        get_InverterMonatsLeistung(windowsPath, 'Sma', 'EnergieMonat.txt', 'TotalEnergy.log', year)
-        get_InverterMonatsLeistung(windowsPath, 'Piko', 'EnergieMonat.txt', 'TotalEnergy.log', year)
+    writetoFile(windowsPath, 'Sma', 'EnergieJahr.txt', smaJahr)
+    writetoFile(windowsPath, 'Piko', 'EnergieJahr.txt', pikoJahr)
 
 # #################################################################################################
 # #  Funktion: 'Einsprung beim Aufruf  '

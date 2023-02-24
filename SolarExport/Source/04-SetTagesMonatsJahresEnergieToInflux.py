@@ -14,7 +14,11 @@
 # 1.0         26.05.2020
 #
 # #################################################################################################
-
+##
+##Aufruf im Raspi
+## cd /mnt/dietpi_userdata/SolarExport
+##python3 "/mnt/dietpi_userdata/SolarExport/04-SetTagesMonatsJahresEnergieToInflux.py"
+##
 # #################################################################################################
 # # Debug Einstellungen
 # #################################################################################################
@@ -317,8 +321,8 @@ def _main(argv):
     influxHdlrLong = None
     #windowsPath = 'F:\\PvAnlage\\SolarExport\\'
 
-    rangeYear = [2014,2015,2016,2017,2018,2019,2020,2021]
-    #rangeYear = [2019]
+    #rangeYear = [2014,2015,2016,2017,2018,2019,2020,2021,2022]
+    rangeYear = [2022,2023]
 
     if (bDebug == False):
         windowsPath = '/mnt/dietpi_userdata/SolarExport'

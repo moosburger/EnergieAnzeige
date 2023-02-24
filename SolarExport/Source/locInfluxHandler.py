@@ -230,9 +230,27 @@ class influxIO(object):
                 #    print("{}".format(info))
 
             except DbException.InfluxDBClientError as e:
-                print("CientError (Write): {}\nAnzahl Daten: {} e: {}".format(json.json_body, valueCnt, e))
-                #for info in sys.exc_info():
-                #    print("{}".format(info))
+                tmp = str(e)
+                sensor_dataNew = None
+
+                if ("is type float, already exists as type integer dropped" in tmp):
+                    tmp = []
+                    for value in sensor_data.value:
+                        tmp.append(int(value))
+                    sensor_dataNew = _SensorData(sensor_data.device, sensor_data.instance, sensor_data.type, tmp, sensor_data.timestamp)
+
+                elif ("is type integer, already exists as type float dropped" in tmp):
+                    tmp = []
+                    for value in sensor_data.value:
+                        tmp.append(float(value))
+                    sensor_dataNew = _SensorData(sensor_data.device, sensor_data.instance, sensor_data.type, tmp, sensor_data.timestamp)
+
+                if (sensor_dataNew is not None):
+                    print(f"Schreibe {sensor_data.type} nochmal mit Integer Wert: {sensor_dataNew}")
+                    retVal = self._send_sensor_data_to_influxdb(sensor_dataNew)
+
+                if (retVal != True):
+                    print("CientError (Write) db {} von self.{} - {}: {}\nAnzahl Daten: {} e: {}".format(self.callee, self.database, callee, json.json_body, valueCnt, e))
 
             except requestException.ConnectionError as e:
                 print("ConnectionError (Write): {}\nAnzahl Daten: {} e: {}".format(json.json_body, valueCnt, e))
@@ -257,31 +275,44 @@ class influxIO(object):
     # #################################################################################################
         def _Query_influxDb(self, queries, measurement, searchFor):
 
+            bIsPoint = False
+            bIsQuery = False
+            bIsResult = False
+            retVal = []
+            points = []
+            results = []
+            errQuery = ''
+            errPoint = ''
+            errPointLen = 0
+            errResult = ''
+
             try:
-                retVal = []
-                points = []
-                results = []
-                errQuery = ''
-                errPoint = ''
-                errResult = ''
 
                 for query in queries:
+                    bIsQuery = True
                     errQuery = query
                     result = self.influxdb_client.query(query)
                     results.append(result)
 
                 for result in results:
+                    bIsResult = True
                     errResult = result
                     point = list(result.get_points(measurement))
                     points.append(point)
 
                 for point in points:
+                    bIsPoint = True
                     errPoint = point
-                    if (len(point) > 1):
+                    errPointLen = len(point)
+                    if (searchFor not in str(point)):
+                        self.log.error("Key '{}' existiert nicht. {} -{}-".format(searchFor, callee, point[0]))
+                        retVal.append(point[0])
+
+                    elif (len(point) > 1):
                         for k in range (0, len(point)):
-                            retVal.append(point[k][searchFor])
+                            retVal.append(float(point[k][searchFor]))
                     elif (len(point) > 0):
-                        retVal.append(point[0][searchFor])
+                        retVal.append(float(point[0][searchFor]))
                     else:
                         retVal.append(0)
             except:
@@ -290,6 +321,9 @@ class influxIO(object):
                 print("errQuery: {}".format(errQuery))
                 print("errResult: {}".format(errResult))
                 print("errPoint: {}".format(errPoint))
+                if (bIsPoint):
+                    print("errPointLen: {}".format(errPointLen))
+                    print("searchFor: {}".format(searchFor))
 
             return retVal
 

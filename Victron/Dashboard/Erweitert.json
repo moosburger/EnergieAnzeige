@@ -10,15 +10,23 @@
         "limit": 100,
         "name": "Annotations & Alerts",
         "showIn": 0,
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "editable": true,
+  "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 2,
   "id": 4,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "cacheTimeout": null,
@@ -27,18 +35,24 @@
         "defaults": {
           "mappings": [
             {
-              "from": "-100000",
-              "id": 0,
-              "text": "zum Netz",
-              "to": "-0",
-              "type": 2
+              "options": {
+                "from": -100000,
+                "result": {
+                  "text": "zum Netz"
+                },
+                "to": 0
+              },
+              "type": "range"
             },
             {
-              "from": "0",
-              "id": 1,
-              "text": "aus dem Netz",
-              "to": "10000",
-              "type": 2
+              "options": {
+                "from": 0,
+                "result": {
+                  "text": "aus dem Netz"
+                },
+                "to": 10000
+              },
+              "type": "range"
             }
           ],
           "thresholds": {
@@ -92,7 +106,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "groupBy": [
@@ -145,18 +159,24 @@
         "defaults": {
           "mappings": [
             {
-              "from": "0.1",
-              "id": 0,
-              "text": "Erzeugung",
-              "to": "10000",
-              "type": 2
+              "options": {
+                "from": 0.1,
+                "result": {
+                  "text": "Erzeugung"
+                },
+                "to": 10000
+              },
+              "type": "range"
             },
             {
-              "from": "0",
-              "id": 1,
-              "text": "Aus",
-              "to": "0.1",
-              "type": 2
+              "options": {
+                "from": 0,
+                "result": {
+                  "text": "Aus"
+                },
+                "to": 0.1
+              },
+              "type": "range"
             }
           ],
           "noValue": "Aus",
@@ -245,7 +265,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "groupBy": [],
@@ -370,10 +390,10 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
-          "alias": "GesamtEnergie Piko",
+          "alias": "Energie Piko",
           "groupBy": [
             {
               "params": [
@@ -416,7 +436,7 @@
           ]
         },
         {
-          "alias": "GesamtEnergie Sma",
+          "alias": "Energie Sma",
           "groupBy": [
             {
               "params": [
@@ -567,10 +587,6 @@
       },
       "datasource": null,
       "decimals": 0,
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fontSize": "80%",
       "format": "percent",
       "gridPos": {
@@ -746,10 +762,6 @@
         "threshold": 0
       },
       "datasource": null,
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fontSize": "80%",
       "format": "percent",
       "gridPos": {
@@ -918,25 +930,34 @@
         "defaults": {
           "mappings": [
             {
-              "from": "-100",
-              "id": 0,
-              "text": "Entladen",
-              "to": "-0.3",
-              "type": 2
+              "options": {
+                "from": -100,
+                "result": {
+                  "text": "Entladen"
+                },
+                "to": -0.3
+              },
+              "type": "range"
             },
             {
-              "from": "0.3",
-              "id": 1,
-              "text": "Laden",
-              "to": "100",
-              "type": 2
+              "options": {
+                "from": 0.3,
+                "result": {
+                  "text": "Laden"
+                },
+                "to": 100
+              },
+              "type": "range"
             },
             {
-              "from": "-0.3",
-              "id": 2,
-              "text": "inaktiv",
-              "to": "0.3",
-              "type": 2
+              "options": {
+                "from": -0.3,
+                "result": {
+                  "text": "inaktiv"
+                },
+                "to": 0.3
+              },
+              "type": "range"
             }
           ],
           "thresholds": {
@@ -991,7 +1012,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "groupBy": [],
@@ -1039,10 +1060,6 @@
       "datasource": null,
       "decimals": 0,
       "description": "negative Werte: -> zum Netz | positive Werte: <- vom Netz",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fontSizes": [
         4,
         5,
@@ -1151,7 +1168,7 @@
       },
       "gaugeDivId": "d3gauge_svg_12",
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 3,
         "x": 0,
         "y": 5
@@ -1166,6 +1183,26 @@
         {
           "name": "range to text",
           "value": 2
+        }
+      ],
+      "markerEndShapes": [
+        {
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "id": 2,
+          "name": "stub"
         }
       ],
       "operatorName": "current",
@@ -2440,10 +2477,6 @@
       "datasource": null,
       "decimals": 2,
       "description": "negative Werte: -> entladen | positive Werte: <- laden",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fontSizes": [
         4,
         5,
@@ -2539,7 +2572,7 @@
         "tickLengthMaj": 0.15,
         "tickLengthMin": 0.05,
         "tickSpaceMajVal": 1000,
-        "tickSpaceMinVal": 500,
+        "tickSpaceMinVal": 200,
         "tickWidthMaj": 5,
         "tickWidthMin": 1,
         "ticknessGaugeBasis": 200,
@@ -2552,7 +2585,7 @@
       },
       "gaugeDivId": "d3gauge_svg_30",
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 3,
         "x": 3,
         "y": 5
@@ -2561,12 +2594,38 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:137",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:138",
           "name": "range to text",
           "value": 2
+        }
+      ],
+      "markerEndShapes": [
+        {
+          "$$hashKey": "object:116",
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "$$hashKey": "object:117",
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "$$hashKey": "object:118",
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "$$hashKey": "object:119",
+          "id": 2,
+          "name": "stub"
         }
       ],
       "operatorName": "current",
@@ -3826,6 +3885,7 @@
       ],
       "valueMaps": [
         {
+          "$$hashKey": "object:140",
           "op": "=",
           "text": "N/A",
           "value": "null"
@@ -3840,10 +3900,6 @@
       ],
       "datasource": null,
       "decimals": null,
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fontSizes": [
         4,
         5,
@@ -3951,7 +4007,7 @@
       },
       "gaugeDivId": "d3gauge_svg_32",
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 3,
         "x": 6,
         "y": 5
@@ -3968,6 +4024,26 @@
           "$$hashKey": "object:224",
           "name": "range to text",
           "value": 2
+        }
+      ],
+      "markerEndShapes": [
+        {
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "id": 2,
+          "name": "stub"
         }
       ],
       "operatorName": "current",
@@ -5243,10 +5319,6 @@
       ],
       "datasource": null,
       "decimals": null,
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fontSizes": [
         4,
         5,
@@ -5342,7 +5414,7 @@
         "tickLengthMaj": 0.15,
         "tickLengthMin": 0.05,
         "tickSpaceMajVal": 1000,
-        "tickSpaceMinVal": 500,
+        "tickSpaceMinVal": 200,
         "tickWidthMaj": 5,
         "tickWidthMin": 1,
         "ticknessGaugeBasis": 200,
@@ -5355,7 +5427,7 @@
       },
       "gaugeDivId": "d3gauge_svg_52",
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 3,
         "x": 9,
         "y": 5
@@ -5364,12 +5436,38 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:224",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:225",
           "name": "range to text",
           "value": 2
+        }
+      ],
+      "markerEndShapes": [
+        {
+          "$$hashKey": "object:203",
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "$$hashKey": "object:204",
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "$$hashKey": "object:205",
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "$$hashKey": "object:206",
+          "id": 2,
+          "name": "stub"
         }
       ],
       "operatorName": "current",
@@ -6630,6 +6728,7 @@
       ],
       "valueMaps": [
         {
+          "$$hashKey": "object:227",
           "op": "=",
           "text": "N/A",
           "value": "null"
@@ -6644,10 +6743,6 @@
       ],
       "datasource": null,
       "decimals": 2,
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fontSizes": [
         4,
         5,
@@ -6716,9 +6811,16 @@
         "gaugeUnits": "",
         "innerCol": "#fff",
         "labelFontSize": 18,
+        "markerEndEnabled": false,
+        "markerStartEnabled": false,
+        "markerStartShape": {
+          "$$hashKey": "object:96",
+          "id": 0,
+          "name": "circle"
+        },
         "maxNeedleAngle": 330,
         "maxTickAngle": 300,
-        "maxValue": 5500,
+        "maxValue": 6000,
         "minValue": 0,
         "needleCol": "#0099CC",
         "needleLengthNeg": 0.2,
@@ -6743,7 +6845,7 @@
         "tickLengthMaj": 0.15,
         "tickLengthMin": 0.05,
         "tickSpaceMajVal": 1000,
-        "tickSpaceMinVal": 500,
+        "tickSpaceMinVal": 200,
         "tickWidthMaj": 5,
         "tickWidthMin": 1,
         "ticknessGaugeBasis": 200,
@@ -6756,7 +6858,7 @@
       },
       "gaugeDivId": "d3gauge_svg_53",
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 3,
         "x": 12,
         "y": 5
@@ -6765,12 +6867,38 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:145",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:146",
           "name": "range to text",
           "value": 2
+        }
+      ],
+      "markerEndShapes": [
+        {
+          "$$hashKey": "object:95",
+          "id": 0,
+          "name": "arrow"
+        }
+      ],
+      "markerStartShapes": [
+        {
+          "$$hashKey": "object:96",
+          "id": 0,
+          "name": "circle"
+        },
+        {
+          "$$hashKey": "object:97",
+          "id": 1,
+          "name": "square"
+        },
+        {
+          "$$hashKey": "object:98",
+          "id": 2,
+          "name": "stub"
         }
       ],
       "operatorName": "current",
@@ -8031,6 +8159,7 @@
       ],
       "valueMaps": [
         {
+          "$$hashKey": "object:148",
           "op": "=",
           "text": "N/A",
           "value": "null"
@@ -8044,18 +8173,24 @@
         "defaults": {
           "mappings": [
             {
-              "from": "0.1",
-              "id": 0,
-              "text": "Alarm",
-              "to": "1000",
-              "type": 2
+              "options": {
+                "from": 0.1,
+                "result": {
+                  "text": "Alarm"
+                },
+                "to": 1000
+              },
+              "type": "range"
             },
             {
-              "from": "0",
-              "id": 1,
-              "text": " ",
-              "to": "0.1",
-              "type": 2
+              "options": {
+                "from": 0,
+                "result": {
+                  "text": " "
+                },
+                "to": 0.1
+              },
+              "type": "range"
             }
           ],
           "thresholds": {
@@ -8137,9 +8272,9 @@
         ]
       },
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 3,
-        "x": 17,
+        "x": 16,
         "y": 5
       },
       "hideTimeOverride": true,
@@ -8167,7 +8302,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "groupBy": [],
@@ -8258,7 +8393,7 @@
           ]
         }
       ],
-      "timeFrom": "1M",
+      "timeFrom": "1y",
       "timeShift": null,
       "title": "Alarme",
       "transparent": true,
@@ -8271,18 +8406,24 @@
         "defaults": {
           "mappings": [
             {
-              "from": "0.1",
-              "id": 0,
-              "text": "On",
-              "to": "10000",
-              "type": 2
+              "options": {
+                "from": 0.1,
+                "result": {
+                  "text": "On"
+                },
+                "to": 10000
+              },
+              "type": "range"
             },
             {
-              "from": "-1",
-              "id": 1,
-              "text": " Off",
-              "to": "0.1",
-              "type": 2
+              "options": {
+                "from": -1,
+                "result": {
+                  "text": " "
+                },
+                "to": 0.1
+              },
+              "type": "range"
             }
           ],
           "thresholds": {
@@ -8376,9 +8517,9 @@
         ]
       },
       "gridPos": {
-        "h": 6,
-        "w": 3,
-        "x": 20,
+        "h": 8,
+        "w": 4,
+        "x": 19,
         "y": 5
       },
       "hideTimeOverride": true,
@@ -8406,35 +8547,20 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "groupBy": [],
+          "hide": false,
           "limit": "",
           "measurement": "vebus",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "A",
+          "query": "SELECT last(\"LedsAbsorption\") AS \"Konstantspannung\", last(\"LedsBulk\") AS \"Konstantstrom (Bulk)\", last(\"LedsFloat\") AS \"Ladeerhaltung\", last(\"LedsLowBattery\") AS \"niedrige Batteriespannung\", last(\"LedsOverload\") AS \"Überlast\", last(\"LedsTemperature\") AS \"Temperatur\" FROM \"vebus\" WHERE (\"instance\" = 'MultiPlus-II') AND $timeFilter",
+          "rawQuery": false,
+          "refId": "B",
           "resultFormat": "table",
           "select": [
-            [
-              {
-                "params": [
-                  "LedsAbsorption"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  "Konstantspannung"
-                ],
-                "type": "alias"
-              }
-            ],
             [
               {
                 "params": [
@@ -8448,7 +8574,25 @@
               },
               {
                 "params": [
-                  "Konstantstrom"
+                  "Konstantstrom (Bulk)"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "LedsAbsorption"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  "Konstantspannung (Absorption)"
                 ],
                 "type": "alias"
               }
@@ -8466,7 +8610,7 @@
               },
               {
                 "params": [
-                  "Ladeerhaltung"
+                  "Ladeerhaltung (Float)"
                 ],
                 "type": "alias"
               }
@@ -8535,63 +8679,884 @@
           ]
         }
       ],
-      "timeFrom": "1M",
+      "timeFrom": "1y",
       "timeShift": null,
       "title": "LED Status",
       "transparent": true,
       "type": "stat"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "-- Mixed --",
+      "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "links": []
+          "mappings": [],
+          "max": 6000,
+          "min": 0,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "BatterieTemp"
+            },
+            "properties": [
+              {
+                "id": "max",
+                "value": 50
+              },
+              {
+                "id": "min",
+                "value": -20
+              },
+              {
+                "id": "unit",
+                "value": "celsius"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 12
+      },
+      "id": 6,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.2.3",
+      "targets": [
+        {
+          "alias": "PIKO",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "pvinverter",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcPower"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "PIKO"
+            }
+          ]
+        },
+        {
+          "alias": "SMA",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "pvinverter",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "AcPower"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "SMA"
+            }
+          ]
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Aktuelle Pv Leistung",
+      "transparent": true,
+      "type": "gauge"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "mappings": [],
+          "max": 80,
+          "min": -20,
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "dark-green",
+                "value": null
+              },
+              {
+                "color": "dark-yellow",
+                "value": 75
+              },
+              {
+                "color": "dark-red",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Batterie"
+            },
+            "properties": [
+              {
+                "id": "max",
+                "value": 50
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 8,
+        "x": 7,
+        "y": 12
+      },
+      "hideTimeOverride": true,
+      "id": 8,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.2.3",
+      "targets": [
+        {
+          "alias": "Batterie",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "vebus",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Dc0Temperature"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "MultiPlus-II"
+            }
+          ]
+        },
+        {
+          "alias": "Raspi Cpu",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Temp"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "first"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "CpuInfo"
+            }
+          ]
+        },
+        {
+          "alias": "Raspi Gehäuse",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "CaseTemp"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "first"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "CpuInfo"
+            }
+          ]
+        }
+      ],
+      "timeFrom": "31d",
+      "timeShift": null,
+      "title": "Temperaturen",
+      "transparent": true,
+      "type": "gauge"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
         },
         "overrides": []
       },
-      "fill": 0,
-      "fillGradient": 0,
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 16,
+        "y": 13
+      },
+      "hideTimeOverride": true,
+      "id": 18,
+      "options": {
+        "displayMode": "basic",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "pluginVersion": "8.2.3",
+      "targets": [
+        {
+          "groupBy": [],
+          "hide": false,
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "Usage"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Alle"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "UsageCore0"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Core 0"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "UsageCore1"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Core 1"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "UsageCore2"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Core 2"
+                ],
+                "type": "alias"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "UsageCore3"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Core 3"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "CpuInfo"
+            }
+          ]
+        }
+      ],
+      "timeFrom": "31d",
+      "timeShift": null,
+      "title": "Cpu Last %",
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 21,
+        "y": 13
+      },
+      "hideTimeOverride": true,
+      "id": 54,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Raspi\\.Boot Time$/",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.2.3",
+      "targets": [
+        {
+          "groupBy": [],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "BootTime"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [
+                  "Boot Time"
+                ],
+                "type": "alias"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "CpuInfo"
+            }
+          ]
+        }
+      ],
+      "timeFrom": "52w",
+      "timeShift": null,
+      "title": "Boot Time",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 15
+      },
+      "hideTimeOverride": true,
+      "id": 26,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": false,
+        "text": {}
+      },
+      "pluginVersion": "8.2.3",
+      "targets": [
+        {
+          "alias": "total",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Total"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1048576"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Memory"
+            }
+          ]
+        },
+        {
+          "alias": "belegt",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Used"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1048576"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Memory"
+            }
+          ]
+        },
+        {
+          "alias": "verfügbar",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1048576"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "Memory"
+            }
+          ]
+        }
+      ],
+      "timeFrom": "31d",
+      "timeShift": null,
+      "title": "RAM in GB",
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "datasource": "-- Mixed --",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Sun altitude"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
       "gridPos": {
         "h": 9,
         "w": 10,
         "x": 0,
-        "y": 11
+        "y": 17
       },
-      "hiddenSeries": false,
       "id": 4,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.5.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "Sun altitude",
-          "yaxis": 2
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      },
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "PIKO",
@@ -8771,16 +9736,9 @@
           "target": "sun_altitude"
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Pv Leistung",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
       "transformations": [
         {
           "id": "filterFieldsByName",
@@ -8788,446 +9746,80 @@
         }
       ],
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1212",
-          "format": "watt",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1213",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "type": "timeseries"
     },
     {
       "datasource": null,
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
           "mappings": [],
-          "max": 6000,
-          "min": 0,
           "thresholds": {
-            "mode": "percentage",
+            "mode": "absolute",
             "steps": [
               {
-                "color": "dark-green",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
           },
           "unit": "watt"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "BatterieTemp"
-            },
-            "properties": [
-              {
-                "id": "max",
-                "value": 50
-              },
-              {
-                "id": "min",
-                "value": -20
-              },
-              {
-                "id": "unit",
-                "value": "celsius"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 10,
-        "y": 11
-      },
-      "id": 6,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
-      },
-      "pluginVersion": "7.5.4",
-      "targets": [
-        {
-          "alias": "PIKO",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "pvinverter",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "AcPower"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "PIKO"
-            }
-          ]
-        },
-        {
-          "alias": "SMA",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "pvinverter",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "AcPower"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "SMA"
-            }
-          ]
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Aktuelle Pv Leistung",
-      "transparent": true,
-      "type": "gauge"
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "mappings": [],
-          "max": 80,
-          "min": -20,
-          "thresholds": {
-            "mode": "percentage",
-            "steps": [
-              {
-                "color": "dark-green",
-                "value": null
-              },
-              {
-                "color": "dark-yellow",
-                "value": 75
-              },
-              {
-                "color": "dark-red",
-                "value": 95
-              }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Batterie"
-            },
-            "properties": [
-              {
-                "id": "max",
-                "value": 50
-              },
-              {
-                "id": "decimals",
-                "value": 1
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 11
-      },
-      "id": 8,
-      "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
-      },
-      "pluginVersion": "7.5.4",
-      "targets": [
-        {
-          "alias": "Batterie",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "vebus",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Dc0Temperature"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "MultiPlus-II"
-            }
-          ]
-        },
-        {
-          "alias": "Raspi Cpu",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Temp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "first"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "CpuInfo"
-            }
-          ]
-        },
-        {
-          "alias": "Raspi Gehäuse",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CaseTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "first"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "CpuInfo"
-            }
-          ]
-        }
-      ],
-      "timeFrom": "4w",
-      "timeShift": null,
-      "title": "Temperaturen",
-      "transparent": true,
-      "type": "gauge"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
         "overrides": []
       },
-      "fill": 0,
-      "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 11,
         "x": 10,
-        "y": 16
+        "y": 17
       },
-      "hiddenSeries": false,
       "id": 14,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
-      "percentage": false,
-      "pluginVersion": "7.5.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "Leistung",
@@ -9361,66 +9953,24 @@
           ]
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Batterie Leistung",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1612",
-          "format": "watt",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1613",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "type": "timeseries"
     },
     {
       "datasource": null,
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -9428,42 +9978,56 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 2,
+        "h": 5,
         "w": 3,
         "x": 21,
-        "y": 16
+        "y": 20
       },
       "hideTimeOverride": true,
-      "id": 54,
+      "id": 24,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "displayMode": "gradient",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "last"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
         },
-        "text": {},
-        "textMode": "auto"
+        "showUnfilled": true,
+        "text": {}
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
-          "groupBy": [],
+          "alias": "total",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
           "measurement": "Raspi",
           "orderByTime": "ASC",
           "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "BootTime"
+                  "Total"
                 ],
                 "type": "field"
               },
@@ -9473,9 +10037,9 @@
               },
               {
                 "params": [
-                  "Boot Time"
+                  " / 1048576"
                 ],
-                "type": "alias"
+                "type": "math"
               }
             ]
           ],
@@ -9483,21 +10047,356 @@
             {
               "key": "instance",
               "operator": "=",
-              "value": "CpuInfo"
+              "value": "/dev/sda2"
+            }
+          ]
+        },
+        {
+          "alias": "belegt",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Used"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1048576"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/sda2"
+            }
+          ]
+        },
+        {
+          "alias": "frei",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Free"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1048576"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/sda2"
             }
           ]
         }
       ],
-      "timeFrom": "1y",
+      "timeFrom": "52w",
       "timeShift": null,
-      "title": "Boot Time",
+      "title": "SSD in GB",
       "transparent": true,
-      "type": "stat"
+      "type": "bargauge"
     },
     {
       "datasource": null,
       "fieldConfig": {
         "defaults": {
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 25
+      },
+      "hideTimeOverride": true,
+      "id": 25,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "pluginVersion": "8.2.3",
+      "targets": [
+        {
+          "alias": "total",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Total"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1024"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/mmcblk0p1"
+            }
+          ]
+        },
+        {
+          "alias": "belegt",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Used"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1024"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/mmcblk0p1"
+            }
+          ]
+        },
+        {
+          "alias": "frei",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "Raspi",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "Free"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              },
+              {
+                "params": [
+                  " / 1024"
+                ],
+                "type": "math"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "instance",
+              "operator": "=",
+              "value": "/dev/mmcblk0p1"
+            }
+          ]
+        }
+      ],
+      "timeFrom": "52w",
+      "timeShift": null,
+      "title": "SD in MB",
+      "transparent": true,
+      "type": "bargauge"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -9511,174 +10410,29 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "watt"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 3,
-        "x": 21,
-        "y": 18
-      },
-      "hideTimeOverride": true,
-      "id": 18,
-      "options": {
-        "displayMode": "basic",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "text": {}
-      },
-      "pluginVersion": "7.5.4",
-      "targets": [
-        {
-          "groupBy": [],
-          "hide": false,
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "Usage"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  "Alle"
-                ],
-                "type": "alias"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "UsageCore0"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  "Core 0"
-                ],
-                "type": "alias"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "UsageCore1"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  "Core 1"
-                ],
-                "type": "alias"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "UsageCore2"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  "Core 2"
-                ],
-                "type": "alias"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "UsageCore3"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [
-                  "Core 3"
-                ],
-                "type": "alias"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "CpuInfo"
-            }
-          ]
-        }
-      ],
-      "timeFrom": "4w",
-      "timeShift": null,
-      "title": "Cpu Last %",
-      "transparent": true,
-      "type": "bargauge"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 0,
-      "fillGradient": 0,
       "gridPos": {
         "h": 9,
         "w": 10,
         "x": 0,
-        "y": 20
+        "y": 26
       },
-      "hiddenSeries": false,
       "id": 2,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
-      "percentage": false,
-      "pluginVersion": "7.5.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "L1",
@@ -9853,110 +10607,110 @@
           ]
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Netzleistung",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1412",
-          "format": "watt",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1413",
-          "decimals": null,
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": true,
-        "alignLevel": null
-      }
+      "type": "timeseries"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "links": []
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "volt"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Strom"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "amp"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Strom"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "amp"
+              }
+            ]
+          }
+        ]
       },
-      "fill": 0,
-      "fillGradient": 0,
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 11,
         "x": 10,
-        "y": 24
+        "y": 26
       },
-      "hiddenSeries": false,
       "id": 22,
-      "legend": {
-        "alignAsTable": false,
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.5.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "$$hashKey": "object:273",
-          "alias": "MultiPlus-Strom",
-          "yaxis": 2
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        {
-          "$$hashKey": "object:274",
-          "alias": "Strom",
-          "yaxis": 2
+        "tooltip": {
+          "mode": "multi"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      },
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "MultiPlus-Spannung",
@@ -10135,299 +10889,84 @@
           ]
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Batterie Spannung und Strom",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:1812",
-          "decimals": 1,
-          "format": "volt",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:1813",
-          "decimals": 1,
-          "format": "amp",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "type": "timeseries"
     },
     {
       "datasource": null,
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
           "mappings": [],
-          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
-          }
+          },
+          "unit": "watt"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 21,
-        "y": 26
-      },
-      "hideTimeOverride": true,
-      "id": 26,
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": false,
-        "text": {}
-      },
-      "pluginVersion": "7.5.4",
-      "targets": [
-        {
-          "alias": "total",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Total"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Memory"
-            }
-          ]
-        },
-        {
-          "alias": "belegt",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Used"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Memory"
-            }
-          ]
-        },
-        {
-          "alias": "verfügbar",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Available"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "Memory"
-            }
-          ]
-        }
-      ],
-      "timeFrom": "4w",
-      "timeShift": null,
-      "title": "RAM in GB",
-      "transparent": true,
-      "type": "bargauge"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 0,
-      "fillGradient": 0,
       "gridPos": {
         "h": 9,
         "w": 10,
         "x": 0,
-        "y": 29
+        "y": 35
       },
-      "hiddenSeries": false,
       "id": 42,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
       },
-      "percentage": false,
-      "pluginVersion": "7.5.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "L1",
@@ -10602,55 +11141,50 @@
           ]
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Ac Lasten",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:2012",
-          "format": "watt",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "$$hashKey": "object:2013",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "type": "timeseries"
     },
     {
       "datasource": null,
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "links": [],
           "mappings": [],
+          "max": 100,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
@@ -10658,246 +11192,48 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Temperatur"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
               }
             ]
           }
-        },
-        "overrides": []
+        ]
       },
       "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 21,
-        "y": 31
-      },
-      "hideTimeOverride": true,
-      "id": 24,
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "text": {}
-      },
-      "pluginVersion": "7.5.4",
-      "targets": [
-        {
-          "alias": "total",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Total"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/root"
-            }
-          ]
-        },
-        {
-          "alias": "belegt",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Used"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/root"
-            }
-          ]
-        },
-        {
-          "alias": "frei",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Free"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1048576"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/root"
-            }
-          ]
-        }
-      ],
-      "timeFrom": "4w",
-      "timeShift": null,
-      "title": "SSD in GB",
-      "transparent": true,
-      "type": "bargauge"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 11,
         "x": 10,
-        "y": 32
+        "y": 35
       },
-      "hiddenSeries": false,
       "id": 20,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.5.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "Temperatur",
-          "yaxis": 2
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      },
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "System-SoC",
@@ -11117,261 +11453,22 @@
           ]
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Batterie SoC und Temperatur",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
       "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:2250",
-          "format": "percent",
-          "label": null,
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "$$hashKey": "object:2251",
-          "format": "celsius",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 21,
-        "y": 36
-      },
-      "hideTimeOverride": true,
-      "id": 25,
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "text": {}
-      },
-      "pluginVersion": "7.5.4",
-      "targets": [
-        {
-          "alias": "total",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Total"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1024"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/mmcblk0p1"
-            }
-          ]
-        },
-        {
-          "alias": "belegt",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Used"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1024"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/mmcblk0p1"
-            }
-          ]
-        },
-        {
-          "alias": "frei",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "Raspi",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"Total\") FROM \"Raspi\" WHERE (\"instance\" = '/dev/root') AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "Free"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              },
-              {
-                "params": [
-                  " / 1024"
-                ],
-                "type": "math"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "instance",
-              "operator": "=",
-              "value": "/dev/mmcblk0p1"
-            }
-          ]
-        }
-      ],
-      "timeFrom": "4w",
-      "timeShift": null,
-      "title": "SD in MB",
-      "transparent": true,
-      "type": "bargauge"
+      "type": "timeseries"
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 27,
+  "schemaVersion": 31,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {
@@ -11390,5 +11487,5 @@
   "timezone": "Europe/Berlin",
   "title": "Erweitert",
   "uid": "Gw2MqQkRk",
-  "version": 318
+  "version": 361
 }

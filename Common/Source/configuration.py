@@ -56,6 +56,8 @@ class Global():
     INFLUXDB_USER = None
     INFLUXDB_PASSWORD = None
     INFLUXDB_ZIPPED = False
+    INFLUXDB_DATABASE_WAERME = 'WaermeEnergieAnzeige'
+    INFLUXDB_DATABASE_WAERME_LONG = 'WaermeMonatsAnzeige'
     INFLUXDB_DATABASE = 'EnergieAnzeige'
     INFLUXDB_DATABASE_LONG = 'MonatsAnzeige'
     INLFUXDB_DELAY = 5
@@ -64,6 +66,17 @@ class Global():
     MODBUS_PORT = 502
     MODBUS_PIKO_IP = "192.168.100.142"
     MODBUS_SMA_IP = "192.168.100.143"
+    MODBUS_WAERMEENERGIE_IP = "192.168.100.139"
+
+    GAS_KONSTANTE       = 0.01      ## 1 Impuls entspricht  0.01 Kubikmeter Gas
+    GAS_ENERGIE         = 10        ## ! Kubikmeter Gas besitzt die Energie von 10 kWh
+
+    ## x0,1 = 1. Stelle hinter dem Komma, z.B. 0,6 m³ = 600 Liter
+    ## x0,01 = 2. Stelle hinter dem Komma, z.B. 0,07 m³ = 70 Liter
+    ## x0,001 = 3. Stelle hinter dem Komma, z.B. 0,008 m³ = 8 Liter
+    ## x0,0001 = 4. Stelle hinter dem Komma, z.B. 0,0009 m³ = 0,9 Liter = 900 Milliliter
+    ## Impluszähler auf die x0.0001 setzten, damit wird bei jeder Umdrehung 1 Liter verbraucht
+    WASSER_KONSTANTE    = 1       ## 1 Impuls entspricht 0.001 KubikMeter Wasser oder einem Liter
 
 # #################################################################################################
 # # Query auf Influx für zsätzliche Infos aus Berechnungen
@@ -72,6 +85,7 @@ class Global():
     MONTHSOFARTIMESTAMP  = "'{}-{:02}-01T01:00:00.0Z'"
     YEARSOFARTIMESTAMP   = "'{}-01-01T01:00:00.0Z'"
 
+    DAYTIMESTAMP       = "'{}-{:02}-{:02}T00:30:00.0Z'"
     MONTHTIMESTAMP       = "'{}-{:02}-01T00:30:00.0Z'"
     YEARTIMESTAMP        = "'{}-01-01T00:30:00.0Z'"
 
@@ -113,12 +127,16 @@ class Global():
     AllPower= "SELECT last(AcPower) FROM grid where instance='Meter'"
 
     #DcBattPower = "SELECT last(DcBatteryPower) FROM system where instance='Gateway'"
-    #Dc0Power = "SELECT last(Dc0Power) FROM vebus where instance='MultiPlus-II'"
-    AcBattPower = "SELECT last(AcActiveInL1P) FROM vebus where instance='MultiPlus-II'"
+    Dc0Power = "SELECT last(Dc0Power) FROM vebus where instance='MultiPlus-II'"
+    #AcBattPower = "SELECT last(AcActiveInL1P) FROM vebus where instance='MultiPlus-II'"
 
-    LastL1 = "SELECT last(AcConsumptionOnInputL1Power) FROM system where instance='Gateway'"
-    LastL2 = "SELECT last(AcConsumptionOnInputL2Power) FROM system where instance='Gateway'"
-    LastL3 = "SELECT last(AcConsumptionOnInputL3Power) FROM system where instance='Gateway'"
+    LastL1In = "SELECT last(AcConsumptionOnInputL1Power) FROM system where instance='Gateway'"
+    LastL2In = "SELECT last(AcConsumptionOnInputL2Power) FROM system where instance='Gateway'"
+    LastL3In = "SELECT last(AcConsumptionOnInputL3Power) FROM system where instance='Gateway'"
+
+    LastL1Out = "SELECT last(AcConsumptionOnOutputL1Power) FROM system where instance='Gateway'"
+    LastL2Out = "SELECT last(AcConsumptionOnOutputL2Power) FROM system where instance='Gateway'"
+    LastL3Out = "SELECT last(AcConsumptionOnOutputL3Power) FROM system where instance='Gateway'"
 
 # #################################################################################################
 # # Topics für die Pv Inverter
@@ -148,6 +166,15 @@ class PvInverter():
         AcEnergyForwardDaySoFar
         AcEnergyForwardMonthSoFar
         AcEnergyForwardYearSoFar
+        Dc1U
+        Dc1I
+        Dc1P
+        Dc2U
+        Dc2I
+        Dc2P
+        Dc1Temp
+        Dc2Temp
+        DcTemp
 
         Connected	                {"value": 1}
         CustomName	                {"value": ""}
@@ -220,7 +247,8 @@ class Grid():
     Topics = [ 'Ac/Current', 'Ac/Energy/Forward', 'Ac/Energy/Reverse', 'Ac/Power', 'Ac/Voltage',
                 'Ac/L1/Current', 'Ac/L1/Energy/Forward', 'Ac/L1/Energy/Reverse', 'Ac/L1/Power', 'Ac/L1/Voltage',
                 'Ac/L2/Current', 'Ac/L2/Energy/Forward', 'Ac/L2/Energy/Reverse', 'Ac/L2/Power', 'Ac/L2/Voltage',
-                'Ac/L3/Current', 'Ac/L3/Energy/Forward', 'Ac/L3/Energy/Reverse', 'Ac/L3/Power', 'Ac/L3/Voltage' ]
+                'Ac/L3/Current', 'Ac/L3/Energy/Forward', 'Ac/L3/Energy/Reverse', 'Ac/L3/Power', 'Ac/L3/Voltage',
+                'Connected' ]
 
 # #################################################################################################
 # # Topics für das BMV-700
@@ -277,7 +305,7 @@ class Battery():
         battery/258/TimeToGo-	                        {"value": 136440.0}
     """
 
-    Inst1 = '258'
+    Inst1 = '259'
     Label1 = 'BMV-700'
     RegEx = 'battery'
     Topics = ['Alarms/HighStarterVoltage', 'Alarms/HighTemperature', 'Alarms/HighVoltage', 'Alarms/LowSoc', 'Alarms/LowStarterVoltage', 'Alarms/LowTemperature', 'Alarms/LowVoltage', 'Alarms/MidVoltage',
@@ -299,6 +327,7 @@ class System():
         system/0/Ac/ConsumptionOnInput/L2/Power-	    {"value": 118.40000000000001}
         system/0/Ac/ConsumptionOnInput/L3/Power-	    {"value": 158.70000000000002}
         AcConsumptionOnInputPower
+        AcConsumptionOnOutputPower
         system/0/Ac/ConsumptionOnInput/NumberOfPhases	{"value": 3}
         system/0/Ac/Grid/DeviceType	                    {"value": 345}
         system/0/Ac/Grid/L1/Power-	                    {"value": -260.60000000000002}
@@ -411,8 +440,9 @@ class System():
     Label1 = 'Gateway'
     RegEx = 'system'
     Topics = ['Ac/ConsumptionOnInput/L1/Power', 'Ac/ConsumptionOnInput/L2/Power', 'Ac/ConsumptionOnInput/L3/Power',
-                'Ac/Grid/L1/Power', 'Ac/Grid/L2/Power', 'Ac/Grid/L3/Power', 'Ac/PvOnGrid/L1/Power',
-                'Ac/PvOnGrid/L2/Power', 'Ac/PvOnGrid/L3/Power', 'Dc/Battery/Current',
+                'Ac/ConsumptionOnOutput/L1/Power', 'Ac/ConsumptionOnOutput/L2/Power', 'Ac/ConsumptionOnOutput/L3/Power',
+                'Ac/Grid/L1/Power', 'Ac/Grid/L2/Power', 'Ac/Grid/L3/Power', 'Ac/PvOnGrid/L1/Power', 'Connected',
+                'Ac/PvOnGrid/L2/Power', 'Ac/PvOnGrid/L3/Power', 'Dc/Battery/Current', 'Dc/Battery/ConsumedAmphours',
                 'Dc/Battery/Power', 'Dc/Battery/Soc', 'Dc/Battery/State', 'Dc/Battery/Temperature', 'Dc/Battery/Voltage' ]
 
 # #################################################################################################
@@ -548,15 +578,31 @@ class VeBus():
         vebus/261/VebusError	                            {"value": 0}
         vebus/261/VebusMainState	                        {"value": 9}
         vebus/261/VebusSetChargeState	                    {"value": 0}
+
+        ConsumedAmphours
+        ConsumedWatthours
+        ChargedAmphours
+        ChargedWatthours
+
     """
 
     Inst1 = '261'
     Label1 = 'MultiPlus-II'
     RegEx = 'vebus'
-    Topics = ['Ac/ActiveIn/CurrentLimit', 'Ac/ActiveIn/L1/I', 'Ac/ActiveIn/L1/P', 'Ac/ActiveIn/L1/S', 'Ac/ActiveIn/L1/V',
+    Topics = ['Ac/ActiveIn/CurrentLimit', 'Ac/ActiveIn/L1/I', 'Ac/ActiveIn/L1/P', 'Ac/ActiveIn/L1/S', 'Ac/ActiveIn/L1/V', 'Ac/ActiveIn/Connected', 'Ac/ActiveIn/L1/F',
                     'Alarms/HighTemperature', 'Alarms/LowBattery', 'Alarms/Overload', 'Alarms/PhaseRotation', 'Alarms/Ripple', 'Alarms/TemperatureSensor', 'Alarms/VoltageSensor',
-                    'Dc/0/Current', 'Dc/0/MaxChargeCurrent', 'Dc/0/Power', 'Dc/0/Temperature', 'Dc/0/Voltage', 'Energy/AcIn1ToInverter', 'Energy/InverterToAcIn1',
+                    'Dc/0/Current', 'Dc/0/MaxChargeCurrent', 'Dc/0/Power', 'Dc/0/Temperature', 'Dc/0/Voltage', 'Energy/AcIn1ToInverter', 'Energy/InverterToAcIn1', 'Connected',
                     'Leds/Absorption', 'Leds/Bulk', 'Leds/Float', 'Leds/Inverter', 'Leds/LowBattery', 'Leds/Mains', 'Leds/Overload', 'Leds/Temperature' ,'Soc']
+
+# #################################################################################################
+# # Topics für den VeBus
+# #################################################################################################
+class Waerme():
+    Inst1 = ''
+    Label1 = 'PUFFER'
+    RegEx = 'heizung'
+    Topics = []
+
 
 # #################################################################################################
 # # Topics für alles andere

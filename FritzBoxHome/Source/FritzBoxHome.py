@@ -37,6 +37,7 @@ try:
     PublicImport = True
     import sys
     from logging.config import fileConfig
+    #from importlib import reload
     import os
     import logging
     from datetime import datetime
@@ -77,27 +78,6 @@ log = logging.getLogger('FritzHome')
 # # Prototypen
 # # if __name__ == '__main__':
 # #################################################################################################
-
-# #################################################################################################
-# #  Funktion: '_write_File '
-## 	\details
-#   \param[in] 	strFile
-#   \param[in]  txtStream
-#   \param[in]  oType
-#   \return     -
-# #################################################################################################
-def _write_File(strFile, txtStream, oType):
-
-    with open(strFile, oType) as f:
-      f.write (txtStream)
-      f.flush()
-
-    f.close()
-
-    # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
-    os.chmod(strFile, 0o777)
-
-# # Ende Funktion: ' _write_File ' ################################################################
 
 # #################################################################################################
 # #  Funktion: '_Read_File '
@@ -196,10 +176,16 @@ def getEnergy(context, features):
 # #################################################################################################
 def _main(argv):
 
+    runLogFile = '/home/gerhard/Grafana/FritzBoxHome/LogDataAllowed.txt'
     maxPower = 0
     minPower = 9999
     firstRun = True
     log.info("Starte FritzBoxHome")
+
+    bRunLogging = os.path.exists(runLogFile)
+    if (bRunLogging == False):
+        log.info("Beende FritzBoxHome")
+        sys.exit()
 
     try:
         ## Import fehlgeschlagen
@@ -221,13 +207,13 @@ def _main(argv):
                 maxPower = actualPower
                 datStream = ("\tTimeStamp {0:02d}.{1:02d}.{2:4d} {3:02d}:{4:02d}:{5:02d}    max Power: {6:6.2f} W".format(lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s, maxPower))
                 strFile = "/mnt/dietpi_userdata/FritzBoxHome/HzgMaxMinPower.log"
-                _write_File(strFile, datStream + '\n', "a")
+                Utils._write_File(strFile, datStream + '\n', "a")
 
             if (minPower > actualPower) and (actualPower > 0.0):
                 minPower = actualPower
                 datStream = ("\tTimeStamp {0:02d}.{1:02d}.{2:4d} {3:02d}:{4:02d}:{5:02d}                             min Power: {6:6.2f} W".format(lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s, minPower))
                 strFile = "/mnt/dietpi_userdata/FritzBoxHome/HzgMaxMinPower.log"
-                _write_File(strFile, datStream + '\n', "a")
+                Utils._write_File(strFile, datStream + '\n', "a")
 
             datStream = ("\tTimeStamp {0:02d}.{1:02d}.{2:4d} {3:02d}:{4:02d}:{5:02d}    actual Power: {6:6.2f} W    max Power: {7:6.2f} W    min Power: {8:6.2f} W".format(lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s, actualPower, maxPower, minPower))
             #print(datStream)
@@ -236,7 +222,7 @@ def _main(argv):
                 os.mkdir(strFile)
 
             strFile = "{0}/HzgPower_{1:02d}.{2:02d}.{3:4d}.log".format(strFile, lt_tag, lt_monat, lt_jahr)
-            _write_File(strFile, datStream + '\n', "a")
+            Utils._write_File(strFile, datStream + '\n', "a")
 
             time.sleep(120)
 

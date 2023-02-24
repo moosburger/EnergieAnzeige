@@ -43,6 +43,8 @@ fndFrst=True
 fndAll=False
 Rplc=True
 Srch=False
+toFloat=True
+toInt=False
 
 # #################################################################################################
 # # Funktionen
@@ -71,7 +73,7 @@ def GetPythonVersion():
     PytVer = sys.version_info
     return PytVer
 
-# # Ende Funktion: ' GetPythonVersion ' ###########################################################################
+# # Ende Funktion: ' GetPythonVersion ' ###########################################################
 
 # #################################################################################################
 # # Anfang Funktion: ' RegEx '
@@ -98,7 +100,7 @@ def RegEx(pattern, Stream, findFirst, Replace, repString):
         return m
     return 0
 
-# # Ende Funktion: ' RegEx ' #################################################################################
+# # Ende Funktion: ' RegEx ' ######################################################################
 
 # #################################################################################################
 # # Anfang Funktion: ' RegExSplit '
@@ -112,7 +114,7 @@ def RegExSplit(pattern, Stream):
     splitList =  re.split(pattern, Stream)
     return splitList
 
-# # Ende Funktion: ' RegExSplit ' #################################################################################
+# # Ende Funktion: ' RegExSplit ' #################################################################
 
 # #################################################################################################
 # # Anfang Funktion: ' GetEnvironVars '
@@ -134,31 +136,103 @@ def GetEnvironVars(EnvironVar, env):
 
     return os.environ[EnvironVar]
 
-# # Ende Funktion: ' GetEnvironVars ' ############################################################################
+# # Ende Funktion: ' GetEnvironVars ' #############################################################
 
 # #################################################################################################
-# #  Funktion: '_check_Data_Type '
+# #  Funktion: '_check_Data_TypeOld '
 ## 	\details    -
 #   \param[in] 	myVal
 #   \return 	myVal
 # #################################################################################################
-def _check_Data_Type(myVal):
+def _check_Data_TypeOld(myVal):
 
     #float, int, str, list, dict, tuple
-    if (isinstance(myVal, basestring)):
+    if (isinstance(myVal, str)):
         pass
     elif (isinstance(myVal, int)):
-        myVal = float(myVal)
-    elif (isinstance(myVal, long)):
-        myVal = float(myVal)
+        #myVal = float(myVal)
+        #myVal = round(myVal, 2)
+        pass
     elif (isinstance(myVal, float)):
         myVal = float(myVal)
+        myVal = round(myVal, 2)
     else:
         myVal = str(myVal)
 
     return myVal
 
-# # Ende Funktion: _check_Data_Type ############################################################
+# # Ende Funktion: _check_Data_TypeOld ############################################################
+
+# #################################################################################################
+# #  Funktion: '_check_Data_Type '
+# 	\details    -
+#   \param[in] 	myVal
+#   \return 	myVal
+# #################################################################################################
+def _check_Data_Type(myVal, toFloat, Format=None):
+
+    type = ''
+    length = len(str(myVal))
+    #float, int, str, datetime, list, dict, tuple
+
+    if (Format is not None):
+        if ('%S' in Format) and ('%m' in Format):
+            myVal = datetime.datetime.strptime(myVal, Format)
+            type = 'datetime'
+        elif ('%S' in Format):
+            myVal = datetime.datetime.strptime(myVal, Format).time()
+            type = 'time'
+        elif ('%m' in Format):
+            myVal = datetime.datetime.strptime(myVal, Format).date()
+            type = 'date'
+    else:
+        try:
+            #print(f"toFloat: {toFloat}; myVal: {myVal}")
+            if not (isinstance(myVal, str)):
+                #print ("Is Not AN String")
+                if (toFloat == True):
+                    myVal = float(myVal)
+                else:
+                    myVal = int(myVal)
+
+            else:
+                if (myVal.isnumeric()):
+                    #print ("IsNumeric")
+                    if (toFloat == True):
+                        myVal = float(myVal)
+                    else:
+                        myVal = int(myVal)
+                elif ('.' in myVal):
+                    #print ("HasDot")
+                    myVal = float(myVal)
+        except:
+            #print ("InPass")
+            pass
+
+        if (isinstance(myVal, int)):
+            type = 'int'
+            myVal = int(myVal)
+#        elif (isinstance(myVal, long)):
+#            type = 'long'
+#            myVal = int(myVal)
+        elif (isinstance(myVal, float)):
+            type = 'float'
+            myVal = float(myVal)
+            myVal = round(myVal, 2)
+        elif (isinstance(myVal, list)):
+            type = 'list'
+        elif (isinstance(myVal, dict)):
+            type = 'dict'
+        elif (isinstance(myVal, tuple)):
+            type = 'tuple'
+        else:
+            type = 'string'
+            myVal = str(myVal)
+
+    #print(f"type: {type}; myVal: {myVal}")
+    return myVal, type, length
+
+# # Ende Funktion: _check_Data_Type ###############################################################
 
 # #################################################################################################
 # # Anfang Funktion: ' ErsetzeUmlaute '
@@ -179,7 +253,7 @@ def ErsetzeUmlaute(Stream):
 
     return Stream
 
-# # Ende Funktion: ' ErsetzeUmlaute ' ############################################################################
+# # Ende Funktion: ' ErsetzeUmlaute ' #############################################################
 
 # #################################################################################################
 # # Anfang Funktion: ' ErzeugeUmlaute '
@@ -199,7 +273,7 @@ def ErzeugeUmlaute(Stream):
 
     return Stream
 
-# # Ende Funktion: ' ErzeugeUmlaute ' ############################################################################
+# # Ende Funktion: ' ErzeugeUmlaute ' #############################################################
 
 # #################################################################################################
 # # Anfang Funktion: ' Printable '
@@ -224,7 +298,7 @@ def Printable(Stream):
 
     return ErzeugeUmlaute(str)
 
-# # Ende Funktion: ' Printable ' ############################################################################
+# # Ende Funktion: ' Printable ' ##################################################################
 
 # #################################################################################################
 # # Anfang Funktion: ' monthdelta '
@@ -245,6 +319,27 @@ def monthdelta(date, delta, asDateObject):
     else:
         return [d,m,y,d_m]
 
-# # Ende Funktion: ' monthdelta ' ############################################################################
+# # Ende Funktion: ' monthdelta ' #################################################################
 
-# # DateiEnde ##########################################################################################
+# #################################################################################################
+# #  Funktion: '_write_File '
+## 	\details
+#   \param[in] 	strFile
+#   \param[in]  txtStream
+#   \param[in]  oType
+#   \return     -
+# #################################################################################################
+def _write_File(strFile, txtStream, oType):
+
+    with open(strFile, oType) as f:
+      f.write (txtStream)
+      f.flush()
+
+    f.close()
+
+    # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
+    os.chmod(strFile, 0o777)
+
+# # Ende Funktion: ' _write_File ' ################################################################
+
+# # DateiEnde #####################################################################################

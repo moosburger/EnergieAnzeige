@@ -45,6 +45,22 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if(bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 import sys
@@ -59,6 +75,8 @@ import locConfiguration as _conf
 # #################################################################################################
 # # Python Imports (site-packages)
 # #################################################################################################
+sys.path.insert(0, importPath)
+import Utils
 
 # #################################################################################################
 # # private Imports
@@ -69,7 +87,8 @@ import locConfiguration as _conf
 # #################################################################################################
 RelVer="1.4.1"
 RelDate="20160218"
-TRef="c800"
+#TRef="c800"
+TRef="8000"
 
 # #################################################################################################
 # # Funktionen
@@ -434,27 +453,6 @@ class PikoWebRead(object):
     return ht.isoformat()
 
 # #################################################################################################
-# #  Funktion: '_write_File '
-## 	\details
-#   \param[in] 	strFile
-#   \param[in]  txtStream
-#   \param[in]  oType
-#   \return     -
-# #################################################################################################
-  def _write_File(self, strFile, txtStream, oType):
-
-    with open(strFile, oType) as f:
-      f.write (txtStream)
-      f.flush()
-
-    f.close()
-
-    # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
-    os.chmod(strFile, 0o777)
-
-# # Ende Funktion: ' _write_File ' ################################################################
-
-# #################################################################################################
 # #  Funktion: ' GetFetchedData '
 ## 	\details
 #   \param[in]	-
@@ -476,7 +474,7 @@ class PikoWebRead(object):
         # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
         os.chmod(strFolder, 0o777)
 
-      self._write_File(fileName , datStream, "a")
+      Utils._write_File(fileName , datStream, "a")
 
     return self.Data
 
@@ -574,7 +572,7 @@ class PikoWebRead(object):
     InvPortalName = ""
     Recv=b""; Snd=b"\x00\xa6"
     Recv=self._SndRecv(self.Opt['Addr'], Snd, self.Opt['Dbg'])
-    if self._ChkSum(Recv) != 0and len(Recv)>=37:
+    if self._ChkSum(Recv) != 0 and len(Recv)>=37:
         for i in range(32):
             if 0x20 <= Recv[5+i] <= 0x7f: InvPortalName+=chr(Recv[5+i])
 
@@ -615,6 +613,8 @@ class PikoWebRead(object):
     if self.Data['InvModel'] == "PIKO 8.3":
         TRef="c800"
     if self.Data['InvModel'] == "PIKO 5.5":
+        TRef="8000"
+    if self.Data['InvModel'] == "PIKO 4.2":
         TRef="8000"
     if self.Opt['TRef'] != "0": TRef = self.Opt['TRef']
 
@@ -756,7 +756,7 @@ class PikoWebRead(object):
 
     self.SocketStream.close()
 
-    print(Status)
+    #print(Status)
     return Status
 
 # # Ende Funktion: ' FetchData ' ###################################################################

@@ -493,8 +493,8 @@ def _main(argv):
 
     lastDay = ''
 
-    aktJahr = [2014,2015,2016,2017,2018,2019,2020,2021]
-    #aktJahr = [2020]
+    #aktJahr = [2014,2015,2016,2017,2018,2019,2020,2021,2022]
+    aktJahr = [2022]
 
     if (bDebug == False):
         windowsPath = '/mnt/dietpi_userdata/SolarExport'

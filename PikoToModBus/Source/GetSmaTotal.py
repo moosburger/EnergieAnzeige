@@ -16,16 +16,38 @@
 # #################################################################################################
 
 # #################################################################################################
+# # Debug Einstellungen
+# #################################################################################################
+bDebug = False
+bDebugOnLinux = False
+
+# Damit kann aus einem andern Pfad importiert werden. Diejenigen die lokal verwendet werden, vor der Pfaderweiterung importieren
+if(bDebug == False):
+    importPath = '/mnt/dietpi_userdata/Common'
+
+elif(bDebugOnLinux == True):
+    importPath = '/home/users/Grafana/Common'
+
+else:
+    importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
+
+# #################################################################################################
 # # Python Imports (Standard Library)
 # #################################################################################################
 
-from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+from pymodbus.client import ModbusTcpClient as ModbusClient
 from pymodbus.register_read_message import ReadHoldingRegistersResponse
 import ctypes
 import sys
 import os
 import locConfiguration as _conf
 from datetime import datetime
+
+# #################################################################################################
+# # Python Imports (site-packages)
+# #################################################################################################
+sys.path.insert(0, importPath)
+import Utils
 
 # ------------------------------------------------------------------------#
 # Define client
@@ -113,27 +135,6 @@ class TotalSmaEnergy():
 # # Ende Funktion: ' Destructor ' #################################################################
 
 # #################################################################################################
-# #  Funktion: '_write_File '
-## 	\details
-#   \param[in] 	strFile
-#   \param[in]  txtStream
-#   \param[in]  oType
-#   \return     -
-# #################################################################################################
-    def _write_File(self, strFile, txtStream, oType):
-
-        with open(strFile, oType) as f:
-            f.write (txtStream)
-            f.flush()
-
-        f.close()
-
-        # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
-        os.chmod(strFile, 0o777)
-
-# # Ende Funktion: ' _write_File ' ################################################################
-
-# #################################################################################################
 # #  Funktion: '_FetchSmaTotal '
 ## 	\details
 #   \param[in]
@@ -200,9 +201,9 @@ class TotalSmaEnergy():
                 sk = 0
                 val = ''
                 if (skr > 0):
-                    sk = modbus.read_holding_registers(skr, 1, unit=UNIT)
+                    sk = modbus.read_holding_registers(skr, 1, slave=UNIT)
 
-                raw = modbus.read_holding_registers(adr, leng, unit=UNIT)
+                raw = modbus.read_holding_registers(adr, leng, slave=UNIT)
                 if isinstance(raw, ReadHoldingRegistersResponse):
                     if (leng == 16):
                         Translate = convertChar()
@@ -262,7 +263,7 @@ class TotalSmaEnergy():
                             # chmod sendet Oktal Zahlen, Python2 0 davor, python 3 0o
                             os.chmod(strFolder, 0o777)
 
-                        self._write_File(fileName , datStream, "a")
+                        Utils._write_File(fileName , datStream, "a")
             modbus.close()
 
             # Sma loescht die Tagesleistung um Mitternacht...

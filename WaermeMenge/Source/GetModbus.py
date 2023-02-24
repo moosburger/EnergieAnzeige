@@ -4,14 +4,14 @@
 # #################################################################################################
 ## \brief
 #  \details
-#  \file      GetSmaTotal.py
+#  \file      GetModbus.py
 #
-#  \date      Erstellt am: 13.03.2020
+#  \date      Erstellt am: 07.02.2023
 #  \author    moosburger
 #
 # <History\> ######################################################################################
 # Version     Datum       Ticket#     Beschreibung
-# 1.0         13:03.2020
+# 1.0         07.02.2023
 #
 # #################################################################################################
 
@@ -26,7 +26,7 @@ if (bDebug == False):
     importPath = '/mnt/dietpi_userdata/Common'
 
 elif(bDebugOnLinux == True):
-    importPath = '/home/users/Grafana/Common'
+    importPath = '/home/gerhard/Grafana/Common'
 
 else:
     importPath = 'D:\\Users\\Download\\PvAnlage\\Common'
@@ -135,16 +135,25 @@ class ModBusHandler():
                 # ------------------------------------------------------------------------#
                 # Define UNIT ID
                 #
-                self.SunSpecUnit = 126  # PikoProfil
-                self.SmaUnit = 3  # SMA
+                self.SunSpecUnit = 126 # PikoProfil
+                self.DefaultUnit = 3   # Default
+
+                self.Vers_Addr   =   1000
+                self.SoBus1_Addr =   1100
+                self.SoBus2_Addr =   1110
+                self.OW_Addr     =   2000
+                self.eBus1_Addr  =   3000
+                self.eBus2_Addr  =   3500
+
+                self.DsInternal  =   '40:6:186:150:6:0:0:103'
+                self.DsTPO       =   '40:141:48:52:12:0:0:199'
+                self.DsH2O       =   '40:241:68:200:6:0:0:89'
 
                 # ------------------------------------------------------------------------#
                 # Define client
                 # ------------------------------------------------------------------------#
-                #Piko
-                self.modbusPiko = ModbusClient(_conf.MODBUS_PIKO_IP, port=_conf.MODBUS_PORT)
-                #SMA
-                self.modbusSma = ModbusClient(_conf.MODBUS_SMA_IP, port=_conf.MODBUS_PORT)
+                #Teensy
+                self.modbusWaermeEnergie = ModbusClient(_conf.MODBUS_WAERMEENERGIE_IP, port=_conf.MODBUS_PORT)
 
             except Exception as e:
                 self.log.error("ModBusHandler __init__: {}".format(e))
@@ -159,50 +168,92 @@ class ModBusHandler():
 # # Ende Funktion: ' Destructor ' #################################################################
 
 # #################################################################################################
-# #  Funktion: 'FetchSmaData '
+# #  Funktion: 'FetchWaermeEnergieData '
 ## 	\details
 #   \param[in]
 #   \return     -
 # #################################################################################################
-        def FetchSmaData(self):
+        def FetchWaermeEnergieData(self):
 
             try:
-                self.modbusSma.connect()
-                SmaProfil = (
-                                ('    Tagesertrag',30535, 2,0, self.SmaUnit),
-                                ('       Leistung',30775, 2,0, self.SmaUnit),
-                                ('   Gesamtertrag',30529, 2,0, self.SmaUnit),
-                                ('Innentemperatur',40219, 1,0, self.SunSpecUnit),
-                                ('   Dc1 Spannung',40642, 1,40625, self.SunSpecUnit),
-                                ('   Dc2 Spannung',40662, 1,40625, self.SunSpecUnit),
-                                ('      Dc1 Strom',40641, 1,40624, self.SunSpecUnit),
-                                ('      Dc2 Strom',40661, 1,40624, self.SunSpecUnit),
-                                ('   Dc1 Leistung',40643, 1,40626, self.SunSpecUnit),
-                                ('   Dc2 Leistung',40663, 1,40626, self.SunSpecUnit)
-                            )
-                SmaProfilData = {}
+                WaermeEnergieProfil = (
+                    ('  Version',self.Vers_Addr, 8, 0, 's', self.DefaultUnit),
+                    ('      Gas',self.SoBus1_Addr, 2, 0, 'u', self.DefaultUnit),
+                    ('   Wasser',self.SoBus2_Addr, 2, 0, 'u', self.DefaultUnit),
+                    (' Ow-Val00',self.OW_Addr +  0, 2, 0, 'f', self.DefaultUnit),
+                    (' Ow-Adr01',self.OW_Addr +  2, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr02',self.OW_Addr +  3, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr03',self.OW_Addr +  4, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr04',self.OW_Addr +  5, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr05',self.OW_Addr +  6, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr06',self.OW_Addr +  7, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr07',self.OW_Addr +  8, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr08',self.OW_Addr +  9, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Val10',self.OW_Addr + 10, 2, 0, 'f', self.DefaultUnit),
+                    (' Ow-Adr11',self.OW_Addr + 12, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr12',self.OW_Addr + 13, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr13',self.OW_Addr + 14, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr14',self.OW_Addr + 15, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr15',self.OW_Addr + 16, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr16',self.OW_Addr + 17, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr17',self.OW_Addr + 18, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr18',self.OW_Addr + 19, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Val20',self.OW_Addr + 20, 2, 0, 'f', self.DefaultUnit),
+                    (' Ow-Adr21',self.OW_Addr + 22, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr22',self.OW_Addr + 23, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr23',self.OW_Addr + 24, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr24',self.OW_Addr + 25, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr25',self.OW_Addr + 26, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr26',self.OW_Addr + 27, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr27',self.OW_Addr + 28, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr28',self.OW_Addr + 29, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Val30',self.OW_Addr + 30, 2, 0, 'f', self.DefaultUnit),
+                    #~ (' Ow-Adr31',self.OW_Addr + 32, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Adr32',self.OW_Addr + 33, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Adr33',self.OW_Addr + 34, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Adr34',self.OW_Addr + 35, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Adr35',self.OW_Addr + 36, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Adr36',self.OW_Addr + 37, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Adr37',self.OW_Addr + 38, 1, 0, 's', self.DefaultUnit),
+                    #~ (' Ow-Adr38',self.OW_Addr + 39, 1, 0, 's', self.DefaultUnit),
+                    (' timeStamp',self.eBus1_Addr +  0, 2, 0, 'u', self.DefaultUnit),
+                    ('       TKO',self.eBus1_Addr +  2, 2, 0, 'f', self.DefaultUnit),
+                    ('       TFK',self.eBus1_Addr +  4, 2, 0, 'f', self.DefaultUnit),
+                    ('       TSO',self.eBus1_Addr +  6, 2, 0, 'f', self.DefaultUnit),
+                    ('       TSU',self.eBus1_Addr +  8, 2, 0, 'f', self.DefaultUnit),
+                    ('       TPU',self.eBus1_Addr + 10, 2, 0, 'f', self.DefaultUnit),
+                )
 
-                for dataSet in SmaProfil:
-                    UNIT = dataSet[4]
+                self.modbusWaermeEnergie.connect()
+                WaermeEnergieProfilData = {}
+                WaermeEnergieProfilData['TInternal'] = float(-127.0)
+                WaermeEnergieProfilData['TPO'] = float(-127.0)
+                WaermeEnergieProfilData['TWasser'] = float(-127.0)
+                OneWire = []
+
+                for dataSet in WaermeEnergieProfil:
+                    UNIT = dataSet[5]
 
                     adrOfs = 0
                     if (self.SunSpecUnit == UNIT):
                         adrOfs = 1
 
-                    des = dataSet[0]
+                    DictKey = dataSet[0].strip()
                     adr = dataSet[1] - adrOfs
                     leng = dataSet[2]
                     skr = dataSet[3] - adrOfs
+                    Einheit = dataSet[4]
                     Translate = 0
                     TranslateScale = 0
 
                     raw = 0
                     sk = 0
+                    valF = ''
                     val = ''
                     if (skr > 0):
-                        sk = self.modbusSma.read_holding_registers(skr, 1, slave=UNIT)
+                        sk = self.modbusWaermeEnergie.read_holding_registers(skr, 1, slave=UNIT)
 
-                    raw = self.modbusSma.read_holding_registers(adr, leng, slave=UNIT)
+                    raw = self.modbusWaermeEnergie.read_holding_registers(adr, leng, slave=UNIT)
                     if isinstance(raw, ReadHoldingRegistersResponse):
                         if (leng == 16):
                             Translate = convertChar()
@@ -226,12 +277,14 @@ class ModBusHandler():
                             Translate.u16.hl = raw.registers[2]
                             Translate.u16.lh = raw.registers[1]
                             Translate.u16.ll = raw.registers[0]
+                            valF = float(Translate.float)
                             val = Translate.uint64
 
                         elif (leng == 2):
                             Translate=convert2()
                             Translate.u16.h = raw.registers[1]
                             Translate.u16.l = raw.registers[0]
+                            valF = float(Translate.float)
                             val = Translate.uint32
 
                         else:
@@ -244,133 +297,56 @@ class ModBusHandler():
                                 TranslateScale.u16 = sk.registers[0]
 
                             val = Translate.s16*(10**(TranslateScale.s16))
-
                             if (Translate.u16 == 0xFFFF) or (Translate.u16 == 0x8000):
                                 val = 0
 
-                        SmaProfilData[str(adr + adrOfs)] = val
+                        # OneWire Sensoren zusammenbauen
+                        if ('Ow-' in DictKey):
+                            if (Einheit == 'f'):
+                                WaermeEnergieProfilData[str(adr + adrOfs)] = valF
+                            else:
+                                WaermeEnergieProfilData[str(adr + adrOfs)] = val
 
-                self.modbusSma.close()
-
-            except Exception as e:
-                self.log.error("FetchSmaData: {}".format(e))
-
-            except:
-                self.log.error("FetchSmaData: {}".format(errLog))
-                for info in sys.exc_info():
-                    self.log.error("{}".format(info))
-
-            return SmaProfilData
-
-    # # Ende Funktion: ' FetchSmaData(' ###################################################################
-
-# #################################################################################################
-# #  Funktion: 'FetchPikoData '
-## 	\details
-#   \param[in]
-#   \return     -
-# #################################################################################################
-        def FetchPikoData(self, Unit):
-
-            try:
-                self.modbusPiko.connect()
-
-                adrOfs = 0
-                if (self.SunSpecUnit == Unit):
-                    adrOfs = 1
-
-                PikoProfil = (
-                                ('    Tagesertrag',40670, 2,40212),
-                                ('       Leistung',40200, 1,40201),
-                                ('  Gesamtertrag2',40210, 2,40212),
-                                ('Innentemperatur',40219, 1,0),
-                                ('   Dc1 Spannung',40642, 1,40625),
-                                ('      Dc1 Strom',40641, 1,40624),
-                                ('   Dc1 Leistung',40643, 1,40626)
-                                #(' And. Innentemp',40222, 1,0)
-                                #('   Dc2 Spannung',40662, 1,40625),
-                                #('      Dc2 Strom',40661, 1,40624),
-                                #('   Dc2 Leistung',40663, 1,40626)
-                            )
-
-                PikoProfilData = {}
-
-                for dataSet in PikoProfil:
-                    des = dataSet[0]
-                    adr = dataSet[1] - adrOfs
-                    leng = dataSet[2]
-                    skr = dataSet[3] - adrOfs
-
-                    Translate = 0
-                    TranslateScale = 0
-
-                    raw = 0
-                    sk = 0
-                    val = ''
-                    if (skr > 0):
-                        sk = self.modbusPiko.read_holding_registers(skr, 1, slave=Unit)
-
-                    raw = self.modbusPiko.read_holding_registers(adr, leng, slave=Unit)
-                    if isinstance(raw, ReadHoldingRegistersResponse):
-                        if (leng == 16):
-                            Translate = convertChar()
-                            for chrGrp in raw.registers:
-                                if (chrGrp == 0):
-                                    break
-                                Translate.u16 = chrGrp
-                                val = val + chr(Translate.u8.l) + chr(Translate.u8.h)
-
-                        elif (leng == 8):
-                            Translate = convertChar()
-                            for chrGrp in raw.registers:
-                                if (chrGrp == 0):
-                                    break
-                                Translate.u16 = chrGrp
-                                val = val + chr(Translate.u8.l) + chr(Translate.u8.h)
-
-                        elif (leng == 4):
-                            Translate=convert4()
-                            Translate.u16.hh = raw.registers[3]
-                            Translate.u16.hl = raw.registers[2]
-                            Translate.u16.lh = raw.registers[1]
-                            Translate.u16.ll = raw.registers[0]
-                            val = Translate.uint64
-
-                        elif (leng == 2):
-                            Translate=convert2()
-                            Translate.u16.h = raw.registers[1]
-                            Translate.u16.l = raw.registers[0]
-                            val = Translate.uint32
-
+                        elif (Einheit == 'f'):
+                            WaermeEnergieProfilData[DictKey] = valF
                         else:
-                            Translate=convert1()
-                            Translate.u16=raw.registers[0]
-                            TranslateScale=convert1()
-                            TranslateScale.u16 = 0
+                            WaermeEnergieProfilData[DictKey] = val
 
-                            if (skr > 0):
-                                TranslateScale.u16 = sk.registers[0]
+                self.modbusWaermeEnergie.close()
 
-                            val = Translate.s16*(10**(TranslateScale.s16))
+                DsAdr = []
+                DsVal = []
+                OW = f"{(WaermeEnergieProfilData[str(self.OW_Addr + 2)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 3)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 4)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 5)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 6)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 7)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 8)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 9)])}"
+                DsVal.append(WaermeEnergieProfilData[str(self.OW_Addr + 0)])
+                DsAdr.append(OW)
 
-                            if (Translate.u16 == 0xFFFF) or (Translate.u16 == 0x8000):
-                                val = 0
+                OW = f"{(WaermeEnergieProfilData[str(self.OW_Addr + 12)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 13)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 14)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 15)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 16)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 17)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 18)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 19)])}"
+                DsVal.append(WaermeEnergieProfilData[str(self.OW_Addr + 10)])
+                DsAdr.append(OW)
 
-                        PikoProfilData[str(adr + adrOfs)] = val
+                OW = f"{(WaermeEnergieProfilData[str(self.OW_Addr + 22)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 23)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 24)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 25)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 26)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 27)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 28)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 29)])}"
+                DsVal.append(WaermeEnergieProfilData[str(self.OW_Addr + 20)])
+                DsAdr.append(OW)
 
-                self.modbusPiko.close()
+                for k in range(len(DsAdr)):
+                    if(self.DsInternal == DsAdr[k]):
+                        WaermeEnergieProfilData['TInternal'] = DsVal[k]
+                    if(self.DsTPO == DsAdr[k]):
+                        WaermeEnergieProfilData['TPO'] = DsVal[k]
+                    if(self.DsH2O == DsAdr[k]):
+                        WaermeEnergieProfilData['TWasser'] = DsVal[k]
 
             except Exception as e:
-                self.log.error("FetchPikoData: {}".format(e))
+                self.log.error("FetchWaermeEnergieData: {}".format(e))
 
             except:
-                self.log.error("FetchPikoData: {}".format(errLog))
+                self.log.error("FetchWaermeEnergieData: {}".format(errLog))
                 for info in sys.exc_info():
                     self.log.error("{}".format(info))
 
-            return PikoProfilData
+            return WaermeEnergieProfilData
 
-    # # Ende Funktion: ' FetchPikoData' ###################################################################
+    # # Ende Funktion: ' FetchWaermeEnergieData(' ###################################################################
 
 ##### Fehlerbehandlung #####################################################
     except IOError as e:

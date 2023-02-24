@@ -8,15 +8,23 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "editable": true,
+  "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 2,
   "id": 10,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "cacheTimeout": null,
@@ -25,20 +33,24 @@
         "defaults": {
           "mappings": [
             {
-              "$$hashKey": "object:3306",
-              "from": "-100000",
-              "id": 0,
-              "text": "zum Netz",
-              "to": "-0",
-              "type": 2
+              "options": {
+                "from": -100000,
+                "result": {
+                  "text": "zum Netz"
+                },
+                "to": 0
+              },
+              "type": "range"
             },
             {
-              "$$hashKey": "object:3307",
-              "from": "0",
-              "id": 1,
-              "text": "aus dem Netz",
-              "to": "10000",
-              "type": 2
+              "options": {
+                "from": 0,
+                "result": {
+                  "text": "aus dem Netz"
+                },
+                "to": 10000
+              },
+              "type": "range"
             }
           ],
           "thresholds": {
@@ -92,7 +104,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "groupBy": [
@@ -145,28 +157,34 @@
         "defaults": {
           "mappings": [
             {
-              "$$hashKey": "object:3160",
-              "from": "-110",
-              "id": 0,
-              "text": "Entladen",
-              "to": "-0.3",
-              "type": 2
+              "options": {
+                "from": -110,
+                "result": {
+                  "text": "Entladen"
+                },
+                "to": -0.3
+              },
+              "type": "range"
             },
             {
-              "$$hashKey": "object:3161",
-              "from": "0.3",
-              "id": 1,
-              "text": "Laden",
-              "to": "100",
-              "type": 2
+              "options": {
+                "from": 0.3,
+                "result": {
+                  "text": "Laden"
+                },
+                "to": 100
+              },
+              "type": "range"
             },
             {
-              "$$hashKey": "object:3162",
-              "from": "-0.3",
-              "id": 2,
-              "text": "inaktiv",
-              "to": "0.3",
-              "type": 2
+              "options": {
+                "from": -0.3,
+                "result": {
+                  "text": "inaktiv"
+                },
+                "to": 0.3
+              },
+              "type": "range"
             }
           ],
           "thresholds": {
@@ -220,7 +238,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "groupBy": [],
@@ -313,7 +331,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "Netz",
@@ -719,12 +737,14 @@
                 "id": "mappings",
                 "value": [
                   {
-                    "from": "0",
-                    "id": 1,
-                    "text": "Inaktiv",
-                    "to": "0",
-                    "type": 2,
-                    "value": "0"
+                    "options": {
+                      "from": 0,
+                      "result": {
+                        "text": "Inaktiv"
+                      },
+                      "to": 0
+                    },
+                    "type": "range"
                   }
                 ]
               }
@@ -752,7 +772,7 @@
         "showUnfilled": true,
         "text": {}
       },
-      "pluginVersion": "7.5.4",
+      "pluginVersion": "8.2.3",
       "targets": [
         {
           "alias": "Sma",
@@ -1066,7 +1086,7 @@
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 27,
+  "schemaVersion": 31,
   "style": "dark",
   "tags": [],
   "templating": {

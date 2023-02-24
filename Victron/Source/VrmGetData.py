@@ -64,7 +64,6 @@ except ImportError as e:
 try:
     PrivateImport = True
     from VrmKeepAlive import KeepAlive
-    from Host import Raspi_CallBack
     from CalcPercentage import CalcPercentageBreakdown
 
     sys.path.insert(0, importPath)
@@ -126,9 +125,9 @@ def on_connect(client, mosq, obj, rc):
     if (rc == 0):
         client.initDone = True
         mqtt_errno, mid = client.subscribe('N/%s/#' % _conf.PORTAL_ID, 1)
-        log.info("Init Done {}".format(client.initDone))
 
     log.info("mqttClient onConnect: {}".format(str(mqtt.connack_string(rc))))
+    log.info("mqttClient Init Done: {}".format(client.initDone))
 
 # # Ende Funktion: ' ' ############################################################################
 
@@ -158,22 +157,28 @@ def on_disconnect(client, userdata, rc):
 def on_message_fallback(client, userdata, message):
     log.info ("Msg.Payload: {}\n\t\t\t\t\t\t- Msg.Topic: {}\n\t\t\t\t\t\t- Msg.qos: {}\n\t\t\t\t\t\t- Userdata: {}".format(message.payload, message.topic, message.qos, userdata))
 
-# # Ende Funktion: ' on_message_fallback' ##################################################################
+# # Ende Funktion: ' on_message_fallback' #########################################################
 
 # #################################################################################################
 # #  Funktion: ' on_message'
-## \details         This function is called everytime the topic is published to.
+## \details         This function is called everytime the topic is published to. Wenn die Funktion zu lange dauert, kommts zu vielen disconnects
 #   \param[in]     mosq
 #   \param[in]     obj
 #   \param[in]     msg
 #   \return         -
 # #################################################################################################
 def on_message(client, userdata, message):
+    global ExtractInUse
 
-    if not client.initDone:
-        return;
+    if (not client.initDone):
+        return
 
     timestamp = datetime.utcnow()
+    timestamp = ("'{0}-{1:02}-{2:02}T{3:02}:{4:02}:{5:02}.{6}Z'").format(timestamp.year, timestamp.month, timestamp.day, timestamp.hour, timestamp.minute, timestamp.second, timestamp.microsecond)
+
+    # Test, welche werte denn kommen
+    #log.info ("Msg.Payload: {}\t- Msg.Topic: {}".format(message.payload, message.topic))
+
     myVal = _checkPayload(client, userdata, message)
     if (myVal is None):
         return
@@ -237,69 +242,6 @@ def on_log(client, userdata, level, buf):
 # # Ende Funktion: 'on_log ' ######################################################################
 
 # #################################################################################################
-# #  Funktion: 'on_Raspi '
-## \details     callback der mqtt Klasse zum loggen
-#   \param[in]     client
-#   \param[in]     userdata
-#   \param[in]     level
-#   \param[in]     buf
-#   \return         -
-# #################################################################################################
-def on_Raspi(obj, Raspi):
-
-    timestamp = datetime.utcnow()
-    timestamp = _conf.RASPITIMESTAMP.format(timestamp.year, timestamp.month)
-    retVal = True
-
-    _cpuLabel = 'Cpu'
-    if (obj == 'GetBootTimeData'):
-        log.debug('GetBootTimeData')
-        bootTime = Raspi.GetBootTimeData()
-        sensor_data = SensorData(_conf.HOST_INSTANCE, 'CpuInfo', ['BootTime',], [bootTime,], timestamp)
-        retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
-
-    if (obj == 'GetCpuInfoData'):
-        log.debug('GetCpuInfoData')
-        CpuInfo = Raspi.GetCpuInfoData()
-        _typ = []
-        _val = []
-        for j, core in enumerate(CpuInfo.cores):
-            _typ.append('UsageCore{}'.format(j))
-            _val.append(core)
-
-        _typ.extend(['PhysicalCores', 'TotalCores', 'MaxFreq', 'MinFreq', 'ActFreq', 'Usage', 'Temp', 'CaseTemp'])
-        _val.extend([CpuInfo.physical, CpuInfo.total, CpuInfo.max, CpuInfo.min, CpuInfo.current, CpuInfo.usage, CpuInfo.temp, CpuInfo.DStemp])
-
-        sensor_data = SensorData(_conf.HOST_INSTANCE, 'CpuInfo', _typ, _val, timestamp)
-        retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
-
-    if (obj == 'GetMemoryInfoData'):
-        log.debug('GetMemoryInfoData')
-        Memorys = Raspi.GetMemoryInfoData() # Werte in KB
-        for ram in Memorys:
-            sensor_data = SensorData(_conf.HOST_INSTANCE, ram.device, ['Total', 'Used', 'Available', 'Percentage'], [ram.total, ram.used, ram.free, ram.percentage], timestamp)
-            retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
-            if (retVal != True):
-                break
-
-    if (obj == 'GetDiskUsageData'):
-        log.debug('GetDiskUsageData')
-        Disks = Raspi.GetDiskUsageData() # Werte in KB
-        for disk in Disks:
-            sensor_data = SensorData(_conf.HOST_INSTANCE, disk.device, ['Total', 'Used', 'Free', 'Percentage'], [disk.total, disk.used, disk.free, disk.percentage], timestamp)
-            retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
-            if (retVal != True):
-                break
-
-    if (retVal != True):
-        log.warning("Fehler beim schreiben von Raspi: {}".format(sensor_data))
-        time.sleep(5)
-        # Reinit Database
-        influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE, 'VrmGetData')
-
-# # Ende Funktion: 'on_Raspi ' ######################################################################
-
-# #################################################################################################
 # #  Funktion: '_get_Sma_Current '
 ## \details     -
 #   \param[in]
@@ -309,12 +251,12 @@ def _get_Sma_Current(AcVoltage, AcPower, timestamp):
 
     #Strom
     if AcVoltage > 0:
-        AcL1Current = _check_Data_Type(AcPower / AcVoltage)
+        AcL1Current, typ, length = Utils._check_Data_Type(AcPower / AcVoltage, Utils.toFloat)
         sensor_data = SensorData(PvInv.RegEx, PvInv.Label1, ["AcL1Current",], [AcL1Current,], timestamp)
 
     return sensor_data
 
-# # Ende Funktion: '_get_Sma_Current ' ######################################################################
+# # Ende Funktion: '_get_Sma_Current ' ############################################################
 
 # #################################################################################################
 # #  Funktion: '_get_Total_Power '
@@ -325,12 +267,12 @@ def _get_Sma_Current(AcVoltage, AcPower, timestamp):
 def _get_Total_Power(myVal, otherPower, timestamp):
 
     #Leistung Pv
-    AcPvOnGridPower = _check_Data_Type(myVal + otherPower)
+    AcPvOnGridPower, typ, length = Utils._check_Data_Type(myVal + otherPower, Utils.toFloat)
     sensor_data = SensorData(System.RegEx, System.Label1, ["AcPvOnGridPower",], [AcPvOnGridPower,], timestamp)
 
     return sensor_data
 
-# # Ende Funktion: '_get_Total_Power ' ######################################################################
+# # Ende Funktion: '_get_Total_Power ' ############################################################
 
 # #################################################################################################
 # #  Funktion: '_get_Total_Consumption '
@@ -341,41 +283,79 @@ def _get_Total_Power(myVal, otherPower, timestamp):
 def _get_Total_Consumption(type, myVal, timestamp):
 
     global AcConsumptionOnInputL1Power, AcConsumptionOnInputL2Power, AcConsumptionOnInputL3Power
+    global AcConsumptionOnOutputL1Power, AcConsumptionOnOutputL2Power, AcConsumptionOnOutputL3Power
 
     # Der gesamte Verbrauch aller Lasten, für die Prozentuale Aufteilung
     if (type == 'AcConsumptionOnInputL1Power'): AcConsumptionOnInputL1Power = myVal
     if (type == 'AcConsumptionOnInputL2Power'): AcConsumptionOnInputL2Power = myVal
     if (type == 'AcConsumptionOnInputL3Power'): AcConsumptionOnInputL3Power = myVal
+    AcConsumptionOnInputPower, typ, length = Utils._check_Data_Type(AcConsumptionOnInputL1Power + AcConsumptionOnInputL2Power + AcConsumptionOnInputL3Power, Utils.toFloat)
 
-    AcConsumptionOnInputPower = _check_Data_Type(AcConsumptionOnInputL1Power + AcConsumptionOnInputL2Power + AcConsumptionOnInputL3Power)
-    sensor_data = SensorData(System.RegEx, System.Label1, ["AcConsumptionOnInputPower",], [AcConsumptionOnInputPower,], timestamp)
+    if (type == 'AcConsumptionOnOutputL1Power'): AcConsumptionOnOutputL1Power = myVal
+    if (type == 'AcConsumptionOnOutputL2Power'): AcConsumptionOnOutputL2Power = myVal
+    if (type == 'AcConsumptionOnOutputL3Power'): AcConsumptionOnOutputL3Power = myVal
+    AcConsumptionOnOutputPower, typ, length = Utils._check_Data_Type(AcConsumptionOnOutputL1Power + AcConsumptionOnOutputL2Power + AcConsumptionOnOutputL3Power, Utils.toFloat)
+
+    if ('AcConsumptionOnInputL' in type):
+        sensor_data = SensorData(System.RegEx, System.Label1, ["AcConsumptionOnInputPower",], [AcConsumptionOnInputPower,], timestamp)
+    else:
+        sensor_data = SensorData(System.RegEx, System.Label1, ["AcConsumptionOnOutputPower",], [AcConsumptionOnOutputPower,], timestamp)
 
     return sensor_data
 
-# # Ende Funktion: '_get_Total_Consumption ' ######################################################################
+# # Ende Funktion: '_get_Total_Consumption ' ######################################################
 
 # #################################################################################################
-# #  Funktion: '_check_Data_Type '
+# #  Funktion: '_get_Consumed_AmpWatt_Hours '
 ## \details     -
+#   \param[in]
 #   \return
 # #################################################################################################
-def _check_Data_Type(myVal):
+def _get_Consumed_AmpWatt_Hours(type, myVal, timestamp):
 
-    #float, int, str, list, dict, tuple
-    if (isinstance(myVal, str)):
-        pass
-    elif (isinstance(myVal, int)):
-        myVal = float(myVal)
-        myVal = round(myVal, 2)
-    elif (isinstance(myVal, float)):
-        myVal = float(myVal)
-        myVal = round(myVal, 2)
-    else:
-        myVal = str(myVal)
+    global lastStep, UBatt, Ah
 
-    return myVal
+    Ah_data = None
+    Wh_data = None
 
-# # Ende Funktion: '_check_Data_Type ' ######################################################################
+    if (('Dc0Voltage' in type) or ('Dc0Current' in type)):
+        if ('Dc0Current' in type):
+            timestamp = (timestamp.replace("'",""))
+            objTimeStamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+            tStep = objTimeStamp
+            if (lastStep is not None):
+                try:
+                    tStep -= lastStep
+                    Ah += myVal * tStep.seconds / 3600
+                    Wh = Ah * UBatt
+                    if (Ah <= 0.0):
+                        # Verbrauchte Energie
+                        Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedAmphours",], [round(Ah,3),], timestamp)
+                        Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedWatthours",], [round(Wh,3),], timestamp)
+                        # APPEND NICHT ERSETZEN!!!!!!!!!!!!!!!!!!!11
+                        #Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedAmphours",], [round(0.0,3),], timestamp)
+                        #Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedWatthours",], [round(0.0,3),], timestamp)
+                    else:
+                        # Energie die nur in die Batterie fließt
+                        Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedAmphours",], [round(Ah,3),], timestamp)
+                        Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedWatthours",], [round(Wh,3),], timestamp)
+                        # APPEND NICHT ERSETZEN!!!!!!!!!!!!!!!!!!!11
+                        #Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedAmphours",], [round(0.0,3),], timestamp)
+                        #Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedWatthours",], [round(0.0,3),], timestamp)
+
+                except:
+                    for info in sys.exc_info():
+                        print ("Fehler: {}".format(info))
+                        log.error ("Fehler: {}".format(info))
+
+            lastStep = objTimeStamp
+
+        else:
+            UBatt = myVal
+
+    return Ah_data, Wh_data
+
+# # Ende Funktion: '_get_Consumed_AmpWatt_Hours ' #################################################
 
 # #################################################################################################
 # #  Funktion: '_checkPayload '
@@ -414,7 +394,7 @@ def _checkPayload(client, userdata, message):
 
     return retVal
 
-# # Ende Funktion: '_checkPayload ' ######################################################################
+# # Ende Funktion: '_checkPayload ' ###############################################################
 
 # #################################################################################################
 # #  Funktion: '_extract_Data '
@@ -424,6 +404,7 @@ def _checkPayload(client, userdata, message):
 # #################################################################################################
 def _extract_Data(msg, myVal, timestamp):
 
+    global ExtractDataDelay
     global SmaAcPower, SmaAcVoltage
     global PikoAcPower
 
@@ -432,9 +413,14 @@ def _extract_Data(msg, myVal, timestamp):
     smaRegEx = "N/{0}/([^/]+)/([^/]+)/(.*)".format(_conf.PORTAL_ID)
     retVal = False
 
+    diff = time.time() - ExtractDataDelay
+    if (diff < 60):
+        #log.warning("ExtractDataDelay: {}".format(diff))
+        return True
+
     try:
         #float, int, str, list, dict, tuple
-        myVal = _check_Data_Type(myVal)
+        myVal, typ, length = Utils._check_Data_Type(myVal, Utils.toFloat)
 
         match = Utils.RegEx(smaRegEx, topic, Utils.fndFrst, Utils.Srch, '')
         if match:
@@ -472,6 +458,14 @@ def _extract_Data(msg, myVal, timestamp):
                 instance = Battery.Label1
             elif (device == VeBus.RegEx) and (match.group(2) == VeBus.Inst1):
                 instance = VeBus.Label1
+
+                # Die konsumierten Ampere, bzw. Watt Stunden
+                Ah_data, Wh_data = _get_Consumed_AmpWatt_Hours(type, myVal, timestamp)
+                if (Ah_data is not None):
+                    sensor_data_list.append(Ah_data)
+                if (Wh_data is not None):
+                    sensor_data_list.append(Wh_data)
+
             elif (device == System.RegEx):
                 instance = System.Label1
 
@@ -481,13 +475,20 @@ def _extract_Data(msg, myVal, timestamp):
             else:
                 instance = str(match.group(2))
 
+            if ("Alarm" in type):
+                myVal = int(myVal)
+
             sensor_data_list.insert(0,SensorData(device, instance, [type,], [myVal,], timestamp))
 
             for sensor_data in sensor_data_list:
                 retVal = False
-                retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data)
+                retVal = influxHdlr._send_sensor_data_to_influxdb(sensor_data, 'VrmGetData')
+                if (retVal == "NoConnecion"):
+                    break;
+
                 if (retVal != True):
-                    log.warning("Fehler beim schreiben von {}".format(sensor_data))
+                    log.warning("Fehler beim schreiben von {} - retVal = {}".format(sensor_data, retVal))
+                    ExtractDataDelay = time.time()
                     break
 
     except ValueError as e:
@@ -502,9 +503,9 @@ def _extract_Data(msg, myVal, timestamp):
         log.warning("TypeError in '_extract_Data': Type: {} ({})".format(type, e))
         retVal = False
 
-    except Error.InfluxDBProblem:
-        log.warning("InfluxDBProblem)")
-        retVal = False
+    #except InfluxDBProblem:
+     #   log.warning("InfluxDBProblem)")
+      #  retVal = False
 
     except:
         for info in sys.exc_info():
@@ -516,11 +517,11 @@ def _extract_Data(msg, myVal, timestamp):
 
     finally:
         if (retVal != True):
-            time.sleep(5)
-            influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE, 'VrmGetData')
+            influxHdlr._close_connection(influxHdlr.database, 'VrmGetData')
+            time.sleep(_conf.INLFUXDB_SHORT_DELAY)
+            influxHdlr._init_influxdb_database(influxHdlr.database, 'VrmGetData')
 
-
-# # Ende Funktion: '_extract_Data ' ######################################################################
+# # Ende Funktion: '_extract_Data ' ###############################################################
 
 # #################################################################################################
 # #  Funktion: ' _main '
@@ -531,15 +532,27 @@ def _extract_Data(msg, myVal, timestamp):
 def _main(argv):
     global influxHdlr
     global AcConsumptionOnInputL1Power, AcConsumptionOnInputL2Power, AcConsumptionOnInputL3Power
+    global AcConsumptionOnOutputL1Power, AcConsumptionOnOutputL2Power, AcConsumptionOnOutputL3Power
     global SmaAcPower, SmaAcVoltage
     global PikoAcPower
+    global ExtractDataDelay
+    global lastStep
+    global UBatt
+    global Ah
 
-    AcConsumptionOnInputL1Power = 0
-    AcConsumptionOnInputL2Power = 0
-    AcConsumptionOnInputL3Power = 0
+    AcConsumptionOnInputL1Power = 0.0
+    AcConsumptionOnInputL2Power = 0.0
+    AcConsumptionOnInputL3Power = 0.0
+    AcConsumptionOnOutputL1Power = 0.0
+    AcConsumptionOnOutputL2Power = 0.0
+    AcConsumptionOnOutputL3Power = 0.0
     SmaAcPower = 0
     SmaAcVoltage = 0
     PikoAcPower = 0
+    ExtractDataDelay = 0
+    lastStep = None
+    UBatt = 0.0
+    Ah = 0.0
 
     log.info("Python Version: {}.{}.{}".format(sys.version_info.major, sys.version_info.minor, sys.version_info.micro))
     log.info('VrmGetData started')
@@ -553,16 +566,17 @@ def _main(argv):
         ## Database initialisieren
         influxHdlr = influxIO(_host = _conf.INFLUXDB_ADDRESS, _port = _conf.INFLUXDB_PORT, _username = _conf.INFLUXDB_USER, _password = _conf.INFLUXDB_PASSWORD, _database = None, _gzip = _conf.INFLUXDB_ZIPPED, logger = logging)
 
-        for i in range(10):
+        for i in range(50):
             ver = influxHdlr._init_influxdb_database(_conf.INFLUXDB_DATABASE, 'VrmGetData')
             if (ver != None):
                 log.info('influxdb Version: {}'.format(ver))
                 break
 
-            time.sleep(5)
+            influxHdlr._close_connection(_conf.INFLUXDB_DATABASE, 'VrmGetData')
+            time.sleep(_conf.INLFUXDB_DELAY)
 
-        ## auslesen der Raspi Temperatur
-        Raspi_CallBack(_conf.HOST_INTERVAL, on_Raspi, logging)
+        if (influxHdlr.IsConnected == False):
+            raise
 
         ## Die Prozentuale Berechnung alle 60 sec
         CalcPercentageBreakdown(_conf.PERCENTAGE_INTERVAL, logging)
@@ -643,10 +657,10 @@ def _main(argv):
         log.error(e.dateinameInfo %{'msg': e.msg})
         print(e.dateinameInfo %{'msg': e.msg})
 
-    #except:
-    #    for info in sys.exc_info():
-    #        log.error("Fehler: {}".format(info))
-    #        print ("Fehler: {}".format(info))
+    except:
+        for info in sys.exc_info():
+            log.error("VrmGetData Fehler: {}".format(info))
+            print ("VrmGetData Fehler: {}".format(info))
 
 # # Ende Funktion: ' _main' #######################################################################
 
