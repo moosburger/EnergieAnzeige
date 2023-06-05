@@ -138,16 +138,21 @@ class ModBusHandler():
                 self.SunSpecUnit = 126 # PikoProfil
                 self.DefaultUnit = 3   # Default
 
-                self.Vers_Addr   =   1000
-                self.SoBus1_Addr =   1100
-                self.SoBus2_Addr =   1110
-                self.OW_Addr     =   2000
-                self.eBus1_Addr  =   3000
-                self.eBus2_Addr  =   3500
+                self.Vers_Addr       = 1000
+                self.SoBus1_Addr     = 1100
+                self.SoBus2_Addr     = 1110
+                self.PumpeSo_Addr    = 1200
+                self.PumpeFK_Addr    = 1202
+                self.BrennSperr_Addr = 1204
+                self.OW_Addr         = 2000
+                self.eBus1_Addr      = 3000
+                self.eBus2_Addr      = 3500
 
                 self.DsInternal  =   '40:6:186:150:6:0:0:103'
                 self.DsTPO       =   '40:141:48:52:12:0:0:199'
                 self.DsH2O       =   '40:241:68:200:6:0:0:89'
+                self.DsH2OWarm   =   '40:93:138:200:6:0:0:248'
+                self.Heizung   =     '40:46:105:200:6:0:0:173'
 
                 # ------------------------------------------------------------------------#
                 # Define client
@@ -180,6 +185,9 @@ class ModBusHandler():
                     ('  Version',self.Vers_Addr, 8, 0, 's', self.DefaultUnit),
                     ('      Gas',self.SoBus1_Addr, 2, 0, 'u', self.DefaultUnit),
                     ('   Wasser',self.SoBus2_Addr, 2, 0, 'u', self.DefaultUnit),
+                    ('      PSO',self.PumpeSo_Addr, 2, 0, 'u', self.DefaultUnit),
+                    ('      PFK',self.PumpeFK_Addr, 2, 0, 'u', self.DefaultUnit),
+                    ('     BRSP',self.BrennSperr_Addr, 2, 0, 'u', self.DefaultUnit),
                     (' Ow-Val00',self.OW_Addr +  0, 2, 0, 'f', self.DefaultUnit),
                     (' Ow-Adr01',self.OW_Addr +  2, 1, 0, 's', self.DefaultUnit),
                     (' Ow-Adr02',self.OW_Addr +  3, 1, 0, 's', self.DefaultUnit),
@@ -207,15 +215,24 @@ class ModBusHandler():
                     (' Ow-Adr26',self.OW_Addr + 27, 1, 0, 's', self.DefaultUnit),
                     (' Ow-Adr27',self.OW_Addr + 28, 1, 0, 's', self.DefaultUnit),
                     (' Ow-Adr28',self.OW_Addr + 29, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Val30',self.OW_Addr + 30, 2, 0, 'f', self.DefaultUnit),
-                    #~ (' Ow-Adr31',self.OW_Addr + 32, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Adr32',self.OW_Addr + 33, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Adr33',self.OW_Addr + 34, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Adr34',self.OW_Addr + 35, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Adr35',self.OW_Addr + 36, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Adr36',self.OW_Addr + 37, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Adr37',self.OW_Addr + 38, 1, 0, 's', self.DefaultUnit),
-                    #~ (' Ow-Adr38',self.OW_Addr + 39, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Val30',self.OW_Addr + 30, 2, 0, 'f', self.DefaultUnit),
+                    (' Ow-Adr31',self.OW_Addr + 32, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr32',self.OW_Addr + 33, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr33',self.OW_Addr + 34, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr34',self.OW_Addr + 35, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr35',self.OW_Addr + 36, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr36',self.OW_Addr + 37, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr37',self.OW_Addr + 38, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr38',self.OW_Addr + 39, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Val40',self.OW_Addr + 40, 2, 0, 'f', self.DefaultUnit),
+                    (' Ow-Adr41',self.OW_Addr + 42, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr42',self.OW_Addr + 43, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr43',self.OW_Addr + 44, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr44',self.OW_Addr + 45, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr45',self.OW_Addr + 46, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr46',self.OW_Addr + 47, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr47',self.OW_Addr + 48, 1, 0, 's', self.DefaultUnit),
+                    (' Ow-Adr48',self.OW_Addr + 49, 1, 0, 's', self.DefaultUnit),
                     (' timeStamp',self.eBus1_Addr +  0, 2, 0, 'u', self.DefaultUnit),
                     ('       TKO',self.eBus1_Addr +  2, 2, 0, 'f', self.DefaultUnit),
                     ('       TFK',self.eBus1_Addr +  4, 2, 0, 'f', self.DefaultUnit),
@@ -226,9 +243,14 @@ class ModBusHandler():
 
                 self.modbusWaermeEnergie.connect()
                 WaermeEnergieProfilData = {}
-                WaermeEnergieProfilData['TInternal'] = float(-127.0)
-                WaermeEnergieProfilData['TPO'] = float(-127.0)
-                WaermeEnergieProfilData['TWasser'] = float(-127.0)
+                WaermeEnergieProfilData['TInternal'] = float(-1.0)
+                WaermeEnergieProfilData['TPO'] = float(-1.0)
+                WaermeEnergieProfilData['TWasser'] = float(-1.0)
+                WaermeEnergieProfilData['TWarmWasser'] = float(-1.0)
+                WaermeEnergieProfilData['THeizung'] = float(-1.0)
+                WaermeEnergieProfilData['PSO'] = int(-1)
+                WaermeEnergieProfilData['PFK'] = int(-1)
+                WaermeEnergieProfilData['BRSP'] = int(-1)
                 OneWire = []
 
                 for dataSet in WaermeEnergieProfil:
@@ -328,6 +350,14 @@ class ModBusHandler():
                 DsVal.append(WaermeEnergieProfilData[str(self.OW_Addr + 20)])
                 DsAdr.append(OW)
 
+                OW = f"{(WaermeEnergieProfilData[str(self.OW_Addr + 32)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 33)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 34)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 35)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 36)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 37)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 38)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 39)])}"
+                DsVal.append(WaermeEnergieProfilData[str(self.OW_Addr + 30)])
+                DsAdr.append(OW)
+
+                OW = f"{(WaermeEnergieProfilData[str(self.OW_Addr + 42)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 43)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 44)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 45)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 46)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 47)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 48)])}:{(WaermeEnergieProfilData[str(self.OW_Addr + 49)])}"
+                DsVal.append(WaermeEnergieProfilData[str(self.OW_Addr + 40)])
+                DsAdr.append(OW)
+
                 for k in range(len(DsAdr)):
                     if(self.DsInternal == DsAdr[k]):
                         WaermeEnergieProfilData['TInternal'] = DsVal[k]
@@ -335,6 +365,10 @@ class ModBusHandler():
                         WaermeEnergieProfilData['TPO'] = DsVal[k]
                     if(self.DsH2O == DsAdr[k]):
                         WaermeEnergieProfilData['TWasser'] = DsVal[k]
+                    if(self.DsH2OWarm == DsAdr[k]):
+                        WaermeEnergieProfilData['TWarmWasser'] = DsVal[k]
+                    if(self.Heizung == DsAdr[k]):
+                        WaermeEnergieProfilData['THeizung'] = DsVal[k]
 
             except Exception as e:
                 self.log.error("FetchWaermeEnergieData: {}".format(e))

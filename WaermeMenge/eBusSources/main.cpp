@@ -46,17 +46,17 @@
 /**************************************************************************************************
 * Variablen
 **************************************************************************************************/
-bool                            mDebugOn;           /*<! */
-bool                            mDebug_Ethernet;    /*<! */
-bool                            mDebug_OneWire;     /*<! */
-bool                            mDebug_SoBus;       /*<! */
-bool                            mDebug_eBus0;       /*<! */
-bool                            mDebug_eBus1;       /*<! */
-bool                            mSerialAvail;       /*<! */
+volatile bool                   mDebugOn;           /*<! */
+volatile bool                   mDebug_Ethernet;    /*<! */
+volatile bool                   mDebug_OneWire;     /*<! */
+volatile bool                   mDebug_SoBus;       /*<! */
+volatile bool                   mDebug_eBus0;       /*<! */
+volatile bool                   mDebug_eBus1;       /*<! */
+volatile bool                   mSerialAvail;       /*<! */
 elapsedMillis                   mLebensZeichen;     /*<! */
 elapsedMillis                   mLaufZeit;
-unsigned long                   mBlinkZeit;
-bool                            mBlink;             /*<! */
+volatile unsigned long          mBlinkZeit;
+volatile bool                   mBlink;             /*<! */
 /*
  * WatchDog in der wdt.h
     wdt_reset()
@@ -71,23 +71,23 @@ DallasTemperature mSensors(&ds);
 DeviceAddress mSensorAddress[MAXSENSORS] = {
         { 0x28, 0x3D, 0xB6, 0x3, 0x5, 0x0, 0x0, 0xD7 }
 };
-uint8_t                         mSensorError[MAXSENSORS] = {0};
-uint8_t                         mActualSensor;
-float                           mTemperature[MAXSENSORS] = {0};
-uint8_t                         mAddr[8];
+volatile uint8_t                mSensorError[MAXSENSORS] = {0};
+volatile uint8_t                mActualSensor;
+volatile float                  mTemperature[MAXSENSORS] = {0};
+volatile uint8_t                mAddr[8];
 
 // So0 Bus
-unsigned int                    mS0_Counter1;       /*<! */
-unsigned int                    mS0_Counter2;       /*<! */
-bool                            mS0_Bus1_DelayOn;
-bool                            mS0_Bus2_DelayOn;
-unsigned int                    mS0Back1;
-unsigned int                    mS0Back2;
+volatile unsigned int           mS0_Counter1;       /*<! */
+volatile unsigned int           mS0_Counter2;       /*<! */
+volatile bool                   mS0_Bus1_DelayOn;
+volatile bool                   mS0_Bus2_DelayOn;
+volatile unsigned int           mS0Back1;
+volatile unsigned int           mS0Back2;
 elapsedMillis                   mS0_Bus1_ms;        /*<! */
 elapsedMillis                   mS0_Bus2_ms;        /*<! */
 
 // Ethernet
-boolean                         mbHasIp;
+volatile boolean                mbHasIp;
 ModbusEthernet*                 mb;
 EthernetServer*                 ethServer;
 
@@ -99,6 +99,9 @@ IPAddress gateway{192, 168, 2, 40};
 
 // Keeps track of what and where belong to whom.
 std::vector<ClientState> clients;
+
+volatile eBusValues_st          eBusValues;
+volatile PinFuerSperre_st       PinFuerSperre;
 /**************************************************************************************************
 * Funktionen
 **************************************************************************************************/
@@ -115,7 +118,7 @@ void initVar()
     mDebug_Ethernet  = false;
     mDebug_OneWire   = false;
     mDebug_SoBus     = false;
-    mDebug_eBus0     = true;
+    mDebug_eBus0     = false;
     mDebug_eBus1     = false;
 
     mSerialAvail     = false;
@@ -135,6 +138,16 @@ void initVar()
 
     mActualSensor    = 0;
     mbHasIp          = false;
+
+    eBusValues.Tko = 0.0;
+    eBusValues.Tfk = 0.0;
+    eBusValues.Tso = 0.0;
+    eBusValues.Tsu = 0.0;
+    eBusValues.Tpu = 0.0;
+
+    PinFuerSperre.PumpeSo = LOW;
+    PinFuerSperre.PumpeFK = LOW;
+    PinFuerSperre.bSperre = LOW;
 }
 /************************ Ende initVar ************************************************************/
 
@@ -155,6 +168,8 @@ void setup()
 
     /* Digitale Ausgänge */
     pinMode(LED_BUILTIN, OUTPUT);
+    // BrennerSperre
+    pinMode(BSP_PIN, OUTPUT);
 
     /* Interrupt Zuordnungen */
     attachInterrupt(digitalPinToInterrupt(S0BUS1_PIN), IRQ_S0_Bus_1, FALLING);
@@ -202,9 +217,12 @@ void setup()
     //mb->begin();
 
     // Hier die benötigten Register anlegen
-    mb->addReg(HREG(Vers_Addr), (uint16_t)0, 8);   // SerienNummer
-    mb->addReg(HREG(SoBus1_Addr), (uint16_t)0, 2);   // S0_Bus_1
-    mb->addReg(HREG(SoBus2_Addr), (uint16_t)0, 2);   // S0_Bus_2
+    mb->addReg(HREG(Vers_Addr),         (uint16_t)0, 8); // SerienNummer
+    mb->addReg(HREG(SoBus1_Addr),       (uint16_t)0, 2); // S0_Bus_1
+    mb->addReg(HREG(SoBus2_Addr),       (uint16_t)0, 2); // S0_Bus_2
+    mb->addReg(HREG(PumpeSo_Addr),      (uint16_t)0, 2); // Pumpe Solar 
+    mb->addReg(HREG(PumpeFK_Addr),      (uint16_t)0, 2); // Pumpe FestStoffKessel
+    mb->addReg(HREG(BrennSperr_Addr),   (uint16_t)0, 2); // BrennerSperre
     for (int u = 0; u < MAXSENSORS; u++)
     {
         uint16_t iAddr = OW_Addr + u * 10;
@@ -214,7 +232,7 @@ void setup()
     for (int u = 0; u < cWRSOL_DATA_LINES - 3; u++)
     {
         uint16_t iAddr = eBus0_Addr + u * 2;
-        mb->addReg(HREG(iAddr), (uint16_t)0, 2); // eBus Float
+        mb->addReg(HREG(iAddr),         (uint16_t)0, 2); // eBus Float
     }
     // Serielle HardwareSchnittstellen für eBus initialisieren
     eBus0Init(eBus0_Addr, false);
@@ -225,7 +243,7 @@ void setup()
     for (int u = 0; u < cWRSOL_DATA_LINES - 3; u++)
     {
         uint16_t iAddr = eBus1_Addr + u * 2;
-        mb->addReg(HREG(iAddr), (uint16_t)0, 2); // eBus Float
+        mb->addReg(HREG(iAddr),         (uint16_t)0, 2); // eBus Float
     }
     eBus1Init(eBus1_Addr, false);
     // Serielle HardwareSchnittstellen für eBus initialisieren
@@ -282,7 +300,7 @@ void modBusServer()
     while (1)
     {
         mb->task();
-        
+
         threads.delay(modBusDelay_ms);
         threads.yield();
     }
@@ -299,13 +317,28 @@ void eBus0Handler()
 {
     while (1)
     {
-        if (!eBus0Task(mDebug_eBus0))
+        PinFuerSperre.PumpeSo = digitalRead(PSOLAR_PIN);
+        PinFuerSperre.PumpeFK = digitalRead(PFK_PIN);
+
+        eBusStatus retStatus = eBus0Task(mDebug_eBus0, &eBusValues);
+        //Serialprint("reStat: %u\n",retStatus);
+        if (retStatus == eBus_reInit)
         {
             eBus0Init(eBus0_Addr, true);
             threads.delay(eBusDelay_ms);
             threads.yield();
             eBus0Init(eBus0_Addr, false);
         }
+        else if (retStatus == eBus_dataReady)
+        {
+            BrennerSperre(&eBusValues, &PinFuerSperre);
+            digitalWrite(BSP_PIN, PinFuerSperre.bSperre);
+
+            _Conf_Two_Register(PumpeSo_Addr, (uint32_t)PinFuerSperre.PumpeSo);
+            _Conf_Two_Register(PumpeFK_Addr, (uint32_t)PinFuerSperre.PumpeFK);
+            _Conf_Two_Register(BrennSperr_Addr, (uint32_t)PinFuerSperre.bSperre);
+        }
+
         threads.delay(eBusDelay_ms);
         threads.yield();
     }

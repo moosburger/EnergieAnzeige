@@ -124,6 +124,7 @@ class CalcPercentageBreakdown():  #object
                 self.WattHourMax = float(0.0)
                 self.SmaP = 0
                 self.PikoP = 0
+                self.Last_SmaTemp = int(0)
 
                 self.IsNewDay2 = False
                 self.IsNewMonth = False
@@ -439,7 +440,8 @@ class CalcPercentageBreakdown():  #object
                         self.PikoP = 0
                         sensor_data.append(SensorData(PvInv.RegEx, PvInv.Label2, ["PeakPikoPower",], [self.PikoP,], DaySoFarTimeStamp))
                         ###########################################################
-                        self.log.info("_calcDailyEnergySoFar NEW DAY: {}".format(sensor_data))
+                        ## self.log.info("_calcDailyEnergySoFar NEW DAY: {}".format(sensor_data))
+                        self.log.info("_calcDailyEnergySoFar NEW DAY")
                         ###########################################################
 
                         self._writeEnergyToDb(self.influxHdlrLong, sensor_data, '_calcDailyEnergySoFar-1')
@@ -531,6 +533,10 @@ class CalcPercentageBreakdown():  #object
 
                 #SmaTemp = int(Utils._check_Data_TypeOld(self.SmaEn['40219']))
                 SmaTemp, typ, length = Utils._check_Data_Type(self.SmaEn['40219'], Utils.toInt)
+                if (SmaTemp == 0):
+                    SmaTemp = self.Last_SmaTemp
+                else:
+                    self.Last_SmaTemp = SmaTemp
                 sensor_dataShort.append(SensorData(PvInv.RegEx, PvInv.Label1, ["DcTemp",], [SmaTemp,], timestamp))
 
                 #PikoTemp = int(Utils._check_Data_TypeOld(self.PikoEn['40219']))
@@ -634,22 +640,24 @@ class CalcPercentageBreakdown():  #object
 
             try:
                 sensor_data = []
-                if (datetime.day == 1) and (self.IsInitWritten2 == False):
-                    self.IsNewMonth = True
-                    ###########################################################
-                    self.log.info("_calcMonthlyEnergySoFar First Day of MONTH")
-                    ###########################################################
-
-                if (datetime.day == 2):
-                    self.IsInitWritten2 = False
-                    ###########################################################
-                    self.log.info("_calcMonthlyEnergySoFar Second Day of MONTH")
-                    ###########################################################
 
                 AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
+
+                if (lt_tag == 1) and (self.IsInitWritten2 == False):
+                    self.IsNewMonth = True
+                    ###########################################################
+                    self.log.info("_calcMonthlyEnergySoFar First Day of MONTH")
+                    ###########################################################
+
+                if (lt_tag == 2):
+                    self.IsInitWritten2 = False
+                    ###########################################################
+                    self.log.info("_calcMonthlyEnergySoFar Second Day of MONTH")
+                    ###########################################################
+
 
                 MonthTimeStamp = _conf.MONTHTIMESTAMP.format(lt_jahr, lt_monat)
                 MonthSoFarTimeStamp = _conf.MONTHSOFARTIMESTAMP.format(lt_jahr, lt_monat)
@@ -685,7 +693,8 @@ class CalcPercentageBreakdown():  #object
                         SYSTEM_ENERGY = "SELECT (PvInvertersAcEnergyForwardMonthSoFar) FROM system where instance='Gateway' and time >= {}".format(MonthSoFarTimeStamp)
                         sensor_data.append(self._prepareData(self.influxHdlrLong, SYSTEM_ENERGY, System.RegEx, System.Label1, 'PvInvertersAcEnergyForwardMonthSoFar', 'PvInvertersAcEnergyForwardMonth', MonthTimeStamp, '_calcMonthlyEnergySoFar'))
                         ###########################################################
-                        self.log.info("_calcMonthlyEnergySoFar NEW DAY: {}".format(sensor_data))
+                        ## self.log.info("_calcMonthlyEnergySoFar NEW DAY: {}".format(sensor_data))
+                        self.log.info("_calcMonthlyEnergySoFar NEW DAY")
                         ###########################################################
 
                         self._writeEnergyToDb(self.influxHdlrLong, sensor_data, '_calcMonthlyEnergySoFar-2')
@@ -746,16 +755,17 @@ class CalcPercentageBreakdown():  #object
 
             try:
                 sensor_data = []
-                if (datetime.day == 1) and (datetime.month == 1) and (self.IsInitWritten3 == False):
-                    self.IsNewYear = True
-
-                if (datetime.day == 2) and (datetime.month == 1):
-                    self.IsInitWritten3 = False
 
                 AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
+
+                if (lt_tag == 1) and (lt_monat == 1) and (self.IsInitWritten3 == False):
+                    self.IsNewYear = True
+
+                if (lt_tag == 2) and (lt_monat == 1):
+                    self.IsInitWritten3 = False
 
                 YearTimeStamp = _conf.YEARTIMESTAMP.format(lt_jahr)
                 YearSoFarTimeStamp = _conf.YEARSOFARTIMESTAMP.format(lt_jahr)

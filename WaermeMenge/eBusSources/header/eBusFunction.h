@@ -167,8 +167,11 @@ const String mWRSOL_PARAM[cWRSOL_DATA_LINES] = {
 };
 
 extern volatile uint8_t     eBus0State;
+extern elapsedMillis        mRun_eBus0;
+extern elapsedMillis        mDataRequestDelay_eBus0;
 #ifdef EBUS2
     extern volatile uint8_t eBus1State;
+    extern elapsedMillis    mDataRequestDelay_eBus1;
 #endif
 struct eBusData
 {
@@ -179,7 +182,6 @@ struct eBusData
     boolean         eBus_out;
     uint8_t         eBus_Byte;
 
-    elapsedMillis   mDataRequestDelay;
     uint8_t         mRequestDataPos;
     uint8_t         mLastCmd;
     uint8_t         mLastDataSize;
@@ -191,12 +193,12 @@ struct eBusData
 // Funktionen: -
 //*************************************************************************************************
 void eBus0Init(uint16_t iAddr, boolean bReInit);
-boolean eBus0Task(boolean debug);
+int eBus0Task(boolean debug, eBusValues_st* eBusValues);
 void sendDataBus0(uint8_t DATA, uint8_t DATA_SIZE);
 
 #ifdef EBUS2
     void eBus1Init(uint16_t iAddr, boolean bReInit);
-    boolean eBus1Task(boolean debug);
+    int eBus1Task(boolean debug);
     void sendDataBus1(uint8_t DATA, uint8_t DATA_SIZE);
 #endif
 

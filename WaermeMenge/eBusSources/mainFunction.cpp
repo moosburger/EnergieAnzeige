@@ -22,7 +22,6 @@
 * Includes
 **************************************************************************************************/
 #include "main.h"
-//#include "modBusFunction.h"
 #include "SerialPrint.h"
 
 /**************************************************************************************************
@@ -36,6 +35,46 @@
 /**************************************************************************************************
 * Funktionen
 **************************************************************************************************/
+
+//*************************************************************************************************
+// FunktionsName:   BrennerSperre
+/// \details        Abhängig von den Temperaturen wird die BrennerSperre aktiviert
+/// \return         -
+//*************************************************************************************************
+void BrennerSperre(eBusValues_st* eBusValues, PinFuerSperre_st* PinFuerSperre)
+{
+    /*Serial.print("Tsu: ");
+    Serial.println(eBusValues->Tsu);
+    Serial.print("Tfk: ");
+    Serial.println(eBusValues->Tfk);
+    Serial.print("Tso: ");
+    Serial.println(eBusValues->Tso);
+    Serial.print("Tko: ");
+    Serial.println(eBusValues->Tko);
+    Serial.print("Tpu: ");
+    Serial.println(eBusValues->Tpu);
+    Serialprint("PumpeSo: %u, PumpeFK: %u, bSperre: %u\n", PinFuerSperre->PumpeSo, PinFuerSperre->PumpeFK, PinFuerSperre->bSperre);*/
+    //BrennerSperre, Ein wenn TSU > 41 und Pumpe läuft (Low Pegel am Eingang)
+    if (((eBusValues->Tsu > SPEICHER_TEMP_MIN) and (PinFuerSperre->PumpeSo = true)) or ((eBusValues->Tfk > SPEICHER_TEMP_MIN) and (PinFuerSperre->PumpeFK = true)))
+    {
+        //Ein
+        PinFuerSperre->bSperre = true;
+        return;
+    }
+    if ((eBusValues->Tso < WARMWASSER_TEMP - 3) and ((PinFuerSperre->PumpeSo = true) or (PinFuerSperre->PumpeFK = true)))
+    {
+        //Nur Aus, wenn unter 51° und Pumpe nicht läuft (High Pegel am Eingang)
+        PinFuerSperre->bSperre = false;
+        return;
+    }
+    if (eBusValues->Tso < WARMWASSER_TEMP - 5)
+    {
+        //Immer aus wenn unter 49°
+        PinFuerSperre->bSperre = false;
+        return;
+    }
+}
+/************************ Ende RisingEdge **********************************************************/
 
 //*************************************************************************************************
 // FunktionsName:   RisingEdge

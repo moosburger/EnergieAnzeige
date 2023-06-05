@@ -315,8 +315,10 @@ def _get_Consumed_AmpWatt_Hours(type, myVal, timestamp):
 
     global lastStep, UBatt, Ah
 
-    Ah_data = None
-    Wh_data = None
+    ConsAh_data = None
+    ConsWh_data = None
+    ChargeAh_data = None
+    ChargeWh_data = None
 
     if (('Dc0Voltage' in type) or ('Dc0Current' in type)):
         if ('Dc0Current' in type):
@@ -330,18 +332,18 @@ def _get_Consumed_AmpWatt_Hours(type, myVal, timestamp):
                     Wh = Ah * UBatt
                     if (Ah <= 0.0):
                         # Verbrauchte Energie
-                        Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedAmphours",], [round(Ah,3),], timestamp)
-                        Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedWatthours",], [round(Wh,3),], timestamp)
-                        # APPEND NICHT ERSETZEN!!!!!!!!!!!!!!!!!!!11
-                        #Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedAmphours",], [round(0.0,3),], timestamp)
-                        #Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedWatthours",], [round(0.0,3),], timestamp)
+                        ConsAh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedAmphours",], [round(Ah,3),], timestamp)
+                        ConsWh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedWatthours",], [round(Wh,3),], timestamp)
+                        # Geladene Energie 0 setzen
+                        ChargeAh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedAmphours",], [round(0.0,3),], timestamp)
+                        ChargeWh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedWatthours",], [round(0.0,3),], timestamp)
                     else:
                         # Energie die nur in die Batterie fließt
-                        Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedAmphours",], [round(Ah,3),], timestamp)
-                        Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedWatthours",], [round(Wh,3),], timestamp)
-                        # APPEND NICHT ERSETZEN!!!!!!!!!!!!!!!!!!!11
-                        #Ah_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedAmphours",], [round(0.0,3),], timestamp)
-                        #Wh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedWatthours",], [round(0.0,3),], timestamp)
+                        ChargeAh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedAmphours",], [round(Ah,3),], timestamp)
+                        ChargeWh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ChargedWatthours",], [round(Wh,3),], timestamp)
+                        # Verbrauchte Energie 0 setzen
+                        ConsAh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedAmphours",], [round(0.0,3),], timestamp)
+                        ConsWh_data = SensorData(VeBus.RegEx, VeBus.Label1, ["ConsumedWatthours",], [round(0.0,3),], timestamp)
 
                 except:
                     for info in sys.exc_info():
@@ -353,7 +355,7 @@ def _get_Consumed_AmpWatt_Hours(type, myVal, timestamp):
         else:
             UBatt = myVal
 
-    return Ah_data, Wh_data
+    return ConsAh_data, ConsWh_data, ChargeAh_data, ChargeWh_data
 
 # # Ende Funktion: '_get_Consumed_AmpWatt_Hours ' #################################################
 
@@ -460,11 +462,15 @@ def _extract_Data(msg, myVal, timestamp):
                 instance = VeBus.Label1
 
                 # Die konsumierten Ampere, bzw. Watt Stunden
-                Ah_data, Wh_data = _get_Consumed_AmpWatt_Hours(type, myVal, timestamp)
-                if (Ah_data is not None):
-                    sensor_data_list.append(Ah_data)
-                if (Wh_data is not None):
-                    sensor_data_list.append(Wh_data)
+                ConsAh_data, ConsWh_data, ChargeAh_data, ChargeWh_data = _get_Consumed_AmpWatt_Hours(type, myVal, timestamp)
+                if (ConsAh_data is not None):
+                    sensor_data_list.append(ConsAh_data)
+                if (ConsWh_data is not None):
+                    sensor_data_list.append(ConsWh_data)
+                if (ChargeAh_data is not None):
+                    sensor_data_list.append(ChargeAh_data)
+                if (ChargeWh_data is not None):
+                    sensor_data_list.append(ChargeWh_data)
 
             elif (device == System.RegEx):
                 instance = System.Label1

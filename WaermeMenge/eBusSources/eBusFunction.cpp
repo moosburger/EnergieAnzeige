@@ -33,14 +33,16 @@
 /**************************************************************************************************
 * Variablen
 **************************************************************************************************/
-uint8_t         volatile eBus0State;
-elapsedMillis   mRun_eBus0;
+volatile uint8_t        eBus0State;
+elapsedMillis           mRun_eBus0;
+elapsedMillis           mDataRequestDelay_eBus0;
 #ifdef EBUS2
-    uint8_t volatile    eBus1State;
+    volatile uint8_t    eBus1State;
     elapsedMillis       mRun_eBus1;
+    elapsedMillis       mDataRequestDelay_eBus1;
 #endif
 
-eBusData eBuses[2];
+volatile eBusData       eBuses[2];
 /***************************************************************************************************
 * Funktionen
 **************************************************************************************************/
@@ -54,9 +56,14 @@ eBusData eBuses[2];
 void eBus0Init(uint16_t iAddr, boolean bReInit)
 {
     if (bReInit)
+    {
+        eBuses[0].mDebug ? Serialprint("ReInit eBus 1\n") : 0;
         eBus0.end();
         return;
+    }
 
+    mRun_eBus0 = 0;
+    mDataRequestDelay_eBus0 = 0;
     eBuses[0].modBusAddr = iAddr;
     eBuses[0].modBusOfs = 0;
     eBuses[0].eBus_out = false;
@@ -69,7 +76,7 @@ void eBus0Init(uint16_t iAddr, boolean bReInit)
     eBuses[0].mFailureCnt = 0;
     eBuses[0].mDebug = false;
 
-    eBuses[0].mDebug ? Serialprint("Init eBus 1\n") : 0;
+    Serialprint("Init eBus 1\n");
     eBus0.begin(cSERIAL_BAUDRATE);
 }
 /************************ Ende eBus0Init **********************************************************/
@@ -84,9 +91,13 @@ void eBus0Init(uint16_t iAddr, boolean bReInit)
 void eBus1Init(uint16_t iAddr, boolean bReInit)
 {
     if (bReInit)
+    {
+        eBuses[1].mDebug ? Serialprint("Init eBus 2\n") : 0;
         eBus1.end();
         return;
+    }
 
+    mRun_eBus1 = 0;
     eBuses[1].modBusAddr = iAddr;
     eBuses[1].modBusOfs = 2;
     eBuses[1].eBus_out = false;
@@ -102,7 +113,7 @@ void eBus1Init(uint16_t iAddr, boolean bReInit)
     eBuses[1].mFirstRun = true;
     eBuses[1].mDebug = false;
 
-    eBuses[1].mDebug ? Serialprint("Init eBus 2\n") : 0;
+    Serialprint("Init eBus 2\n");
     eBus1.begin(cSERIAL_BAUDRATE);
 }
 #endif
@@ -151,14 +162,14 @@ void sendDataBus0(uint8_t DATA, uint8_t DATA_SIZE)
     eBuses[0].mLastCmd = DATA;
     eBuses[0].mLastDataSize = DATA_SIZE;
 
-    if (eBuses[0].mDebug == true)
+    /*if (eBuses[0].mDebug == true)
     {
         Serial.print("\nCmd:\t");
         Serial.print(mWRSOL_PARAM[DATA]);
         Serial.print("\t");
         //Serial.print("Crc: ");
         //Serial.println(eb_calc_crc(mWRSOL_TABLE[DATA], DATA_SIZE));
-    }
+    }*/
 
     // Daten
     eBus0.write(mWRSOL_TABLE[DATA], DATA_SIZE);
@@ -232,7 +243,7 @@ void sendAck(uint8_t BusNumber)
         eBus0.write(mEBUS_TABLE[cSEND_ACK], 2);
         eBus0.flush();
     }
-    
+
     if (BusNumber == 1)
     {
         eBus1.write(mEBUS_TABLE[cSEND_ACK], 2);
@@ -262,7 +273,7 @@ void sendNak(uint8_t BusNumber)
         eBus0.write(mEBUS_TABLE[cSEND_NAK], 2);
         eBus0.flush();
     }
-    
+
     if (BusNumber == 1)
     {
         eBus1.write(mEBUS_TABLE[cSEND_NAK], 2);
@@ -435,7 +446,7 @@ uint8_t readData(uint8_t BusNumber)
     //static int syncNewLine = 0;
     uint8_t retVal = _NoData;
     bool bByteAvail = false;
-    
+
     if (BusNumber == 0)
     {
         if (eBus0.available() > 0)
@@ -506,7 +517,13 @@ uint8_t readData(uint8_t BusNumber)
 uint8_t eBusTimedOut(uint8_t BusNumber, uint8_t recoverState, uint8_t actState)
 {
     uint8_t eBusState = actState;
-    if ((eBuses[BusNumber].mFailureCnt == 1) && (eBuses[BusNumber].mDataRequestDelay >= cDATA_DELAY))
+    uint32_t dataRequestDelay = mDataRequestDelay_eBus0;
+
+#ifdef EBUS2
+    if (BusNumber == 1)
+        dataRequestDelay = mDataRequestDelay_eBus1;
+#endif
+    if ((eBuses[BusNumber].mFailureCnt == 1) && (dataRequestDelay >= cDATA_DELAY))
     {
         eBusState = recoverState;
         eBuses[BusNumber].mFailureCnt = 0;
@@ -521,9 +538,10 @@ uint8_t eBusTimedOut(uint8_t BusNumber, uint8_t recoverState, uint8_t actState)
 /// \details        -
 /// \return         -
 //*************************************************************************************************
-boolean eBus0Task(boolean debug)
+int eBus0Task(boolean debug, eBusValues_st* eBusValues)
 {
     eBuses[0].mDebug = debug;
+    eBusStatus retStatus = eBus_Ok;
 
     int8_t retVal = readData(0);
     if (retVal == _FinishedData)
@@ -536,52 +554,52 @@ boolean eBus0Task(boolean debug)
         {
             Serial.print("\nSende Ident");
             sendDataBus0(cIDENT_REQUEST, 12);
-            return true;
+            return retStatus;
         }
         if (retVal ==_WaitAck)
         {
-            //eBuses[BusNumber].mDebug ? Serialprint("_WaitAck eBusState: %u\n", eBusState) : 0;
-            return true;
+            //eBuses[0].mDebug ? Serialprint("_WaitAck eBusState: %u\n", eBus0State) : 0;
+            return retStatus;
         }
         if (retVal ==_WaitNak)
         {
-            //eBuses[BusNumber].mDebug ? Serialprint("_WaitNak eBusState: %u\n", eBusState) : 0;
-            return true;
+            //eBuses[0].mDebug ? Serialprint("_WaitNak eBusState: %u\n", eBus0State) : 0;
+            return retStatus;
         }
         if (retVal == _SlaveMaster)
         {
             // Zum Recovern in den VerzögerungsState
             eBus0State = _DataCycleDelayed;
-            eBuses[0].mDataRequestDelay = cDATA_DELAY / 2;
-            /*Serial.print("\nSlaveMaster Cmd\n");
-            SerialArrayPrint((const uint8_t *)ebus_buffer, SERIAL_BUFSIZE);
-            eBuses[BusNumber].mDebug ? Serialprint("_SlaveMaster eBusState: %u\n", eBusState) : 0;*/
+            mDataRequestDelay_eBus0 = cDATA_DELAY / 3;
+            //Serial.print("\nSlaveMaster Cmd\n");
+            //SerialArrayPrint((const uint8_t *)eBuses[0].eBus_buffer, cSERIAL_BUFSIZE);
+            //eBuses[0].mDebug ? Serialprint("_SlaveMaster eBusState: %u\n", eBus0State) : 0;
             sendAck(0);
-            return true;
+            return retStatus;
         }
         if (retVal == _NotValid)
         {
-            /*Serial.print(param[eBuses[0].mRequestDataPos]);
-            Serial.print("\tNot Valid\nSendCmd  ");
-            SerialArrayPrint(DATA_TABLE[lastCmd], lastDataSize);
-            Serial.print("Received ");
-            SerialArrayPrint((const uint8_t *)ebus_buffer, SERIAL_BUFSIZE);*/
+            //Serial.print(mWRSOL_PARAM[eBuses[0].mRequestDataPos]);
+            //Serial.print("\tNot Valid\nSendCmd  ");
+            //SerialArrayPrint(mWRSOL_TABLE[eBuses[0].mLastCmd], eBuses[0].mLastDataSize);
+            //Serial.print("Received ");
+            //SerialArrayPrint((const uint8_t *)eBuses[0].eBus_buffer, cSERIAL_BUFSIZE);
             sendNak(0);
             //Wird danach von Save erneut einmal gesendet, wenn wieder Fehler, dann gilt es als nicht übertragen
             eBuses[0].mFailureCnt++;
-            eBuses[0].mDataRequestDelay = 0;
+            mDataRequestDelay_eBus0 = 0;
         }
         if (retVal == _CrcFailed)
         {
-            /*Serial.print(param[eBuses[0].mRequestDataPos]);
-            Serial.print("\tCrc Failed\nSendCmd  ");
-            SerialArrayPrint(DATA_TABLE[lastCmd], lastDataSize);
-            Serial.print("Received ");
-            SerialArrayPrint((const uint8_t *)ebus_buffer, SERIAL_BUFSIZE);*/
+            //Serial.print(mWRSOL_PARAM[eBuses[0].mRequestDataPos]);
+            //Serial.print("\tCrc Failed\nSendCmd  ");
+            //SerialArrayPrint(mWRSOL_TABLE[eBuses[0].mLastCmd], eBuses[0].mLastDataSize);
+            //Serial.print("Received ");
+            //SerialArrayPrint((const uint8_t *)eBuses[0].eBus_buffer, cSERIAL_BUFSIZE);
             sendNak(0);
             //Wird danach von Slave erneut einmal gesendet, wenn wieder Fehler, dann gilt es als nicht übertragen
             eBuses[0].mFailureCnt++;
-            eBuses[0].mDataRequestDelay = 0;
+            mDataRequestDelay_eBus0 = 0;
         }
         if (eBuses[0].mFailureCnt >= 2)
         {
@@ -592,10 +610,10 @@ boolean eBus0Task(boolean debug)
             {
                 // Zum Recovern in den VerzögerungsState
                 eBus0State = _DataCycleDelayed;
-                eBuses[0].mDataRequestDelay = cDATA_DELAY / 2;
+                mDataRequestDelay_eBus0 = cDATA_DELAY / 3;
             }
             eBuses[0].mFailureCnt = 0;
-            //eBuses[BusNumber].mDebug ? Serialprint("failureCnt eBusState: %u\n", eBusState) : 0;
+            //eBuses[0].mDebug ? Serialprint("failureCnt eBusState: %u\n", eBus0State) : 0;
         }
     }
 
@@ -610,11 +628,11 @@ boolean eBus0Task(boolean debug)
         break;
 
         case _SelfIdentResponse:
-            // Timeout, wenn Slave nach dem NAK doch nichts mehr schickt
+            // Timeout, wenn der Slave nach dem NAK doch nichts mehr schickt
             eBus0State = eBusTimedOut(0, _SelfIdent, _SelfIdentResponse);
             if (retVal == _FinishedData)
             {
-                eBuses[0].mDebug ? Serial.print("SelfIdent Daten") : 0;
+                //eBuses[0].mDebug ? Serial.print("SelfIdent Daten") : 0;
                 eBus0State = _SlaveIdent;
             }
         break;
@@ -628,11 +646,11 @@ boolean eBus0Task(boolean debug)
         break;
 
         case _SlaveIdentResponse:
-            // Timeout, wenn Slave nach dem NAK doch nichts mehr schickt
+            // Timeout, wenn der Slave nach dem NAK doch nichts mehr schickt
             eBus0State = eBusTimedOut(0, _SlaveIdent, _SlaveIdentResponse);
             if (retVal == _FinishedData)
             {
-                eBuses[0].mDebug ? Serial.print("SlaveIdent Daten") : 0;
+                //eBuses[0].mDebug ? Serial.print("SlaveIdent Daten") : 0;
                 eBus0State = _DataCycle;
                 sendAck(0);
             }
@@ -641,16 +659,16 @@ boolean eBus0Task(boolean debug)
         case _DataCycle:
             if (retVal == _Sync)
             {
-                if (eBuses[0].mRequestDataPos == cWRSOL_DATA_START)
-                    Serial.print("\n");
-                
+                //if (eBuses[0].mRequestDataPos == cWRSOL_DATA_START)
+                //    Serial.print("\n");
+
                 sendDataBus0(eBuses[0].mRequestDataPos, 8);
                 eBus0State = _DataCycleResponse;
             }
         break;
 
         case _DataCycleResponse:
-            // Timeout, wenn Slave nach dem NAK doch nichts mehr schickt
+            // Timeout, wenn der Slave nach dem NAK doch nichts mehr schickt
             eBus0State = eBusTimedOut(0, _DataCycle, _DataCycleResponse);
             if (retVal == _FinishedData)
             {
@@ -659,6 +677,7 @@ boolean eBus0Task(boolean debug)
                 // Werte brechnen
                 int16_t iVal = (eBuses[0].eBus_buffer[3] << 8) + (eBuses[0].eBus_buffer[2]);
                 float fVal = (float)iVal / 10;
+                //eBuses[0].mDebug ? Serialprint("   iVal:   %u\n",iVal) :0 ;
 
                 eBus0State = _DataCycle;
                 if (eBuses[0].mRequestDataPos == cWRSOL_DATA_START)
@@ -668,18 +687,38 @@ boolean eBus0Task(boolean debug)
                     wrSOL_HexToTime(iVal, &DayOfWeek, &Hour, &Min);
                     String timeStamp;
                     eb_day_to_str((unsigned char)DayOfWeek, &timeStamp);
-                    timeStamp = timeStamp + "," + (String)Hour + ":" + (String)Min ;
+                    timeStamp = timeStamp + "," + (String)Hour + ":" + (String)Min;
 
                     _Conf_Two_Register(eBuses[0].modBusAddr, (uint32_t)iVal);
-                    eBuses[0].mDebug ? Serial.print(timeStamp) : 0;
+                    //eBuses[0].mDebug ? Serial.print(timeStamp) : 0;
                     //eBuses[0].mDebug ? Serialprint("   iVal:   %u",iVal) :0 ;
                 }
                 else if ((eBuses[0].mRequestDataPos > cWRSOL_DATA_START) && (eBuses[0].mRequestDataPos <= cWRSOL_DATA_END))
                 {
                     _Conf_Two_Register(eBuses[0].modBusAddr + eBuses[0].modBusOfs + (eBuses[0].mRequestDataPos - cWRSOL_DATA_START) * 2, (float)fVal);
+                    switch (eBuses[0].mRequestDataPos)
+                    {
+                        case 5:
+                            eBusValues->Tko = fVal;
+                            break;
+                        case 6:
+                            eBusValues->Tfk = fVal;
+                            break;
+                        case 7:
+                            eBusValues->Tso = fVal;
+                            break;
+                        case 8:
+                            eBusValues->Tsu = fVal;
+                            break;
+                        case 9:
+                            eBusValues->Tpu = fVal;
+                            break;
+                        default:
+                        break;
+                    }
                     //Serial.print(mWRSOL_PARAM[eBuses[0].mRequestDataPos]);
                     //Serial.print("\t");
-                    eBuses[0].mDebug ? Serial.print(fVal) : 0;
+                    //eBuses[0].mDebug ? Serial.println(fVal) : 0;
                     //eBuses[0].mDebug ? Serial.print("\t") : 0;
                     //eBuses[0].mDebug ? Serial.print(eBuses[0].modBusAddr + eBuses[0].modBusOfs + (eBuses[0].mRequestDataPos - cWRSOL_DATA_START) * 2) : 0;
                     //eBuses[0].mDebug ? Serial.println() : 0;
@@ -690,17 +729,18 @@ boolean eBus0Task(boolean debug)
                 if  (eBuses[0].mRequestDataPos > cWRSOL_DATA_END)
                 {
                     eBus0State = _DataCycleDelayed;
-                    eBuses[0].mDataRequestDelay = 0;
+                    mDataRequestDelay_eBus0 = 0;
+                    retStatus = eBus_dataReady;
                 }
             }
         break;
 
         case _DataCycleDelayed:
-            if (retVal == _FinishedData)
-                SerialArrayPrint((const uint8_t *)eBuses[0].eBus_buffer, cSERIAL_BUFSIZE);
- 
+            //if (retVal == _FinishedData)
+            //    SerialArrayPrint((const uint8_t *)eBuses[0].eBus_buffer, cSERIAL_BUFSIZE);
+
             /* Delay ellapsedmillis von 5s dann wieder von vorne */
-            if (eBuses[0].mDataRequestDelay >= cDATA_DELAY)
+            if (mDataRequestDelay_eBus0 >= cDATA_DELAY / 2)
             {
                 eBuses[0].mRequestDataPos = cWRSOL_DATA_START;
                 eBus0State = _DataCycle;
@@ -711,10 +751,16 @@ boolean eBus0Task(boolean debug)
         default:
         break;
     }
+
     if (mRun_eBus0 > cDATA_DELAY * 5)
-        return false;
-    else
-        return true;
+    {
+        retStatus = eBus_reInit;
+    }
+    else if (retStatus == eBus_Ok)
+    {
+        mRun_eBus0 = 0;
+    }
+    return retStatus;
 }
 /************************ Ende eBus0Task **********************************************************/
 
@@ -724,20 +770,27 @@ boolean eBus0Task(boolean debug)
 /// \return         -
 //*************************************************************************************************
 #ifdef EBUS2
-boolean eBus1Task(boolean debug)
+int eBus1Task(boolean debug)
 {
+    eBusStatus retStatus = eBus_Ok;
     eBuses[1].mDebug = debug;
 
     int8_t retVal = readData(1);
     if (retVal == _FinishedData)
     {
-        mRun_eBus0 = 0;
+        mRun_eBus1 = 0;
+        SerialArrayPrint((const uint8_t *)eBuses[1].ebus_buffer, SERIAL_BUFSIZE);
     }
 
     if (mRun_eBus1 > cDATA_DELAY * 5)
-        return false;
-    else
-        return true;
+    {
+        retStatus = eBus_reInit;
+    }
+    else if (retStatus == eBus_Ok)
+    {
+        mRun_eBus0 = 0;
+    }
+    return retStatus;
 }
 #endif
 /************************ Ende eBus1Task **********************************************************/

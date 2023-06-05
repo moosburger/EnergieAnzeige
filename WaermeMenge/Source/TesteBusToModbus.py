@@ -102,70 +102,32 @@ SmaUnit = 3
 # ------------------------------------------------------------------------#
 # Define client
 # ------------------------------------------------------------------------#
-#Piko
-#~ modbus = ModbusClient('192.168.2.42' , port=_conf.MODBUS_PORT)
-#~ sunSpec = (
-            #~ ('   Seriennummer',40053,16,0, SunSpecUnit),
-            #~ ('  Softwarepaket',40045, 8,0, SunSpecUnit),
-            #~ ('    Geraetetyp1',40240, 1,0, SunSpecUnit),
-            #~ ('    Geraetetyp2',40037, 8,0, SunSpecUnit),
-            #~ ('  Gesamtertrag1',40303, 4,0, SunSpecUnit),
-            #~ ('  Gesamtertrag2',40210, 2,40212, SunSpecUnit),
-            #~ ('       Leistung',40200, 1,40201, SunSpecUnit),
-            #~ ('    Tagesertrag',40670, 2,40212, SunSpecUnit),
-            #~ ('   Ac1 Spannung',40196, 1,40199, SunSpecUnit),
-            #~ ('   Ac2 Spannung',40197, 1,40199, SunSpecUnit),
-            #~ ('   Ac3 Spannung',40198, 1,40199, SunSpecUnit),
-            #~ ('      Ac1 Strom',40189, 1,40192, SunSpecUnit),
-            #~ ('      Ac2 Strom',40190, 1,40192, SunSpecUnit),
-            #~ ('      Ac3 Strom',40191, 1,40192, SunSpecUnit),
-            #~ ('Innentemperatur',40219, 1,0, SunSpecUnit),
-            #~ (' And. Innentemp',40222, 1,0, SunSpecUnit),
-            #~ ('   Dc1 Spannung',40642, 1,40625, SunSpecUnit),
-            #~ ('   Dc2 Spannung',40662, 1,40625, SunSpecUnit),
-            #~ ('      Dc1 Strom',40641, 1,40624, SunSpecUnit),
-            #~ ('      Dc2 Strom',40661, 1,40624, SunSpecUnit),
-            #~ ('   Dc1 Leistung',40643, 1,40626, SunSpecUnit),
-            #~ ('   Dc2 Leistung',40663, 1,40626, SunSpecUnit),
-            #~ (' Betriebsstatus',40224, 1,0, SunSpecUnit),
-            #~ (' Ereignisnummer',40226, 2,0, SunSpecUnit),
-            #~ ('    MAC-Adresse',40076, 4,0, SunSpecUnit),
-            #~ ('     IP-Adresse',40097, 8,0, SunSpecUnit)
-        #~ )
-
-#SMA
-#~ modbus = ModbusClient('192.168.2.43' , port=_conf.MODBUS_PORT)
-#~ sunSpec = (
-                                #~ ('    Tagesertrag',30535, 2,0, SmaUnit),
-                                #~ ('       Leistung',30775, 2,0, SmaUnit),
-                                #~ ('   Gesamtertrag',30529, 2,0, SmaUnit),
-                                #~ ('Innentemperatur',40219, 1,0, SunSpecUnit),
-                                #~ ('   Dc1 Spannung',40642, 1,40625, SunSpecUnit),
-                                #~ ('   Dc2 Spannung',40662, 1,40625, SunSpecUnit),
-                                #~ ('      Dc1 Strom',40641, 1,40624, SunSpecUnit),
-                                #~ ('      Dc2 Strom',40661, 1,40624, SunSpecUnit),
-                                #~ ('   Dc1 Leistung',40643, 1,40626, SunSpecUnit),
-                                #~ ('   Dc2 Leistung',40663, 1,40626, SunSpecUnit)
-        #~ )
-
 # Teensy
 Weekday = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 Vers_Addr   =   1000
 SoBus1_Addr =   1100
 SoBus2_Addr =   1110
+PumpeSo_Addr    = 1200
+PumpeFK_Addr    = 1202
+BrennSperr_Addr = 1204
 OW_Addr     =   2000
 eBus1_Addr  =   3000
 eBus2_Addr  =   3500
 DsInternal  =   '40:6:186:150:6:0:0:103'    #[40, 6, 186, 150, 6, 0, 0, 103]
 DsTPO       =   '40:141:48:52:12:0:0:199'   #[40, 141, 48, 52, 12, 0, 0, 199]
 DsH2O       =   '40:241:68:200:6:0:0:89'    #[40, 241, 68, 200, 6, 0, 0, 89]
+DsH2OWarm   =   '40:93:138:200:6:0:0:248'
+Heizung   =     '40:46:105:200:6:0:0:173'
 
 modbus = ModbusClient('192.168.2.39', port=502)
 DefaultUnit = 3
-sunSpec = (
+WaermeEnergieProfil = (
                     ('   Version',Vers_Addr, 8, 0, 's', DefaultUnit),
                     ('     Gas',SoBus1_Addr, 2, 0, 'u', DefaultUnit),
                     ('  Wasser',SoBus2_Addr, 2, 0, 'u', DefaultUnit),
+                    ('      PSO',PumpeSo_Addr, 2, 0, 'u', DefaultUnit),
+                    ('      PFK',PumpeFK_Addr, 2, 0, 'u', DefaultUnit),
+                    ('     BRSP',BrennSperr_Addr, 2, 0, 'u', DefaultUnit),
                     (' Ow-Val00',OW_Addr +  0, 2, 0, 'f', DefaultUnit),
                     (' Ow-Adr01',OW_Addr +  2, 1, 0, 's', DefaultUnit),
                     (' Ow-Adr02',OW_Addr +  3, 1, 0, 's', DefaultUnit),
@@ -193,38 +155,48 @@ sunSpec = (
                     (' Ow-Adr26',OW_Addr + 27, 1, 0, 's', DefaultUnit),
                     (' Ow-Adr27',OW_Addr + 28, 1, 0, 's', DefaultUnit),
                     (' Ow-Adr28',OW_Addr + 29, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Val30',OW_Addr + 30, 2, 0, 'f', DefaultUnit),
-                    #~ (' Ow-Adr31',OW_Addr + 32, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Adr32',OW_Addr + 33, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Adr33',OW_Addr + 34, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Adr34',OW_Addr + 35, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Adr35',OW_Addr + 36, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Adr36',OW_Addr + 37, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Adr37',OW_Addr + 38, 1, 0, 's', DefaultUnit),
-                    #~ (' Ow-Adr38',OW_Addr + 39, 1, 0, 's', DefaultUnit),
-                    (' timeStamp',eBus1_Addr +  0, 2, 0, 'u', DefaultUnit),
-                    ('       TKO',eBus1_Addr +  2, 2, 0, 'f', DefaultUnit),
-                    ('       TFK',eBus1_Addr +  4, 2, 0, 'f', DefaultUnit),
-                    ('       TSO',eBus1_Addr +  6, 2, 0, 'f', DefaultUnit),
-                    ('       TSU',eBus1_Addr +  8, 2, 0, 'f', DefaultUnit),
-                    ('       TPU',eBus1_Addr + 10, 2, 0, 'f', DefaultUnit),
+                    (' Ow-Val30',OW_Addr + 30, 2, 0, 'f', DefaultUnit),
+                    (' Ow-Adr31',OW_Addr + 32, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr32',OW_Addr + 33, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr33',OW_Addr + 34, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr34',OW_Addr + 35, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr35',OW_Addr + 36, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr36',OW_Addr + 37, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr37',OW_Addr + 38, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr38',OW_Addr + 39, 1, 0, 's', DefaultUnit),
+                    (' Ow-Val40',OW_Addr + 40, 2, 0, 'f', DefaultUnit),
+                    (' Ow-Adr41',OW_Addr + 42, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr42',OW_Addr + 43, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr43',OW_Addr + 44, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr44',OW_Addr + 45, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr45',OW_Addr + 46, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr46',OW_Addr + 47, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr47',OW_Addr + 48, 1, 0, 's', DefaultUnit),
+                    (' Ow-Adr48',OW_Addr + 49, 1, 0, 's', DefaultUnit),
+                    ('timeStamp',eBus1_Addr +  0, 2, 0, 'u', DefaultUnit),
+                    ('      TKO',eBus1_Addr +  2, 2, 0, 'f', DefaultUnit),
+                    ('      TFK',eBus1_Addr +  4, 2, 0, 'f', DefaultUnit),
+                    ('      TSO',eBus1_Addr +  6, 2, 0, 'f', DefaultUnit),
+                    ('      TSU',eBus1_Addr +  8, 2, 0, 'f', DefaultUnit),
+                    ('      TPU',eBus1_Addr + 10, 2, 0, 'f', DefaultUnit),
         )
 
-#log.info("Total energy    : %d Wh" % Data['TotalWh'])
-#~ #log.info("Today energy    : %d Wh" % Data['TodayWh'])
-
-for i in range(15000):
+for i in range(1):
     print (f'\nLauf : {i}')
-    # ----------------------------------------------------------------------- #
+# ----------------------------------------------------------------------- #
     modbus.connect()
-
-    sunSpecData = {}
+    WaermeEnergieProfilData = {}
+    WaermeEnergieProfilData['TInternal'] = float(-127.0)
+    WaermeEnergieProfilData['TPO'] = float(-127.0)
+    WaermeEnergieProfilData['TWasser'] = float(-127.0)
+    WaermeEnergieProfilData['TWarmWasser'] = float(-127.0)
+    WaermeEnergieProfilData['THeizung'] = float(-127.0)
+    WaermeEnergieProfilData['PSO'] = int(-1)
+    WaermeEnergieProfilData['PFK'] = int(-1)
+    WaermeEnergieProfilData['BRSP'] = int(-1)
     OneWire = []
-    DsIntCnt = 0
-    DsTPOCnt = 0
-    DsH2OCnt = 0
 
-    for dataSet in sunSpec:
+    for dataSet in WaermeEnergieProfil:
         UNIT = dataSet[5]
 
         adrOfs = 0
@@ -305,19 +277,19 @@ for i in range(15000):
             # Ds Adresse ['0x28','0x6','0xba','0x96','0x6','0x0','0x0','0x67] interner Sensor
             if ('Ow-' in DictKey):
                 if (Einheit == 'f'):
-                    sunSpecData[str(adr + adrOfs)] = valF
+                    WaermeEnergieProfilData[str(adr + adrOfs)] = valF
                 else:
-                    sunSpecData[str(adr + adrOfs)] = val
+                    WaermeEnergieProfilData[str(adr + adrOfs)] = val
 
             elif (Einheit == 'f'):
-                sunSpecData[DictKey] = valF
+                WaermeEnergieProfilData[DictKey] = valF
             #    print(f'{des} ({adr}) {val} {valF:0.2f}')
             else:
-                sunSpecData[DictKey] = val
+                WaermeEnergieProfilData[DictKey] = val
             #    print(f'{des} ({adr}) {val} {val}')
 
-        else:
-            print('\nAdresse:[{}] nicht vorhanden'.format(adr))
+        #else:
+        #    print('\nAdresse:[{}] nicht vorhanden'.format(adr))
 
 
     # ----------------------------------------------------------------------- #
@@ -327,38 +299,64 @@ for i in range(15000):
 
     DsAdr = []
     DsVal = []
-    OW = f"{(sunSpecData[str(OW_Addr + 2)])}:{(sunSpecData[str(OW_Addr + 3)])}:{(sunSpecData[str(OW_Addr + 4)])}:{(sunSpecData[str(OW_Addr + 5)])}:{(sunSpecData[str(OW_Addr + 6)])}:{(sunSpecData[str(OW_Addr + 7)])}:{(sunSpecData[str(OW_Addr + 8)])}:{(sunSpecData[str(OW_Addr + 9)])}"
-    DsVal.append(sunSpecData[str(OW_Addr + 0)])
+    OW = f"{(WaermeEnergieProfilData[str(OW_Addr + 2)])}:{(WaermeEnergieProfilData[str(OW_Addr + 3)])}:{(WaermeEnergieProfilData[str(OW_Addr + 4)])}:{(WaermeEnergieProfilData[str(OW_Addr + 5)])}:{(WaermeEnergieProfilData[str(OW_Addr + 6)])}:{(WaermeEnergieProfilData[str(OW_Addr + 7)])}:{(WaermeEnergieProfilData[str(OW_Addr + 8)])}:{(WaermeEnergieProfilData[str(OW_Addr + 9)])}"
+    DsVal.append(WaermeEnergieProfilData[str(OW_Addr + 0)])
     DsAdr.append(OW)
 
-    OW = f"{(sunSpecData[str(OW_Addr + 12)])}:{(sunSpecData[str(OW_Addr + 13)])}:{(sunSpecData[str(OW_Addr + 14)])}:{(sunSpecData[str(OW_Addr + 15)])}:{(sunSpecData[str(OW_Addr + 16)])}:{(sunSpecData[str(OW_Addr + 17)])}:{(sunSpecData[str(OW_Addr + 18)])}:{(sunSpecData[str(OW_Addr + 19)])}"
-    DsVal.append(sunSpecData[str(OW_Addr + 10)])
+    OW = f"{(WaermeEnergieProfilData[str(OW_Addr + 12)])}:{(WaermeEnergieProfilData[str(OW_Addr + 13)])}:{(WaermeEnergieProfilData[str(OW_Addr + 14)])}:{(WaermeEnergieProfilData[str(OW_Addr + 15)])}:{(WaermeEnergieProfilData[str(OW_Addr + 16)])}:{(WaermeEnergieProfilData[str(OW_Addr + 17)])}:{(WaermeEnergieProfilData[str(OW_Addr + 18)])}:{(WaermeEnergieProfilData[str(OW_Addr + 19)])}"
+    DsVal.append(WaermeEnergieProfilData[str(OW_Addr + 10)])
     DsAdr.append(OW)
 
-    OW = f"{(sunSpecData[str(OW_Addr + 22)])}:{(sunSpecData[str(OW_Addr + 23)])}:{(sunSpecData[str(OW_Addr + 24)])}:{(sunSpecData[str(OW_Addr + 25)])}:{(sunSpecData[str(OW_Addr + 26)])}:{(sunSpecData[str(OW_Addr + 27)])}:{(sunSpecData[str(OW_Addr + 28)])}:{(sunSpecData[str(OW_Addr + 29)])}"
-    DsVal.append(sunSpecData[str(OW_Addr + 20)])
+    OW = f"{(WaermeEnergieProfilData[str(OW_Addr + 22)])}:{(WaermeEnergieProfilData[str(OW_Addr + 23)])}:{(WaermeEnergieProfilData[str(OW_Addr + 24)])}:{(WaermeEnergieProfilData[str(OW_Addr + 25)])}:{(WaermeEnergieProfilData[str(OW_Addr + 26)])}:{(WaermeEnergieProfilData[str(OW_Addr + 27)])}:{(WaermeEnergieProfilData[str(OW_Addr + 28)])}:{(WaermeEnergieProfilData[str(OW_Addr + 29)])}"
+    DsVal.append(WaermeEnergieProfilData[str(OW_Addr + 20)])
+    DsAdr.append(OW)
+
+    OW = f"{(WaermeEnergieProfilData[str(OW_Addr + 32)])}:{(WaermeEnergieProfilData[str(OW_Addr + 33)])}:{(WaermeEnergieProfilData[str(OW_Addr + 34)])}:{(WaermeEnergieProfilData[str(OW_Addr + 35)])}:{(WaermeEnergieProfilData[str(OW_Addr + 36)])}:{(WaermeEnergieProfilData[str(OW_Addr + 37)])}:{(WaermeEnergieProfilData[str(OW_Addr + 38)])}:{(WaermeEnergieProfilData[str(OW_Addr + 39)])}"
+    DsVal.append(WaermeEnergieProfilData[str(OW_Addr + 30)])
+    DsAdr.append(OW)
+
+    OW = f"{(WaermeEnergieProfilData[str(OW_Addr + 42)])}:{(WaermeEnergieProfilData[str(OW_Addr + 43)])}:{(WaermeEnergieProfilData[str(OW_Addr + 44)])}:{(WaermeEnergieProfilData[str(OW_Addr + 45)])}:{(WaermeEnergieProfilData[str(OW_Addr + 46)])}:{(WaermeEnergieProfilData[str(OW_Addr + 47)])}:{(WaermeEnergieProfilData[str(OW_Addr + 48)])}:{(WaermeEnergieProfilData[str(OW_Addr + 49)])}"
+    DsVal.append(WaermeEnergieProfilData[str(OW_Addr + 40)])
     DsAdr.append(OW)
 
     for k in range(len(DsAdr)):
         if(DsInternal == DsAdr[k]):
-            sunSpecData['TInternal'] = DsVal[k]
+            WaermeEnergieProfilData['TInternal'] = DsVal[k]
         if(DsTPO == DsAdr[k]):
-            sunSpecData['TPO'] = DsVal[k]
+            WaermeEnergieProfilData['TPO'] = DsVal[k]
         if(DsH2O == DsAdr[k]):
-            sunSpecData['TWasser'] = DsVal[k]
+            WaermeEnergieProfilData['TWasser'] = DsVal[k]
+        if(DsH2OWarm == DsAdr[k]):
+            WaermeEnergieProfilData['TWarmWasser'] = DsVal[k]
+        if(Heizung == DsAdr[k]):
+            WaermeEnergieProfilData['THeizung'] = DsVal[k]
 
 
-    print (f"Ds Adr: {(sunSpecData[str(OW_Addr + 2)]): 4}:{(sunSpecData[str(OW_Addr + 3)]): 4}:{(sunSpecData[str(OW_Addr + 4)]): 4}:{(sunSpecData[str(OW_Addr + 5)]): 4}:{(sunSpecData[str(OW_Addr + 6)]): 4}:{(sunSpecData[str(OW_Addr + 7)]): 4}:{(sunSpecData[str(OW_Addr + 8)]): 4}:{(sunSpecData[str(OW_Addr + 9)]): 4} Temp: {sunSpecData[str(OW_Addr + 0)]:0.2f}")
+    print (f"Ds Adr: {(WaermeEnergieProfilData[str(OW_Addr + 2)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 3)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 4)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 5)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 6)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 7)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 8)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 9)]): 4} Temp: {WaermeEnergieProfilData[str(OW_Addr + 0)]:0.2f}")
 
-    print (f"Ds Adr: {(sunSpecData[str(OW_Addr +12)]): 4}:{(sunSpecData[str(OW_Addr +13)]): 4}:{(sunSpecData[str(OW_Addr +14)]): 4}:{(sunSpecData[str(OW_Addr +15)]): 4}:{(sunSpecData[str(OW_Addr +16)]): 4}:{(sunSpecData[str(OW_Addr +17)]): 4}:{(sunSpecData[str(OW_Addr +18)]): 4}:{(sunSpecData[str(OW_Addr +19)]): 4} Temp: {sunSpecData[str(OW_Addr +10)]:0.2f}")
+    print (f"Ds Adr: {(WaermeEnergieProfilData[str(OW_Addr + 12)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 13)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 14)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 15)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 16)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 17)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 18)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 19)]): 4} Temp: {WaermeEnergieProfilData[str(OW_Addr + 10)]:0.2f}")
 
-    print (f"Ds Adr: {(sunSpecData[str(OW_Addr + 22)]): 4}:{(sunSpecData[str(OW_Addr + 23)]): 4}:{(sunSpecData[str(OW_Addr + 24)]): 4}:{(sunSpecData[str(OW_Addr + 25)]): 4}:{(sunSpecData[str(OW_Addr + 26)]): 4}:{(sunSpecData[str(OW_Addr + 27)]): 4}:{(sunSpecData[str(OW_Addr + 28)]): 4}:{(sunSpecData[str(OW_Addr + 29)]): 4} Temp: {sunSpecData[str(OW_Addr + 20)]:0.2f}")
+    print (f"Ds Adr: {(WaermeEnergieProfilData[str(OW_Addr + 22)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 23)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 24)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 25)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 26)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 27)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 28)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 29)]): 4} Temp: {WaermeEnergieProfilData[str(OW_Addr + 20)]:0.2f}")
 
-    #print (f"Ds Adr: {(sunSpecData[str(OW_Addr + 32)]):}:{(sunSpecData[str(OW_Addr + 33)])}:{(sunSpecData[str(OW_Addr + 34)])}:{(sunSpecData[str(OW_Addr + 35)])}:{(sunSpecData[str(OW_Addr + 36)])}:{(sunSpecData[str(OW_Addr + 37)])}:{(sunSpecData[str(OW_Addr + 38)])}:{(sunSpecData[str(OW_Addr + 39)])} Temp: {sunSpecData[str(OW_Addr + 30)]:0.2f}")
+    print (f"Ds Adr: {(WaermeEnergieProfilData[str(OW_Addr + 32)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 33)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 34)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 35)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 36)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 37)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 38)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 39)]): 4} Temp: {WaermeEnergieProfilData[str(OW_Addr + 30)]:0.2f}")
 
-    timeStamp = sunSpecData['timeStamp']
-    #print(f'-{timeStamp}-')
-    #print(f"-{sunSpecData['timeStamp']}-")
+    print (f"Ds Adr: {(WaermeEnergieProfilData[str(OW_Addr + 42)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 43)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 44)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 45)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 36)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 47)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 48)]): 4}:{(WaermeEnergieProfilData[str(OW_Addr + 49)]): 4} Temp: {WaermeEnergieProfilData[str(OW_Addr + 40)]:0.2f}")
+
+
+
+    lt = time.localtime() # Aktuelle, lokale Zeit als Tupel
+    # Entpacken des Tupels
+    lt_jahr, lt_monat, lt_tag = lt[0:3]        # Datum
+    lt_h, lt_m, lt_s = lt[3:6]
+    lt_dst = lt[8]                             # Sommerzeit
+
+
+    timeStamp = WaermeEnergieProfilData['timeStamp']
+    print(f'-{timeStamp}-')
+    #print(f"-{WaermeEnergieProfilData['timeStamp']}-")
+
+    if (lt_dst == 1):
+        timeStamp = timeStamp + 60
 
     weekH = int(timeStamp) / 60
     #print(f'\nweekH: {weekH}')
@@ -387,110 +385,22 @@ for i in range(15000):
         Min = Min - 60
         Hour += 1
 
-    print(f"     Time: {Weekday[DayOfWeek]}; {Hour:02}:{Min:02}\t{timeStamp}")
-    print(f"  Version: {sunSpecData['Version']}")
-    print(f"  Gas Imp: {sunSpecData['Gas']}")
-    print(f"   Wasser: {sunSpecData['Wasser']}")
-    print(f"TInternal: {sunSpecData['TInternal']:0.2f}")
-    print(f"      TPO: {sunSpecData['TPO']:0.2f}")
-    print(f"  TWasser: {sunSpecData['TWasser']:0.2f}")
-    print(f"      TKO: {sunSpecData['TKO']:0.2f}")
-    print(f"      TFK: {sunSpecData['TFK']:0.2f}")
-    print(f"      TSO: {sunSpecData['TSO']:0.2f}")
-    print(f"      TSU: {sunSpecData['TSU']:0.2f}")
-    print(f"      TPU: {sunSpecData['TPU']:0.2f}")
+    print(f"       Time: {Weekday[DayOfWeek]}; {Hour:02}:{Min:02}\t{timeStamp}")
+    print(f"    Version: {WaermeEnergieProfilData['Version']}")
+    print(f"    Gas Imp: {WaermeEnergieProfilData['Gas']}")
+    print(f"     Wasser: {WaermeEnergieProfilData['Wasser']}")
+    print(f"  TInternal: {WaermeEnergieProfilData['TInternal']:0.2f}")
+    print(f"        TPO: {WaermeEnergieProfilData['TPO']:0.2f}")
+    print(f"    TWasser: {WaermeEnergieProfilData['TWasser']:0.2f}")
+    print(f"TWarmWasser: {WaermeEnergieProfilData['TWarmWasser']:0.2f}")
+    print(f"   THeizung: {WaermeEnergieProfilData['THeizung']:0.2f}")
+    print(f"        TKO: {WaermeEnergieProfilData['TKO']:0.2f}")
+    print(f"        TFK: {WaermeEnergieProfilData['TFK']:0.2f}")
+    print(f"        TSO: {WaermeEnergieProfilData['TSO']:0.2f}")
+    print(f"        TSU: {WaermeEnergieProfilData['TSU']:0.2f}")
+    print(f"        TPU: {WaermeEnergieProfilData['TPU']:0.2f}")
+    print(f"        PSO: {WaermeEnergieProfilData['PSO']:0.2f}")
+    print(f"        PFK: {WaermeEnergieProfilData['PFK']:0.2f}")
+    print(f"       BRSP: {WaermeEnergieProfilData['BRSP']:0.2f}")
 
-    time.sleep(60)
-
-#~ Data = {}
-#~ Data['Now'] = datetime.now()
-#~ Data['RelVer'] =    sunSpecData['40045']
-#~ Data['host'] =      sunSpecData['40097']
-#~ Data['Status'] =    sunSpecData['40224']
-#~ #Data['StatusTxt'] = sunSpecData['aaa']
-#~ Data['InvName'] =   'PowerDorf'
-#~ Data['InvSN'] =     sunSpecData['40053']
-#~ Data['InvModel'] =  'Sunnboy 3.0'
-#~ Data['InvString'] = '2'
-#~ Data['InvPhase'] =  '1'
-#~ Data['TotalWh1SP'] =   sunSpecData['40303']
-#~ Data['TotalWh2SP'] =   sunSpecData['40210']
-
-#~ Data['DayWh'] =   sunSpecData['30537']
-#~ Data['TotalWh'] =   sunSpecData['30531']
-
-#~ Data['CC_P'] =      sunSpecData['40643'] + sunSpecData['40663']
-#~ Data['CA_P'] =      sunSpecData['40200']
-
-#~ Data['CC1_U'] =   sunSpecData['40642']
-#~ Data['CC1_I'] =   sunSpecData['40641']
-#~ Data['CC1_P'] =   sunSpecData['40643']
-#~ Data['CC1_T'] =   sunSpecData['40219']
-
-#~ Data['CC2_U'] =   sunSpecData['40662']
-#~ Data['CC2_I'] =   sunSpecData['40661']
-#~ Data['CC2_P'] =   sunSpecData['40663']
-#~ Data['CC2_T'] =   sunSpecData['40219']
-
-#~ Data['CA1_U'] =   sunSpecData['40196']
-#~ Data['CA1_I'] =   sunSpecData['40189']
-#~ Data['CA1_P'] =   sunSpecData['40200']
-#~ Data['CA1_T'] =   sunSpecData['40219']
-
-
-
-#~ print("")
-#~ print("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(Data['Now']))
-#~ print("Comm software   : SMA v%s - %s",(Data['RelVer']))
-#~ print("Comm host       : %s",Data['host'])
-#~ print("Inverter Status : %d",Data['Status'])
-#~ print("Inverter Name   : %s",Data['InvName'])
-#~ print("Inverter SN     : %s",Data['InvSN'])
-#~ print("Inverter Model  : %s",Data['InvModel'])
-#~ print("Inverter String : %d",Data['InvString'])
-#~ print("Inverter Phase  : %d",Data['InvPhase'])
-#~ print("Total energy SS1: %d Wh",Data['TotalWh1SP'])
-#~ print("Total energy SS2: %d Wh",Data['TotalWh2SP'])
-#~ print("Daily energy    : %d Wh",Data['DayWh'])
-#~ print("Total energy    : %d Wh",Data['TotalWh'])
-#~ print("DC Power        : %5d W\tAC Power        : %5d W",(Data['CC_P'], Data['CA_P']))
-#~ print('DC String 1     : %5.1f V   %4.2f A   %4d W   T= %5.2f C',(Data['CC1_U'], Data['CC1_I'], Data['CC1_P'], Data['CC1_T']))
-#~ print('DC String 2     : %5.1f V   %4.2f A   %4d W   T= %5.2f C',(Data['CC2_U'], Data['CC2_I'], Data['CC2_P'], Data['CC2_T']))
-#~ print('AC Phase 1      : %5.1f V   %4.2f A   %4d W   T= %5.2f C',(Data['CA1_U'], Data['CA1_I'], Data['CA1_P'], Data['CA1_T']))
-
-#~ log.info("")
-#~ log.info("TimeStamp       : {:%m/%d/%y %H:%M %S}".format(Data['Now']))
-#~ log.info("Comm software   : SMA v%s - %s" % (Data['RelVer']))
-#~ log.info("Comm host       : %s" % Data['host'])
-#~ log.info("Inverter Status : %d (%s)" % (Data['Status'], Data['StatusTxt'])
-#~ log.info("Inverter Name   : %s" % Data['InvName'])
-#~ log.info("Inverter SN     : %s" % Data['InvSN'])
-#~ log.info("Inverter Model  : %s" % Data['InvModel'])
-#~ log.info("Inverter String : %d" % Data['InvString'])
-#~ log.info("Inverter Phase  : %d" % Data['InvPhase'])
-#~ log.info("Total energy    : %d Wh" % Data['TotalWh'])
-#~ log.info("DC Power        : %5d W\tAC Power        : %5d W" % (Data['CC_P'], Data['CA_P']))
-#~ log.info('DC String 1     : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (Data['CC1_U'], Data['CC1_I'], Data['CC1_P'], Data['CC1_T']))
-#~ log.info('DC String 2     : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (Data['CC2_U'], Data['CC2_I'], Data['CC2_P'], Data['CC2_T']))
-#~ log.info('AC Phase 1      : %5.1f V   %4.2f A   %4d W   T= %5.2f C' % (Data['CA1_U'], Data['CA1_I'], Data['CA1_P'], Data['CA1_T'])))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#    time.sleep(60)

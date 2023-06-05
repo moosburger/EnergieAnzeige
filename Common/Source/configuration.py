@@ -69,7 +69,7 @@ class Global():
     MODBUS_WAERMEENERGIE_IP = "192.168.100.139"
 
     GAS_KONSTANTE       = 0.01      ## 1 Impuls entspricht  0.01 Kubikmeter Gas
-    GAS_ENERGIE         = 10        ## ! Kubikmeter Gas besitzt die Energie von 10 kWh
+    GAS_ENERGIE         = 11        ## 1 Kubikmeter Gas besitzt die Energie von 11 kWh
 
     ## x0,1 = 1. Stelle hinter dem Komma, z.B. 0,6 m³ = 600 Liter
     ## x0,01 = 2. Stelle hinter dem Komma, z.B. 0,07 m³ = 70 Liter

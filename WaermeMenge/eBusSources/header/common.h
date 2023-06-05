@@ -32,10 +32,10 @@
 * Defines
 **************************************************************************************************/
 #define boolean     bool
-#define VERSION     "0.9.0.1\t"
+#define VERSION     "0.9.1.0\t"
 
 //OneWire
-#define MAXSENSORS 4
+#define MAXSENSORS 5
 #define ONEWIRE_PIN 32
 
 // ModBus
@@ -44,17 +44,32 @@
 // Wenn der zweite eBus verwendet werden soll
 //#define EBUS
 
+enum eBusStatus
+{
+    eBus_reInit,
+    eBus_Ok,
+    eBus_dataReady
+};
 /**************************************************************************************************
 * Variablen
 **************************************************************************************************/
 //OneWire
-extern bool                             mDebug_OneWire;
-extern OneWire                          ds;
-extern DallasTemperature                mSensors;
+extern volatile bool            mDebug_OneWire;
+extern OneWire                  ds;
+extern DallasTemperature        mSensors;
 
 //ModBus
-extern ModbusEthernet*                  mb;
+extern ModbusEthernet*          mb;
 
+//eBus Werte
+struct eBusValues_st
+{
+    float Tko;
+    float Tfk;
+    float Tso;
+    float Tsu;
+    float Tpu;
+};
 /************************ Ende  ******************************************************************/
 #endif /* _MAIN_H_ */
 /************************ Ende _COMMON_H_.h ******************************************************/

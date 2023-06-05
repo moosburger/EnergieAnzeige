@@ -113,6 +113,7 @@ class CalcWaermeMenge(object):
                 self.WriteEnergyToDbDelay = 0
 
                 self.Interval_sek = interval
+                self.FirstRun = True
 
                 ####
                 ## Modbus Initialisieren
@@ -128,13 +129,18 @@ class CalcWaermeMenge(object):
                 self.TFestStoffKessel = float(-127.0)
                 self.TInternal = float(-127.0)
                 self.TWasser = float(-127.0)
+                self.TWarmWasser = float(-127.0)
+                self.THeizung = float(-127.0)
+                self.PSolar = int(-1)
+                self.PFestStoff = int(-1)
+                self.BrennerSperre = int(-1)
 
-                self.GasImpuls = int(0)
-                self.Gas_cbm = float(0.0)
-                self.Gas_kWh = float(0.0)
-                self.WasserImpuls = int(0)
-                self.Wasser_Lit = int(0)
-                self.Wasser_cbm = float(0.0)
+                self.GasImpuls = int(-1)
+                self.Gas_cbm = float(-1.0)
+                self.Gas_kWh = float(1-.0)
+                self.WasserImpuls = int(-1)
+                self.Wasser_Lit = int(-1)
+                self.Wasser_cbm = float(-1.0)
 
                 self.Last_TKollektor = float(-127.0)
                 self.Last_TSpeicherOben = float(-127.0)
@@ -144,11 +150,20 @@ class CalcWaermeMenge(object):
                 self.Last_TFestStoffKessel = float(-127.0)
                 self.Last_TInternal = float(-127.0)
                 self.Last_TWasser = float(-127.0)
+                self.Last_TWarmWasser = float(-127.0)
+                self.Last_THeizung = float(-127.0)
+                self.Last_PSolar = int(-1)
+                self.Last_PFestStoff = int(-1)
+                self.Last_BrennerSperre = int(-1)
 
-                self.Last_GasImpuls = int(0)
-                self.Last_WasserImpuls = int(0)
-                self.Last_totWasser_Lit = int(0)
-                self.Last_totGas_cbm = float(0.0)
+                self.Last_GasImpuls = int(-1)
+                self.Last_WasserImpuls = int(-1)
+                self.Last_totWasser_Lit = int(-1)
+                self.Last_totGas_cbm = float(-1.0)
+                self.Last_Gas_cbm = float(-1.0)
+                self.Last_Gas_kWh = float(-1.0)
+                self.Last_Wasser_Lit = int(-1)
+                self.Last_Wasser_cbm = float(-1.0)
                 self.Last_GasForwardMonthSoFar_cbm = float(0.0)
                 self.Last_GasForwardMonthSoFar_kWh = float(0.0)
                 self.Last_WasserForwardMonthSoFar_Lit = int(0)
@@ -156,7 +171,14 @@ class CalcWaermeMenge(object):
                 self.Last_GasForwardYearSoFar_cbm = float(0.0)
                 self.Last_WasserForwardYearSoFar_Lit = int(0)
 
-                self.Last_eBusTimeStamp = int(-127)
+                self.GasPartSum_cbm = float(0.0)
+                self.GasPartSumStart = ""
+                self.WasserPartSum_Lit = int(0)
+                self.WasserPartSumStart = ""
+                self.dailyStartGasImpuls = int(-1)
+                self.dailyStartWasserImpuls = int(-1)
+                self.Bezug_GasImpuls = int(0)
+                self.Bezug_WasserImpuls = int(0)
 
                 self.IsNewDay2 = False
                 self.IsNewMonth = False
@@ -214,7 +236,7 @@ class CalcWaermeMenge(object):
                     time.sleep(_conf.INLFUXDB_DELAY)
 
                 # Beim Init verzögern, da kommen viele Daten vom mqtt Broker
-                #time.sleep(interval)
+                time.sleep(interval)
                 self.log.info('waiting')
                 time.sleep(interval)
                 self.log.info('running')
@@ -231,10 +253,37 @@ class CalcWaermeMenge(object):
                     time.sleep(interval / divide)
                     self._calcYearlyHeatQuantitySoFar()
 
+                    self.FirstRun = False
+
             except:
                 for info in sys.exc_info():
                     self.log.error("Fehler: {}".format(info))
                     print("Fehler: {}".format(info))
+
+    # # Ende Funktion: ' run ' ########################################################################
+
+    # #################################################################################################
+    # #  Funktion: '_prepareData '
+    ## 	\details    -
+    #   \param[in] 	myVal
+    #   \return 	myVal
+    # #################################################################################################
+        def _prepFile(self, strFolder, fileGas, fileWasser):
+
+            if (not os.path.exists(strFolder)):
+                os.mkdir(strFolder)
+                os.chmod(strFolder, 0o777)
+
+            par1 = 'Datum;'
+            par2 = 'cbm;'
+            par3 = 'kWh;'
+            if (not os.path.exists(fileGas)):
+                Utils._write_File(fileGas, datStream, "w")
+
+            par3 = 'l;'
+            datStream = (f'{par1:>11}{par3:>13}{par2:>13}')
+            if (not os.path.exists(fileWasser)):
+                Utils._write_File(fileWasser, datStream, "w")
 
     # # Ende Funktion: ' run ' ########################################################################
 
@@ -269,7 +318,7 @@ class CalcWaermeMenge(object):
     #   \param[in] 	myVal
     #   \return 	myVal
     # #################################################################################################
-        def _getVal(self, influxHandler, QUERY, Instance, where, callee):
+        def _getVal(self, influxHandler, QUERY, Instance, where, callee, digit=2):
 
             tmp = influxHandler._Query_influxDb([QUERY,], Instance, where, f'{callee}_getVal')
             if ("Zero" in  str(tmp)):
@@ -283,7 +332,7 @@ class CalcWaermeMenge(object):
                 influxHandler._init_influxdb_database(influxHandler.database, 'WaermeMenge')
                 tmp[0] = 0.0
 
-            resultVar, typ, length = Utils._check_Data_Type(tmp[0], Utils.toFloat)
+            resultVar, typ, length = Utils._check_Data_Type(tmp[0], Utils.toFloat, digit=digit)
             return resultVar
 
     # # Ende Funktion: '_getVal ' #####################################################################
@@ -294,7 +343,7 @@ class CalcWaermeMenge(object):
     #   \param[in] 	myVal
     #   \return 	myVal
     # #################################################################################################
-        def _getVal2(self, influxHandler, strQUERY, Instance, DayTimeStamp, where, vari, callee):
+        def _getVal2(self, influxHandler, strQUERY, Instance, DayTimeStamp, where, vari, callee, digit=2):
 
             dayCnt = 0
             locDayTimeStamp = DayTimeStamp
@@ -326,10 +375,10 @@ class CalcWaermeMenge(object):
                         time.sleep(_conf.INLFUXDB_SHORT_DELAY)
                         influxHandler._init_influxdb_database(influxHandler.database, 'WaermeMenge')
                         tmp[0] = 0.0
-                        #break
+
                     break
 
-                resultVar, typ, length = Utils._check_Data_Type(tmp[0], Utils.toFloat)
+                resultVar, typ, length = Utils._check_Data_Type(tmp[0], Utils.toFloat, digit=digit)
 
             except Exception as e:
                 self.log.error(f"_getVal2: {e} from {callee}")
@@ -426,6 +475,7 @@ class CalcWaermeMenge(object):
             try:
                 sensor_data = []
                 bIsNight = False
+                dailyGasImpuls = 0
 
                 AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
@@ -434,20 +484,23 @@ class CalcWaermeMenge(object):
 
                 # Gas/Wasser Gesamtwerte
                 strFolder = "{}{}".format(_conf.EXPORT_FILEPATH, lt_jahr)
-                GasWasserIniFile = "{}/GasWasserTotal.log".format(strFolder)
                 fileGas = "{}/GasTagesVerbrauch.txt".format(strFolder)
                 fileWasser = "{}/WasserTagesVerbrauch.txt".format(strFolder)
-                if (not os.path.exists(strFolder)):
-                    os.mkdir(strFolder)
-                    os.chmod(strFolder, 0o777)
+                GasWasserIniFile = "{}/GasWasserTotal.log".format(strFolder)
+                self._prepFile(strFolder, fileGas, fileWasser)
 
                 GasWasserTotal =  configparser.ConfigParser()
                 GasWasserTotal.read(GasWasserIniFile)
 
-                DayTimeStamp = _conf.DAYTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
+                #DayTimeStamp = _conf.DAYTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
                 DaySoFarTimeStamp = _conf.DAYSOFARTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
                 timestamp = datetime.utcnow()
                 timestamp = ("'{0}-{1:02}-{2:02}T{3:02}:{4:02}:{5:02}.{6}Z'").format(timestamp.year, timestamp.month, timestamp.day, timestamp.hour, timestamp.minute, timestamp.second, timestamp.microsecond)
+
+                if (self.FirstRun == True):
+                    ## Gas und Wasser Verbrauch initialisieren
+                    self.dailyStartGasImpuls = int(GasWasserTotal.get('Gas', 'dailyStartGasImpuls'))
+                    self.dailyStartWasserImpuls = int(GasWasserTotal.get('Wasser', 'dailyStartWasserImpuls'))
 
                 #self.log.info(f'sunRise: {sunRise}; localNow: {localNow}; sunSet: {sunSet}')
                 if (localNow > sunSet):     #Zeit <= Mitternacht
@@ -461,38 +514,45 @@ class CalcWaermeMenge(object):
 
                             ###########################################################
                             ## Gestrige Werte abspeichern
-                            _YesterDay = datetime.utcnow()
-                            if (int(lt_tag) == 1):
-                                _Now = datetime.utcnow()
-                                _YesterDay = _Now - datetime.timedelta(days=1)
+                            try:
+                                YesterDayTimeStamp = _conf.DAYTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
+                                objDateTime = datetime.strptime(YesterDayTimeStamp, "'%Y-%m-%dT%H:%M:%S.0Z'")
+                                objDateTime = (objDateTime - timedelta(days=1))
 
-                            YesterDayTimeStamp = _conf.DAYTIMESTAMP.format(_YesterDay.year, _YesterDay.month, _YesterDay.day)
+                                tmpVal = "SELECT last(GasForwardDaySoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}"
+                                GasForwardDaySoFar_cbm = self._getVal2(self.influxHdlrDaily, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'GasForwardDaySoFar_cbm','_calcDailyHeatQuantitySoFar')
+                                tmpVal = "SELECT last(GasForwardDaySoFar_kWh) FROM heizung where instance='PUFFER' and time >= {}"
+                                GasForwardDaySoFar_kWh = self._getVal2(self.influxHdlrDaily, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'GasForwardDaySoFar_kWh','_calcDailyHeatQuantitySoFar')
+                                datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{GasForwardDaySoFar_cbm:12.2f};{GasForwardDaySoFar_kWh:12.2f};')
+                                self.log.info('##########_calcDailyHeatQuantitySoFar-1 ##########')
+                                self.log.info(datStream)
+                                Utils._write_File(fileGas, f'{datStream}\n', "a")
 
-                            tmpVal = "SELECT (WasserForwardDay_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(YesterDayTimeStamp)
-                            WasserForwardDay_Lit = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'WasserForwardDay_Lit','_calcMonthlyHeatQuantitySoFar')
-                            tmpVal = "SELECT (WasserForwardDay_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(YesterDayTimeStamp)
-                            WasserForwardDay_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'WasserForwardDay_cbm','_calcMonthlyHeatQuantitySoFar')
-                            datStream = (f'TimeStamp: {_YesterDay.day:02d}.{_YesterDay.month:02d}.{_YesterDay.year:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {WasserForwardDay_Lit:9.0f} l; {WasserForwardDay_cbm:9.2f} cbm\n')
-                            Utils._write_File(fileWasser, datStream, "a")
+                                tmpVal = "SELECT last(WasserForwardDaySoFar_Lit) FROM heizung where instance='PUFFER' and time >= {}"
+                                WasserForwardDaySoFar_Lit = self._getVal2(self.influxHdlrDaily, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'WasserForwardDaySoFar_Lit','_calcDailyHeatQuantitySoFar')
+                                tmpVal = "SELECT last(WasserForwardDaySoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}"
+                                WasserForwardDaySoFar_cbm = self._getVal2(self.influxHdlrDaily, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'WasserForwardDaySoFar_cbm','_calcDailyHeatQuantitySoFar', digit=3)
+                                datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{WasserForwardDaySoFar_Lit:12.0f};{WasserForwardDaySoFar_cbm:12.3f};')
+                                self.log.info(datStream)
+#                                self.log.info('##################################################')
+                                Utils._write_File(fileWasser, f'{datStream}\n', "a")
 
-                            tmpVal = "SELECT (GasForwardDay_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(YesterDayTimeStamp)
-                            GasForwardDay_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardDaySoFar_cbm','_calcMonthlyHeatQuantitySoFar')
-                            tmpVal = "SELECT (GasForwardDay_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(YesterDayTimeStamp)
-                            GasForwardDay_kWh = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardDay_kWh','_calcMonthlyHeatQuantitySoFar')
-                            datStream = (f'TimeStamp: {_YesterDay.day:02d}.{_YesterDay.month:02d}.{_YesterDay.year:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {GasForwardDay_cbm:9.2f} cbm; {GasForwardDay_kWh:9.2f} kWh\n')
-                            Utils._write_File(fileGas, datStream, "a")
+                            except Exception as e:
+                                self.log.error("YesterDayTimeStamp Fehler: {}".format(e))
+
                             ###########################################################
-
                             ## Gas und Wasser Verbrauch initialisieren
+                            self.dailyStartGasImpuls = int(GasWasserTotal.get('Gas', 'Impuls'))
+                            self.dailyStartWasserImpuls = int(GasWasserTotal.get('Wasser', 'Impuls'))
+                            self.log.info(f"dailyStartGasImpuls: {self.dailyStartGasImpuls}\tdailyStartWasserImpuls: {self.dailyStartWasserImpuls}")
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardDaySoFar_Imp",], [int(0),], DaySoFarTimeStamp))
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardDaySoFar_cbm",], [float(0.0),], DaySoFarTimeStamp))
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardDaySoFar_kWh",], [float(0.0),], DaySoFarTimeStamp))
-
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardDaySoFar_Imp",], [int(0),], DaySoFarTimeStamp))
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardDaySoFar_Lit",], [int(0),], DaySoFarTimeStamp))
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardDaySoFar_cbm",], [float(0.0),], DaySoFarTimeStamp))
-
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["eBusTimeStamp",], ["",], timestamp))
+                            ###########################################################
 
                             self.TKollektor = 0.0
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TKollektor",], [self.TKollektor,], timestamp))
@@ -506,16 +566,28 @@ class CalcWaermeMenge(object):
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TPufferUnten",], [self.TPufferUnten,], timestamp))
                             self.TFestStoffKessel = 0.0
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TFestStoffKessel",], [self.TFestStoffKessel,], timestamp))
+                            self.TWasser = 0.0
+                            sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TWasser",], [self.TWasser ,], timestamp))
+                            self.TWarmWasser = 0.0
+                            sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TWarmWasser",], [self.TWarmWasser ,], timestamp))
+                            self.THeizung = 0.0
+                            sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["THeizung",], [self.THeizung ,], timestamp))
                             self.TInternal = 0.0
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TInternal",], [self.TInternal ,], timestamp))
                             self.GasImpuls = 0
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasImpuls",], [self.GasImpuls,], timestamp))
                             self.WasserImpuls = 0
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserImpuls",], [self.WasserImpuls,], timestamp))
+                            self.PSolar = 0
+                            sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["PSolar",], [self.PSolar,], timestamp))
+                            self.PFestStoff = 0
+                            sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["PFestStoff",], [self.PFestStoff,], timestamp))
+                            self.BrennerSperre = 0
+                            sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["BrennerSperre",], [self.BrennerSperre,], timestamp))
                             ###########################################################
                             self.log.info("_calcDailyHeatQuantitySoFar-1 NEW DAY: {}".format(sensor_data))
                             ###########################################################
-                            self._writeEnergyToDb(self.influxHdlrLong, sensor_data, '_calcDailyHeatQuantitySoFar-1')
+                            self._writeEnergyToDb(self.influxHdlrDaily, sensor_data, '_calcDailyHeatQuantitySoFar-1')
 
                     except Exception as e:
                         self.log.error("_calcDailyHeatQuantitySoFar-1: {}".format(e))
@@ -525,19 +597,27 @@ class CalcWaermeMenge(object):
                     Weekday = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
                     eBusTimeStamp, typ, length = Utils._check_Data_Type(self.WaermeMenge['timeStamp'], Utils.toInt)
 
+                    try:
+                        # Sommerzeit Korrektur
+                        lt = time.localtime() # Aktuelle, lokale Zeit als Tupel
+                        if (lt.tm_isdst == 1): # Sommerzeit
+                            eBusTimeStamp = eBusTimeStamp + 60
+                    except Exception as e:
+                        self.log.error("SommerZeit Fehler: {}".format(e))
+
                     ## 10079 = So, 23:59
                     ## 0 = Mo, 00:00
-                    loweBustimeStamp = self.Last_eBusTimeStamp - 5
-                    higheBustimeStamp = self.Last_eBusTimeStamp + 5
+#                    loweBustimeStamp = self.Last_eBusTimeStamp - 5
+#                    higheBustimeStamp = self.Last_eBusTimeStamp + 5
 
-                    if (loweBustimeStamp < 0) and (self.Last_eBusTimeStamp > -127):
-                        loweBustimeStamp = 10075    ## Sonntag 23:55
+#                    if (loweBustimeStamp < 0) and (self.Last_eBusTimeStamp > -127):
+#                        loweBustimeStamp = 10075    ## Sonntag 23:55
 
-                    if (higheBustimeStamp > 10079):
-                        loweBustimeStamp = 4    ## Montag 00:04
+#                    if (higheBustimeStamp > 10079):
+#                        loweBustimeStamp = 4    ## Montag 00:04
 
-                    if (self.Last_eBusTimeStamp > -127) and ((higheBustimeStamp < eBusTimeStamp) or (loweBustimeStamp > eBusTimeStamp)):
-                        eBusTimeStamp = self.Last_eBusTimeStamp + self.Interval_sek / 60
+#                    if (self.Last_eBusTimeStamp > -127) and ((higheBustimeStamp < eBusTimeStamp) or (loweBustimeStamp > eBusTimeStamp)):
+#                        eBusTimeStamp = self.Last_eBusTimeStamp + self.Interval_sek / 60
                     self.Last_eBusTimeStamp = eBusTimeStamp
 
                     weekH = int(eBusTimeStamp) / 60
@@ -555,7 +635,12 @@ class CalcWaermeMenge(object):
                         Min = Min - 60
                         Hour += 1
 
-                    sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["eBusTimeStamp",], [f"{Weekday[DayOfWeek]}; {Hour:02}:{Min:02}",], DaySoFarTimeStamp))
+                    # Hier die Korrektur, durch die Sommerzeit Aufrechnung, kommen wir eine Stunde am Montag in Probleme
+                    if (DayOfWeek < 0) or (DayOfWeek > 6):
+                        #self.log.info(f"DayOfWeek: {DayOfWeek}")
+                        DayOfWeek = 0
+
+                    sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["eBusTimeStamp",], [f"{Weekday[DayOfWeek]}, {Hour:02}:{Min:02}",], DaySoFarTimeStamp))
 
                 except Exception as e:
                     self.log.error("_calcDailyHeatQuantitySoFar-2: {}".format(e))
@@ -566,76 +651,140 @@ class CalcWaermeMenge(object):
                     self.Last_GasImpuls = int(GasWasserTotal.get('Gas', 'LastImpuls'))
                     totGas_cbm = float(GasWasserTotal.get('Gas', 'KubikMeter'))
                     totGas_kWh = float(GasWasserTotal.get('Gas', 'kWh'))
+                    if (self.Last_Gas_cbm < 0):
+                        self.Last_Gas_cbm = float(GasWasserTotal.get('Gas', 'LastKubikMeter'))
+                    if (self.Last_Gas_kWh < 0):
+                        self.Last_Gas_kWh = float(GasWasserTotal.get('Gas', 'LastkWh'))
 
                     self.GasImpuls, typ, length = Utils._check_Data_Type(self.WaermeMenge['Gas'], Utils.toInt)
                     if (self.GasImpuls == 0): ## Neustart Teensy
                         self.Last_GasImpuls = 0
 
+                    oldTotGasImpuls = totGasImpuls
                     totGasImpuls = abs(self.Last_GasImpuls - self.GasImpuls) + totGasImpuls
-                    sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardDaySoFar_Imp",], [self.GasImpuls,], DaySoFarTimeStamp))
+                    dailyGasImpuls = totGasImpuls - self.dailyStartGasImpuls
+                    sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardDaySoFar_Imp",], [dailyGasImpuls,], DaySoFarTimeStamp))
+                    if (dailyGasImpuls - self.Bezug_GasImpuls > 0):
+                        sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["Brenner",], [int(1),], timestamp))
+
+                        if (self.GasPartSum_cbm == 0.0):
+                            self.GasPartSumStart = timestamp
+
+                        self.GasPartSum_cbm = self.GasPartSum_cbm + round((dailyGasImpuls - self.Bezug_GasImpuls) * _conf.GAS_KONSTANTE, 2)
+#                        self.log.info('######### _calcDailyHeatQuantitySoFar-3 ##########')
+#                        self.log.info(f"totGasImpuls {totGasImpuls} = Last_GasImpuls {self.Last_GasImpuls} - self.GasImpuls {self.GasImpuls} + oldTotGasImpuls {oldTotGasImpuls}")
+#                        self.log.info(f"dailyGasImpuls {dailyGasImpuls} = totGasImpuls {totGasImpuls} - self.dailyStartGasImpuls {self.dailyStartGasImpuls}")
+                    else:
+                        sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["Brenner",], [int(0),], timestamp))
+                        #if (self.GasPartSum_cbm > 0): self.log.info(f"##### Start: {self.GasPartSumStart}    GasVerbrauch: {self.GasPartSum_cbm:9.2f} cbm Ende: {timestamp}")
+                        self.GasPartSum_cbm = float(0.0)
+
                     ## in KubikMetern
-                    self.Gas_cbm = abs(self.Last_GasImpuls - self.GasImpuls) * _conf.GAS_KONSTANTE
-                    totGas_cbm = self.Gas_cbm + totGas_cbm
+                    self.Gas_cbm = round(dailyGasImpuls * _conf.GAS_KONSTANTE, 2)
+#                    if (dailyGasImpuls - self.Bezug_GasImpuls > 0): self.log.info(f"self.Gas_cbm {self.Gas_cbm:12.2f} = dailyGasImpuls {dailyGasImpuls} * _conf.GAS_KONSTANTE {_conf.GAS_KONSTANTE}")
                     sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardDaySoFar_cbm",], [float(self.Gas_cbm),], DaySoFarTimeStamp))
+                    totGas_cbm = round(totGasImpuls * _conf.GAS_KONSTANTE, 2)
+#                    if (dailyGasImpuls - self.Bezug_GasImpuls > 0): self.log.info(f"totGas_cbm {totGas_cbm} = totGasImpuls{totGasImpuls} * _conf.GAS_KONSTANTE {_conf.GAS_KONSTANTE}")
+
                     ## in kWh
-                    self.Gas_kWh = self.Gas_cbm * _conf.GAS_ENERGIE
-                    totGas_kWh = self.Gas_kWh + totGas_kWh
+                    self.Gas_kWh = round(self.Gas_cbm * _conf.GAS_ENERGIE, 2)
+#                    if (dailyGasImpuls - self.Bezug_GasImpuls > 0): self.log.info(f"self.Gas_kWh {self.Gas_kWh:12.2f} = self.Gas_cbm {self.Gas_cbm} * _conf.GAS_ENERGIE {_conf.GAS_ENERGIE}")
                     sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardDaySoFar_kWh",], [float(self.Gas_kWh),], DaySoFarTimeStamp))
+                    totGas_kWh = round(totGas_cbm * _conf.GAS_ENERGIE, 2)
+#                    if (dailyGasImpuls - self.Bezug_GasImpuls > 0): self.log.info(f"totGas_kWh {totGas_kWh} = totGas_cbm{totGas_cbm} * _conf.GAS_ENERGIE {_conf.GAS_ENERGIE}")
+
                     ## Historie
                     self.Last_GasImpuls = self.GasImpuls
+                    self.Last_Gas_cbm = self.Gas_cbm
+                    self.Last_Gas_kWh = self.Gas_kWh
+                    self.Bezug_GasImpuls = dailyGasImpuls
 
+                    ## Verbrauchswerte setzen
+                    GasWasserTotal.set('Gas', 'dailyStartGasImpuls', str(self.dailyStartGasImpuls))
+                    GasWasserTotal.set('Gas', 'dailyGasImpuls', str(dailyGasImpuls))
                     GasWasserTotal.set('Gas', 'Impuls', str(totGasImpuls))
                     GasWasserTotal.set('Gas', 'LastImpuls', str( self.Last_GasImpuls))
-                    GasWasserTotal.set('Gas', 'KubikMeter', (f'{totGas_cbm:9.2f}').strip())
-                    GasWasserTotal.set('Gas', 'kWh', (f'{totGas_kWh:9.2f}').strip())
+                    GasWasserTotal.set('Gas', 'KubikMeter', (f'{totGas_cbm:12.3f}').strip())
+                    GasWasserTotal.set('Gas', 'LastKubikMeter', (f'{self.Last_Gas_cbm:12.3f}').strip())
+                    GasWasserTotal.set('Gas', 'kWh', (f'{totGas_kWh:12.3f}').strip())
+                    GasWasserTotal.set('Gas', 'LastkWh', (f'{self.Last_Gas_kWh:12.3f}').strip())
 
                     ## WasserVerbrauch
                     totWasserImpuls = int(GasWasserTotal.get('Wasser', 'Impuls'))
                     self.Last_WasserImpuls = int(GasWasserTotal.get('Wasser', 'LastImpuls'))
                     totWasser_cbm = float(GasWasserTotal.get('Wasser', 'KubikMeter'))
                     totWasser_Lit = int(GasWasserTotal.get('Wasser', 'Liter'))
+                    if (self.Last_Wasser_cbm < 0):
+                        self.Last_Wasser_cbm = float(GasWasserTotal.get('Wasser', 'LastKubikMeter'))
 
                     self.WasserImpuls, typ, length = Utils._check_Data_Type(self.WaermeMenge['Wasser'], Utils.toInt)
                     if (self.WasserImpuls == 0): ## Neustart Teensy
                         self.Last_WasserImpuls = 0
 
+                    oldTotWasserImpuls = totWasserImpuls
                     totWasserImpuls = abs(self.Last_WasserImpuls - self.WasserImpuls) + totWasserImpuls
-                    sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardDaySoFar_Imp",], [self.WasserImpuls,], DaySoFarTimeStamp))
+                    dailyWasserImpuls = totWasserImpuls - self.dailyStartWasserImpuls
+                    sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardDaySoFar_Imp",], [dailyWasserImpuls,], DaySoFarTimeStamp))
+                    if (dailyWasserImpuls - self.Bezug_WasserImpuls > 0):
+                        sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WBezug",], [int(1),], timestamp))
+
+                        if (self.WasserPartSum_Lit == 0):
+                            self.WasserPartSumStart = timestamp
+
+                        self.WasserPartSum_Lit = self.WasserPartSum_Lit + (dailyWasserImpuls - self.Bezug_WasserImpuls)
+#                        self.log.info('######### _calcDailyHeatQuantitySoFar-3 ##########')
+#                        self.log.info(f"totWasserImpuls {totWasserImpuls} = Last_WasserImpuls {self.Last_WasserImpuls} - self.WasserImpuls {self.WasserImpuls} + oldTotWasserImpuls {oldTotWasserImpuls}")
+#                        self.log.info(f"dailyWasserImpuls {dailyWasserImpuls} = totWasserImpuls {totWasserImpuls} - self.dailyStartWasserImpuls {self.dailyStartWasserImpuls}")
+                    else:
+                        sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WBezug",], [int(0),], timestamp))
+                        #if (self.WasserPartSum_Lit > 0): self.log.info(f"##### Start: {self.WasserPartSumStart} WasserVerbrauch: {self.WasserPartSum_Lit:9} Lit Ende: {timestamp}")
+                        self.WasserPartSum_Lit = int(0)
+
                     ## in Litern
-                    self.Wasser_Lit = abs(self.Last_WasserImpuls - self.WasserImpuls) * _conf.WASSER_KONSTANTE
-                    totWasser_Lit = self.Wasser_Lit + totWasser_Lit
+                    self.Wasser_Lit = dailyWasserImpuls * _conf.WASSER_KONSTANTE
+#                    if (dailyWasserImpuls - self.Bezug_WasserImpuls > 0): self.log.info(f"self.Wasser_Lit {self.Wasser_Lit:12.2f} = dailyWasserImpuls {dailyWasserImpuls}")
                     sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardDaySoFar_Lit",], [self.Wasser_Lit,], DaySoFarTimeStamp))
+                    totWasser_Lit = totWasserImpuls
+
                     ## in KubikMetern
-                    self.Wasser_cbm = self.Wasser_Lit / 1000
-                    totWasser_cbm = self.Wasser_cbm + totWasser_cbm
+                    self.Wasser_cbm = round(self.Wasser_Lit / 1000, 3)
+#                    if (dailyWasserImpuls - self.Bezug_WasserImpuls > 0): self.log.info(f"self.Wasser_cbm {self.Wasser_cbm:12.3f} = self.Wasser_Lit {self.Wasser_Lit} / 1000")
+                    totWasser_cbm = round(totWasserImpuls / 1000, 3)
                     sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardDaySoFar_cbm",], [float(self.Wasser_cbm),], DaySoFarTimeStamp))
+
                     ## Historie
                     self.Last_WasserImpuls = self.WasserImpuls
+                    self.Last_Wasser_cbm = self.Wasser_cbm
+                    self.Bezug_WasserImpuls = dailyWasserImpuls
 
+                    ## Verbrauchswerte setzen
+                    GasWasserTotal.set('Wasser', 'dailyStartWasserImpuls', str(self.dailyStartWasserImpuls))
+                    GasWasserTotal.set('Wasser', 'dailyWasserImpuls', str(dailyWasserImpuls))
                     GasWasserTotal.set('Wasser', 'Impuls', str(totWasserImpuls))
                     GasWasserTotal.set('Wasser', 'LastImpuls', str(self.Last_WasserImpuls))
-                    GasWasserTotal.set('Wasser', 'KubikMeter', (f'{totWasser_cbm:9.2f}').strip())
+                    GasWasserTotal.set('Wasser', 'KubikMeter', (f'{totWasser_cbm:12.3f}').strip())
                     GasWasserTotal.set('Wasser', 'Liter', str(totWasser_Lit))
+                    GasWasserTotal.set('Wasser', 'LastKubikMeter', (f'{self.Last_Wasser_cbm:12.3f}').strip())
 
                     ## Verbrauchswerte speichern
                     with open(GasWasserIniFile, 'w') as configfile:    # save
                         GasWasserTotal.write(configfile)
 
-                    #TimeStamp: 13.02.2023 16:10:46    Wasser:    26525 l
                     logTimestamp = datetime.utcnow()
                     logTimestamp = f"{logTimestamp.day:02}.{logTimestamp.month:02}.{logTimestamp.year:04} {logTimestamp.hour:02}:{logTimestamp.minute:02}:{logTimestamp.second:02}"
+                    #TimeStamp: 13.02.2023 16:10:46    Gas: 26525.23 cbm
+                    datStream = f"TimeStamp: {logTimestamp}    Gas: {totGas_cbm:12.2f} cbm\n"
+                    fileName = "{}/GasVerbrauch.log".format(strFolder)
+                    if (self.Last_totGas_cbm < totGas_cbm):
+                        Utils._write_File(fileName, datStream, "a")
+                    self.Last_totGas_cbm = totGas_cbm
+
+                    #TimeStamp: 13.02.2023 16:10:46    Wasser:    26525 l
                     datStream = f"TimeStamp: {logTimestamp}    Wasser: {totWasser_Lit:9.0f} l\n"
                     fileName = "{}/WasserVerbrauch.log".format(strFolder)
                     if (self.Last_totWasser_Lit < totWasser_Lit):
                         Utils._write_File(fileName, datStream, "a")
                     self.Last_totWasser_Lit = totWasser_Lit
-
-                    #TimeStamp: 13.02.2023 16:10:46    Gas: 26525.23 cbm
-                    datStream = f"TimeStamp: {logTimestamp}    Gas: {totGas_cbm:9.2f} cbm\n"
-                    fileName = "{}/GasVerbrauch.log".format(strFolder)
-                    if (self.Last_totGas_cbm < totGas_cbm):
-                        Utils._write_File(fileName, datStream, "a")
-                    self.Last_totGas_cbm = totGas_cbm
 
                 except Exception as e:
                     self.log.error("_calcDailyHeatQuantitySoFar-3: {}".format(e))
@@ -654,7 +803,7 @@ class CalcWaermeMenge(object):
                 ## Puffer Oben
                 self.TPufferOben, self.Last_TPufferOben = self._getTemperature(self.TPufferOben, self.Last_TPufferOben, 'TPO', int(GasWasserTotal.get('Offset', 'TPO')), Utils.toFloat)
                 # Korrektur
-                self.TPufferOben = self.TPufferOben * float(GasWasserTotal.get('Korrektur', 'TPO'))
+                self.TPufferOben = round(self.TPufferOben * float(GasWasserTotal.get('Korrektur', 'TPO')), 2)
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TPufferOben",], [self.TPufferOben,], timestamp))
                 ## Puffer Unten
                 self.TPufferUnten, self.Last_TPufferUnten = self._getTemperature(self.TPufferUnten, self.Last_TPufferUnten, 'TPU', int(GasWasserTotal.get('Offset', 'TPU')), Utils.toFloat)
@@ -665,16 +814,30 @@ class CalcWaermeMenge(object):
                 ## KaltWasser
                 self.TWasser, self.Last_TWasser = self._getTemperature(self.TWasser, self.Last_TWasser, 'TWasser', int(GasWasserTotal.get('Offset', 'TWasser')), Utils.toInt)
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TWasser",], [self.TWasser,], timestamp))
+                ## WarmWasser
+                self.TWarmWasser, self.Last_TWarmWasser = self._getTemperature(self.TWarmWasser, self.Last_TWarmWasser, 'TWarmWasser', int(GasWasserTotal.get('Offset', 'TWarmWasser')), Utils.toFloat)
+                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TWarmWasser",], [self.TWarmWasser,], timestamp))
+                ## Heizung
+                self.THeizung, self.Last_THeizung = self._getTemperature(self.THeizung, self.Last_THeizung, 'THeizung', int(GasWasserTotal.get('Offset', 'THeizung')), Utils.toFloat)
+                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["THeizung",], [self.THeizung,], timestamp))
                 ## Teensy
                 self.TInternal, self.Last_TInternal = self._getTemperature(self.TInternal, self.Last_TInternal, 'TInternal', int(GasWasserTotal.get('Offset', 'TInternal')), Utils.toInt)
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["TInternal",], [self.TInternal,], timestamp))
+                ## BrennerSperre
+                self.BrennerSperre, typ, length = Utils._check_Data_Type(self.WaermeMenge["BRSP"], Utils.toInt)
+                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["BrennerSperre",], [self.BrennerSperre,], timestamp))
+                ## Solar Pume
+                self.PSolar, typ, length = Utils._check_Data_Type(self.WaermeMenge["PSO"], Utils.toInt)
+                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["PSolar",], [self.PSolar,], timestamp))
+                ## FestStoffKessel Pumpe
+                self.PFestStoff, typ, length = Utils._check_Data_Type(self.WaermeMenge["PFK"], Utils.toInt)
+                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["PFestStoff",], [self.PFestStoff,], timestamp))
                 ###########################################################
                 #self.log.info(f'TKO: {self.TKollektor:5.2f} TSO: {self.TSpeicherOben:5.2f} TSU: {self.TSpeicherUnten:5.2f} TPO: {self.TPufferOben:5.2f} TPU: {self.TPufferUnten:5.2f} TFK: {self.TFestStoffKessel:5.2f} Teensy: {self.TInternal:5.2f}')
                 #self.log.info(f'eBusTime: {Weekday[DayOfWeek]}; {Hour:02}:{Min:02}\t{eBusTimeStamp} Gas: {self.GasImpuls:5.2f} Wasser: {self.WasserImpuls:5.2f}')
                 ###########################################################
                 #self.log.info("_calcDailyHeatQuantitySoFar-4: {}".format(sensor_data))
                 ###########################################################
-
                 self._writeEnergyToDb(self.influxHdlrDaily, sensor_data, '_calcDailyHeatQuantitySoFar-4')
 
             except Exception as e:
@@ -697,36 +860,69 @@ class CalcWaermeMenge(object):
         def _calcMonthlyHeatQuantitySoFar(self):
 
             try:
-                sensor_data = []
-                if (datetime.day == 1) and (self.IsInitWritten2 == False):
-                    self.IsNewMonth = True
-                    ###########################################################
-                    self.log.info("_calcMonthlyHeatQuantitySoFar First Day of MONTH")
-                    ###########################################################
-
-                if (datetime.day == 2):
-                    self.IsInitWritten2 = False
-                    ###########################################################
-                    self.log.info("_calcMonthlyHeatQuantitySoFar Second Day of MONTH")
-                    ###########################################################
-
                 bIsNight = False
-
                 AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
 
+                # Gas/Wasser Gesamtwerte
                 strFolder = "{}{}".format(_conf.EXPORT_FILEPATH, lt_jahr)
                 fileGas = "{}/GasMonatsVerbrauch.txt".format(strFolder)
                 fileWasser = "{}/WasserMonatsVerbrauch.txt".format(strFolder)
+                self._prepFile(strFolder, fileGas, fileWasser)
 
-                DayTimeStamp = _conf.DAYTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
+                #DayTimeStamp = _conf.DAYTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
                 MonthTimeStamp = _conf.MONTHTIMESTAMP.format(lt_jahr, lt_monat)
                 MonthSoFarTimeStamp = _conf.MONTHSOFARTIMESTAMP.format(lt_jahr, lt_monat)
+                locDayTimeStamp  = "'{}-{:02}-{:02}T00:30:00'"
+
+                if (self.FirstRun == True):
+                    ## Gas und Wasser Verbrauch initialisieren
+                    ###########################################################
+                    ## Werte vom letzten Monat abspeichern
+                    ##_SunRiseInfo = SunRiseSet.get_Info([])
+                    ##DayTimeStampBack = locDayTimeStamp.format(_SunRiseInfo[6], _SunRiseInfo[5], _SunRiseInfo[4])
+                    DayTimeStampBack = locDayTimeStamp.format(lt_jahr, lt_monat, lt_tag)
+                    objDateTime = datetime.strptime(DayTimeStampBack, "'%Y-%m-%dT%H:%M:%S'")
+                    objDateTime = (objDateTime - timedelta(days=1))
+                    LastMonthTimeStamp = _conf.MONTHTIMESTAMP.format(objDateTime.year, objDateTime.month)
+
+                    tmpVal = "SELECT (GasForwardMonthSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                    GasForwardMonthSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardMonthSoFar_cbm', '_calcMonthlyHeatQuantitySoFar')
+                    tmpVal = "SELECT (GasForwardMonthSoFar_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                    GasForwardMonthSoFar_kWh = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardMonthSoFar_kWh', '_calcMonthlyHeatQuantitySoFar')
+                    datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{GasForwardMonthSoFar_cbm:12.2f};{GasForwardMonthSoFar_kWh:12.2f};')
+                    self.log.info('##########_calcMonthlyHeatQuantitySoFar-1 ########')
+                    self.log.info(datStream)
+                    Utils._write_File(fileGas, f'{datStream}\n', "a")
+
+                    tmpVal = "SELECT (WasserForwardMonthSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                    WasserForwardMonthSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardMonthSoFar_cbm', '_calcMonthlyHeatQuantitySoFar', digit=3)
+                    tmpVal = "SELECT (WasserForwardMonthSoFar_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                    WasserForwardMonthSoFar_Lit = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardMonthSoFar_Lit', '_calcMonthlyHeatQuantitySoFar')
+                    datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{WasserForwardMonthSoFar_Lit:12.0f};{WasserForwardMonthSoFar_cbm:12.3f};')
+                    self.log.info(datStream)
+#                    self.log.info('##################################################')
+                    Utils._write_File(fileWasser, f'{datStream}\n', "a")
+                    ###########################################################
+
+                sensor_data = []
+                if (lt_tag == 1) and (self.IsInitWritten2 == False):
+                    self.IsNewMonth = True
+                    ###########################################################
+                    self.log.info("_calcMonthlyHeatQuantitySoFar First Day of MONTH")
+                    ###########################################################
+
+                if (lt_tag == 2):
+                    self.IsInitWritten2 = False
+                    ###########################################################
+                    self.log.info("_calcMonthlyHeatQuantitySoFar Second Day of MONTH")
+                    ###########################################################
+
 
                 if (localNow > sunSet):     #Zeit <= Mitternacht
-                    self.IsNewDay2 = False
+                    self.IsNewDay2 = True
                     bIsNight = True
 
                 if (localNow < sunRise) and (bIsNight == False):    # Zeit < Sonnenaufgang und Zeit > Mitternacht -> Unmittelbar nach Mitternacht
@@ -737,26 +933,30 @@ class CalcWaermeMenge(object):
 
                             ###########################################################
                             ## Werte vom letzten Monat abspeichern
-                            _YesterDay = datetime.utcnow()
-                            if (int(lt_tag) == 1) and (int(lt_monat) == 1):
-                                _Now = datetime.utcnow()
-                                _YesterDay = _Now - datetime.timedelta(days=1)
+                            ##_SunRiseInfo = SunRiseSet.get_Info([])
+                            ##DayTimeStampBack = locDayTimeStamp.format(_SunRiseInfo[6], _SunRiseInfo[5], _SunRiseInfo[4])
+                            DayTimeStampBack = locDayTimeStamp.format(lt_jahr, lt_monat, lt_tag)
+                            objDateTime = datetime.strptime(DayTimeStampBack, "'%Y-%m-%dT%H:%M:%S'")
+                            objDateTime = (objDateTime - timedelta(days=1))
+                            LastMonthTimeStamp = _conf.MONTHTIMESTAMP.format(objDateTime.year, objDateTime.month)
 
-                            LastMonthTimeStamp = _conf.MONTHTIMESTAMP.format(_YesterDay.year, _YesterDay.month)
+                            tmpVal = "SELECT (GasForwardMonthSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                            GasForwardMonthSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardMonthSoFar_cbm', '_calcMonthlyHeatQuantitySoFar')
+                            tmpVal = "SELECT (GasForwardMonthSoFar_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                            GasForwardMonthSoFar_kWh = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardMonthSoFar_kWh', '_calcMonthlyHeatQuantitySoFar')
+                            datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{GasForwardMonthSoFar_cbm:12.2f};{GasForwardMonthSoFar_kWh:12.2f};')
+                            self.log.info('##########_calcMonthlyHeatQuantitySoFar-1 ########')
+                            self.log.info(datStream)
+                            Utils._write_File(fileGas, f'{datStream}\n', "a")
 
-                            tmpVal = "SELECT (GasForwardMonth_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
-                            GasForwardMonth_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'GasForwardMonth_cbm','_calcMonthlyHeatQuantitySoFar')
-                            tmpVal = "SELECT (GasForwardMonth_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
-                            GasForwardMonth_kWh = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardMonth_kWh','_calcMonthlyHeatQuantitySoFar')
-                            datStream = (f'{_YesterDay.year:02d}.{_YesterDay.month:02d}.{_YesterDay.year:4d}; {GasForwardMonth_cbm:9.2f} cbm; {GasForwardMonth_kWh:9.2f} kWh\n')
-                            Utils._write_File(fileGas, datStream, "a")
-
-                            tmpVal = "SELECT (WasserForwardMonth_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
-                            WasserForwardMonth_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'WasserForwardMonth_cbm','_calcMonthlyHeatQuantitySoFar')
-                            tmpVal = "SELECT (WasserForwardMonth_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
-                            WasserForwardMonth_Lit = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'WasserForwardMonth_Lit','_calcMonthlyHeatQuantitySoFar')
-                            datStream = (f'{_YesterDay.year:02d}.{_YesterDay.month:02d}.{_YesterDay.year:4d}; {WasserForwardMonth_Lit:9.0f} l; {WasserForwardMonth_cbm:9.2f} cbm\n')
-                            Utils._write_File(fileWasser, datStream, "a")
+                            tmpVal = "SELECT (WasserForwardMonthSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                            WasserForwardMonthSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardMonthSoFar_cbm', '_calcMonthlyHeatQuantitySoFar', digit=3)
+                            tmpVal = "SELECT (WasserForwardMonthSoFar_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(LastMonthTimeStamp)
+                            WasserForwardMonthSoFar_Lit = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardMonthSoFar_Lit', '_calcMonthlyHeatQuantitySoFar')
+                            datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{WasserForwardMonthSoFar_Lit:12.0f};{WasserForwardMonthSoFar_cbm:12.3f};')
+                            self.log.info(datStream)
+#                            self.log.info('##################################################')
+                            Utils._write_File(fileWasser, f'{datStream}\n', "a")
                             ###########################################################
 
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardMonth_cbm",], [int(0),], MonthTimeStamp))
@@ -794,53 +994,43 @@ class CalcWaermeMenge(object):
 
                 tmpVal = "SELECT (GasForwardMonth_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(MonthTimeStamp)
                 GasForwardMonth_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardMonth_cbm', '_calcMonthlyHeatQuantitySoFar')
-                tmpVal = "SELECT (GasForwardDay_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                GasForwardDay_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardDaySoFar_cbm','_calcMonthlyHeatQuantitySoFar')
-
-                GasForwardMonthSoFar_cbm = GasForwardMonth_cbm + GasForwardDay_cbm
+                GasForwardMonthSoFar_cbm = GasForwardMonth_cbm + float(self.Gas_cbm) #GasForwardDaySoFar_cbm
+                ##
+                #self.log.info(f"GasForwardMonthSoFar_cbm {GasForwardMonthSoFar_cbm} = GasForwardMonth_cbm {GasForwardMonth_cbm} + self.Gas_cbm {self.Gas_cbm}")
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardMonthSoFar_cbm",], [GasForwardMonthSoFar_cbm,], MonthSoFarTimeStamp))
 
                 tmpVal = "SELECT (GasForwardMonth_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(MonthTimeStamp)
                 GasForwardMonth_kWh = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardMonth_kWh', '_calcMonthlyHeatQuantitySoFar')
-                tmpVal = "SELECT (GasForwardDay_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                GasForwardDay_kWh = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardDay_kWh','_calcMonthlyHeatQuantitySoFar')
-
-                GasForwardMonthSoFar_kWh = GasForwardMonth_kWh + GasForwardDay_kWh
-                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardMonthSoFar_cbm",], [GasForwardMonthSoFar_kWh,], MonthSoFarTimeStamp))
+                GasForwardMonthSoFar_kWh = GasForwardMonth_kWh + float(self.Gas_kWh) #GasForwardDaySoFar_kWh
+                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardMonthSoFar_kWh",], [GasForwardMonthSoFar_kWh,], MonthSoFarTimeStamp))
                 ###########################################################
                 #self.log.info("GasForwardMonth : {}".format(GasForwardMonth))
                 #self.log.info("self.WaermeMenge['40670'] : {}".format(self.WaermeMenge['40670']))
                 #self.log.info("GasForwardMonthSoFar : {}".format(GasForwardMonthSoFar))
                 ###########################################################
-                datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {GasForwardMonthSoFar_cbm:9.2f} cbm; {GasForwardMonthSoFar_kWh:9.2f} kWh\n')
-                if (self.Last_GasForwardMonthSoFar_cbm < GasForwardMonthSoFar_cbm):
-                    Utils._write_File(fileGas, datStream, "a")
-                self.Last_GasForwardMonthSoFar_cbm = GasForwardMonthSoFar_cbm
+                #datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {GasForwardMonthSoFar_cbm:12.2f} cbm; {GasForwardMonthSoFar_kWh:12.2f} kWh\n')
+                #if (self.Last_GasForwardMonthSoFar_cbm < GasForwardMonthSoFar_cbm):
+                #    Utils._write_File(fileGas, datStream, "a")
+                #self.Last_GasForwardMonthSoFar_cbm = GasForwardMonthSoFar_cbm
 
                 tmpVal = "SELECT (WasserForwardMonth_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(MonthTimeStamp)
                 WasserForwardMonth_Lit = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardMonth_Lit', '_calcMonthlyHeatQuantitySoFar')
-                tmpVal = "SELECT (WasserForwardDay_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                WasserForwardDay_Lit = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'WasserForwardDay_Lit','_calcMonthlyHeatQuantitySoFar')
-
-                WasserForwardMonthSoFar_Lit = WasserForwardMonth_Lit + WasserForwardDay_Lit
+                WasserForwardMonthSoFar_Lit = WasserForwardMonth_Lit + self.Wasser_Lit #WasserForwardDaySoFar_Lit
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardMonthSoFar_Lit",], [WasserForwardMonthSoFar_Lit,], MonthSoFarTimeStamp))
 
                 tmpVal = "SELECT (WasserForwardMonth_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(MonthTimeStamp)
-                WasserForwardMonth_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardMonth_cbm', '_calcMonthlyHeatQuantitySoFar')
-                tmpVal = "SELECT (WasserForwardDay_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                WasserForwardDay_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'WasserForwardDay_cbm','_calcMonthlyHeatQuantitySoFar')
-
-                WasserForwardMonthSoFar_cbm = WasserForwardMonth_cbm + WasserForwardDay_cbm
+                WasserForwardMonth_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardMonth_cbm', '_calcMonthlyHeatQuantitySoFar', digit=3)
+                WasserForwardMonthSoFar_cbm = WasserForwardMonth_cbm + float(self.Wasser_cbm) #WasserForwardDay_cbm
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardMonthSoFar_cbm",], [WasserForwardMonthSoFar_cbm,], MonthSoFarTimeStamp))
                 ###########################################################
                 #self.log.info("WasserForwardMonth : {}".format(WasserForwardMonth))
                 #self.log.info("self.WaermeMenge['30535'] : {}".format(self.WaermeMenge['30535']))
                 #self.log.info("WasserForwardMonthSoFar : {}".format(WasserForwardMonthSoFar))
                 ###########################################################
-                datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {WasserForwardMonthSoFar_Lit:9.0f} l; {WasserForwardMonthSoFar_cbm:9.2f} cbm\n')
-                if (self.Last_WasserForwardMonthSoFar_Lit < WasserForwardMonthSoFar_Lit):
-                    Utils._write_File(fileWasser, datStream, "a")
-                self.Last_WasserForwardMonthSoFar_Lit = WasserForwardMonthSoFar_Lit
+                #datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {WasserForwardMonthSoFar_Lit:9.0f} l; {WasserForwardMonthSoFar_cbm:12.2f} cbm\n')
+                #if (self.Last_WasserForwardMonthSoFar_Lit < WasserForwardMonthSoFar_Lit):
+                #    Utils._write_File(fileWasser, datStream, "a")
+                #self.Last_WasserForwardMonthSoFar_Lit = WasserForwardMonthSoFar_Lit
 
                 ###########################################################
                 #self.log.info("_calcMonthlyHeatQuantitySoFar-2: {}".format(sensor_data))
@@ -867,33 +1057,65 @@ class CalcWaermeMenge(object):
         def _calcYearlyHeatQuantitySoFar(self):
 
             try:
-                sensor_data = []
-                if (datetime.day == 1) and (datetime.month == 1) and (self.IsInitWritten3 == False):
-                    self.IsNewYear = True
-                    ###########################################################
-                    self.log.info("_calcYearlyHeatQuantitySoFar First Day of YEAR")
-                    ###########################################################
-
-                if (datetime.day == 2) and (datetime.month == 1):
-                    self.IsInitWritten3 = False
-                    ###########################################################
-                    self.log.info("_calcYearlyHeatQuantitySoFar Second Day of YEAR")
-                    ###########################################################
-
                 bIsNight = False
-
                 AMh, AMm, UMh, UMm, lt_tag, lt_monat, lt_jahr, lt_h, lt_m, lt_s = SunRiseSet.get_Info([])
                 sunRise = AMh  * 60 + AMm
                 sunSet  = UMh  * 60 + UMm
                 localNow  = lt_h * 60 + lt_m
 
+                # Gas/Wasser Gesamtwerte
                 strFolder = "{}{}".format(_conf.EXPORT_FILEPATH, lt_jahr)
                 fileGas = "{}/GasJahresVerbrauch.txt".format(strFolder)
                 fileWasser = "{}/WasserJahresVerbrauch.txt".format(strFolder)
+                self._prepFile(strFolder, fileGas, fileWasser)
 
-                DayTimeStamp = _conf.DAYTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
+                #DayTimeStamp = _conf.DAYTIMESTAMP.format(lt_jahr, lt_monat, lt_tag)
                 YearTimeStamp = _conf.YEARTIMESTAMP.format(lt_jahr)
                 YearSoFarTimeStamp = _conf.YEARSOFARTIMESTAMP.format(lt_jahr)
+                locDayTimeStamp  = "'{}-{:02}-{:02}T00:30:00'"
+
+                if (self.FirstRun == True):
+                    ## Gas und Wasser Verbrauch initialisieren
+                    ###########################################################
+                    ## Werte vom letzten Jahr abspeichern
+                    ##_SunRiseInfo = SunRiseSet.get_Info([])
+                    ##DayTimeStampBack = locDayTimeStamp.format(_SunRiseInfo[6], _SunRiseInfo[5], _SunRiseInfo[4])
+                    DayTimeStampBack = locDayTimeStamp.format(lt_jahr, lt_monat, lt_tag)
+                    objDateTime = datetime.strptime(DayTimeStampBack, "'%Y-%m-%dT%H:%M:%S'")
+                    objDateTime = (objDateTime - timedelta(days=1))
+                    LastYearTimeStamp = _conf.YEARTIMESTAMP.format(objDateTime.year)
+
+                    tmpVal = "SELECT (GasForwardYearSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                    GasForwardYearSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardYearSoFar_cbm', '_calcYearlyHeatQuantitySoFar')
+                    tmpVal = "SELECT (GasForwardYearSoFar_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                    GasForwardYearSoFar_kWh = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardYearSoFar_kWh', '_calcYearlyHeatQuantitySoFar')
+                    datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{GasForwardYearSoFar_cbm:12.2f};{GasForwardYearSoFar_kWh:12.2f};')
+                    self.log.info('##########_calcYearlyHeatQuantitySoFar-1 ########')
+                    self.log.info(datStream)
+                    Utils._write_File(fileGas, f'{datStream}\n', "a")
+
+                    tmpVal = "SELECT (WasserForwardYearSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                    WasserForwardYearSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardYearSoFar_cbm', '_calcYearlyHeatQuantitySoFar', digit=3)
+                    tmpVal = "SELECT (WasserForwardYearSoFar_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                    WasserForwardYearSoFar_Lit = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardYearSoFar_Lit', '_calcYearlyHeatQuantitySoFar')
+                    datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{WasserForwardYearSoFar_Lit:12.0f};{WasserForwardYearSoFar_cbm:12.3f};')
+                    self.log.info(datStream)
+#                    self.log.info('##################################################')
+                    Utils._write_File(fileWasser, f'{datStream}\n', "a")
+                    ###########################################################
+
+                sensor_data = []
+                if (lt_tag == 1) and (lt_monat == 1) and (self.IsInitWritten3 == False):
+                    self.IsNewYear = True
+                    ###########################################################
+                    self.log.info("_calcYearlyHeatQuantitySoFar First Day of YEAR")
+                    ###########################################################
+
+                if (lt_tag == 2) and (lt_monat == 1):
+                    self.IsInitWritten3 = False
+                    ###########################################################
+                    self.log.info("_calcYearlyHeatQuantitySoFar Second Day of YEAR")
+                    ###########################################################
 
                 if (localNow > sunSet):     #Zeit <= Mitternacht
                     self.IsNewDay3 = True
@@ -907,33 +1129,37 @@ class CalcWaermeMenge(object):
 
                             ###########################################################
                             ## Werte vom letzten Jahr abspeichern
-                            _YesterDay = datetime.utcnow()
-                            if (int(lt_tag) == 1) and (int(lt_monat) == 1):
-                                _Now = datetime.utcnow()
-                                _YesterDay = _Now - datetime.timedelta(days=1)
-
-                            LastYearTimeStamp = _conf.YEARTIMESTAMP.format(_YesterDay.year)
+                            ##_SunRiseInfo = SunRiseSet.get_Info([])
+                            ##DayTimeStampBack = locDayTimeStamp.format(_SunRiseInfo[6], _SunRiseInfo[5], _SunRiseInfo[4])
+                            DayTimeStampBack = locDayTimeStamp.format(lt_jahr, lt_monat, lt_tag)
+                            objDateTime = datetime.strptime(DayTimeStampBack, "'%Y-%m-%dT%H:%M:%S'")
+                            objDateTime = (objDateTime - timedelta(days=1))
+                            LastYearTimeStamp = _conf.YEARTIMESTAMP.format(objDateTime.year)
 
                             ## Die GetWasserTotal.log ins neue Jahr kopieren
-                            strFolder = "{}{}".format(_conf.EXPORT_FILEPATH, _YesterDay.year)
+                            strFolder = "{}{}".format(_conf.EXPORT_FILEPATH, objDateTime.year)
                             LastYearIniFile = "{}/GasWasserTotal.log".format(strFolder)
                             strFolder = "{}{}".format(_conf.EXPORT_FILEPATH, lt_jahr)
                             GasWasserIniFile = "{}/GasWasserTotal.log".format(strFolder)
                             shutil.copyfile(LastYearIniFile, GasWasserIniFile)
 
-                            tmpVal = "SELECT (GasForwardYear_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
-                            GasForwardYear_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'GasForwardYear_cbm','_calcMonthlyHeatQuantitySoFar')
-                            tmpVal = "SELECT (GasForwardYear_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
-                            GasForwardYear_kWh = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardYear_kWh','_calcMonthlyHeatQuantitySoFar')
-                            datStream = (f'{_YesterDay.year:02d}.{_YesterDay.month:02d}.{_YesterDay.year:4d}; {GasForwardYear_cbm:9.2f} cbm; {GasForwardYear_kWh:9.2f} kWh\n')
-                            Utils._write_File(fileGas, datStream, "a")
+                            tmpVal = "SELECT (GasForwardYearSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                            GasForwardYearSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardYearSoFar_cbm', '_calcYearlyHeatQuantitySoFar')
+                            tmpVal = "SELECT (GasForwardYearSoFar_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                            GasForwardYearSoFar_kWh = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardYearSoFar_kWh', '_calcYearlyHeatQuantitySoFar')
+                            datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{GasForwardYearSoFar_cbm:12.2f};{GasForwardYearSoFar_kWh:12.2f};')
+                            self.log.info('##########_calcYearlyHeatQuantitySoFar-1 ########')
+                            self.log.info(datStream)
+                            Utils._write_File(fileGas, f'{datStream}\n', "a")
 
-                            tmpVal = "SELECT (WasserForwardYear_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
-                            WasserForwardYear_Lit = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, YesterDayTimeStamp, 'last', 'WasserForwardYear_Lit','_calcMonthlyHeatQuantitySoFar')
-                            tmpVal = "SELECT (WasserForwardYear_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
-                            WasserForwardYear_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'WasserForwardYear_cbm','_calcMonthlyHeatQuantitySoFar')
-                            datStream = (f'{_YesterDay.year:02d}.{_YesterDay.month:02d}.{_YesterDay.year:4d}; {WasserForwardYear_Lit:9.0f} l; {WasserForwardYear_cbm:9.2f} cbm\n')
-                            Utils._write_File(fileWasser, datStream, "a")
+                            tmpVal = "SELECT (WasserForwardYearSoFar_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                            WasserForwardYearSoFar_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardYearSoFar_cbm', '_calcYearlyHeatQuantitySoFar', digit=3)
+                            tmpVal = "SELECT (WasserForwardYearSoFar_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(LastYearTimeStamp)
+                            WasserForwardYearSoFar_Lit = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardYearSoFar_Lit', '_calcYearlyHeatQuantitySoFar')
+                            datStream = (f'{objDateTime.day:02d}.{objDateTime.month:02d}.{objDateTime.year:4d};{WasserForwardYearSoFar_Lit:12.0f};{WasserForwardYearSoFar_cbm:12.3f};')
+                            self.log.info(datStream)
+#                            self.log.info('##################################################')
+                            Utils._write_File(fileWasser, f'{datStream}\n', "a")
                             ###########################################################
 
                             sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardYear_cbm",], [int(0),], YearTimeStamp))
@@ -971,53 +1197,43 @@ class CalcWaermeMenge(object):
 
                 tmpVal = "SELECT (GasForwardYear_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(YearTimeStamp)
                 GasForwardYear_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardYear_cbm', '_calcYearlyHeatQuantitySoFar')
-                tmpVal = "SELECT (GasForwardDay_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                GasForwardDay_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardDaySoFar_cbm','_calcYearlyHeatQuantitySoFar')
-
-                GasForwardYearSoFar_cbm = GasForwardYear_cbm + GasForwardDay_cbm
+                GasForwardYearSoFar_cbm = GasForwardYear_cbm + float(self.Gas_cbm) #GasForwardDaySoFar_cbm
+                ##
+                #self.log.info(f"GasForwardYearSoFar_cbm {GasForwardYearSoFar_cbm} = GasForwardYear_cbm {GasForwardYear_cbm} + self.Gas_cbm {self.Gas_cbm}")
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardYearSoFar_cbm",], [GasForwardYearSoFar_cbm,], YearSoFarTimeStamp))
 
                 tmpVal = "SELECT (GasForwardYear_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(YearTimeStamp)
                 GasForwardYear_kWh = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'GasForwardYear_kWh', '_calcYearlyHeatQuantitySoFar')
-                tmpVal = "SELECT (GasForwardDay_kWh) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                GasForwardDay_kWh = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'GasForwardDay_kWh','_calcYearlyHeatQuantitySoFar')
-
-                GasForwardYearSoFar_kWh = GasForwardYear_kWh + GasForwardDay_kWh
-                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardYearSoFar_cbm",], [GasForwardYearSoFar_kWh,], YearSoFarTimeStamp))
+                GasForwardYearSoFar_kWh = GasForwardYear_kWh + float(self.Gas_kWh) #GasForwardDaySoFar_kWh
+                sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["GasForwardYearSoFar_kWh",], [GasForwardYearSoFar_kWh,], YearSoFarTimeStamp))
                 ###########################################################
                 #self.log.info("GasForwardYear : {}".format(GasForwardYear))
                 #self.log.info("self.WaermeMenge['40670'] : {}".format(self.WaermeMenge['40670']))
                 #self.log.info("GasForwardYearSoFar : {}".format(GasForwardYearSoFar))
                 ###########################################################
-                datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {GasForwardYearSoFar_cbm:9.2f} cbm; {GasForwardYearSoFar_kWh:9.2f} kWh\n')
-                if (self.Last_GasForwardYearSoFar_cbm < GasForwardYearSoFar_cbm):
-                    Utils._write_File(fileGas, datStream, "a")
-                self.Last_GasForwardYearSoFar_cbm = GasForwardYearSoFar_cbm
+                #datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {GasForwardYearSoFar_cbm:12.2f} cbm; {GasForwardYearSoFar_kWh:12.2f} kWh\n')
+                #if (self.Last_GasForwardYearSoFar_cbm < GasForwardYearSoFar_cbm):
+                #    Utils._write_File(fileGas, datStream, "a")
+                #self.Last_GasForwardYearSoFar_cbm = GasForwardYearSoFar_cbm
 
                 tmpVal = "SELECT (WasserForwardYear_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(YearTimeStamp)
                 WasserForwardYear_Lit = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardYear_Lit', '_calcYearlyHeatQuantitySoFar')
-                tmpVal = "SELECT (WasserForwardDay_Lit) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                WasserForwardDay_Lit = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'WasserForwardDay_Lit','_calcYearlyHeatQuantitySoFar')
-
-                WasserForwardYearSoFar_Lit = WasserForwardYear_Lit + WasserForwardDay_Lit
+                WasserForwardYearSoFar_Lit = WasserForwardYear_Lit + self.Wasser_Lit #WasserForwardDaySoFar_Lit
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardYearSoFar_Lit",], [WasserForwardYearSoFar_Lit,], YearSoFarTimeStamp))
 
                 tmpVal = "SELECT (WasserForwardYear_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(YearTimeStamp)
-                WasserForwardYear_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardYear_cbm', '_calcYearlyHeatQuantitySoFar')
-                tmpVal = "SELECT (WasserForwardDay_cbm) FROM heizung where instance='PUFFER' and time >= {}".format(DayTimeStamp)
-                WasserForwardDay_cbm = self._getVal2(self.influxHdlrLong, tmpVal, Waerme.RegEx, DayTimeStamp, 'last', 'WasserForwardDay_cbm','_calcYearlyHeatQuantitySoFar')
-
-                WasserForwardYearSoFar_cbm = WasserForwardYear_cbm + WasserForwardDay_cbm
+                WasserForwardYear_cbm = self._getVal(self.influxHdlrLong, tmpVal, Waerme.RegEx, 'WasserForwardYear_cbm', '_calcYearlyHeatQuantitySoFar', digit=3)
+                WasserForwardYearSoFar_cbm = WasserForwardYear_cbm + float(self.Wasser_cbm) #WasserForwardDaySoFar_cbm
                 sensor_data.append(SensorData(Waerme.RegEx, Waerme.Label1, ["WasserForwardYearSoFar_cbm",], [WasserForwardYearSoFar_cbm,], YearSoFarTimeStamp))
                 ###########################################################
                 #self.log.info("WasserForwardYear : {}".format(WasserForwardYear))
                 #self.log.info("self.WaermeMenge['30535'] : {}".format(self.WaermeMenge['30535']))
                 #self.log.info("WasserForwardYearSoFar : {}".format(WasserForwardYearSoFar))
                 ###########################################################
-                datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {WasserForwardYearSoFar_Lit:9.0f} l; {WasserForwardYearSoFar_cbm:9.2f} cbm\n')
-                if (self.Last_WasserForwardYearSoFar_Lit < WasserForwardYearSoFar_Lit):
-                    Utils._write_File(fileWasser, datStream, "a")
-                self.Last_WasserForwardYearSoFar_Lit = WasserForwardYearSoFar_Lit
+                #datStream = (f'TimeStamp: {lt_tag:02d}.{lt_monat:02d}.{lt_jahr:4d} {lt_h:02d}:{lt_m:02d}:{lt_s:02d} Verbrauch: {WasserForwardYearSoFar_Lit:9.0f} l; {WasserForwardYearSoFar_cbm:12.2f} cbm\n')
+                #if (self.Last_WasserForwardYearSoFar_Lit < WasserForwardYearSoFar_Lit):
+                #    Utils._write_File(fileWasser, datStream, "a")
+                #self.Last_WasserForwardYearSoFar_Lit = WasserForwardYearSoFar_Lit
 
                 ###########################################################
                 #self.log.info("_calcYearlyHeatQuantitySoFar-2: {}".format(sensor_data))

@@ -169,7 +169,7 @@ def _check_Data_TypeOld(myVal):
 #   \param[in] 	myVal
 #   \return 	myVal
 # #################################################################################################
-def _check_Data_Type(myVal, toFloat, Format=None):
+def _check_Data_Type(myVal, toFloat, digit=2, Format=None):
 
     type = ''
     length = len(str(myVal))
@@ -218,7 +218,7 @@ def _check_Data_Type(myVal, toFloat, Format=None):
         elif (isinstance(myVal, float)):
             type = 'float'
             myVal = float(myVal)
-            myVal = round(myVal, 2)
+            myVal = round(myVal, digit)
         elif (isinstance(myVal, list)):
             type = 'list'
         elif (isinstance(myVal, dict)):
@@ -324,6 +324,10 @@ def monthdelta(date, delta, asDateObject):
 # #################################################################################################
 # #  Funktion: '_write_File '
 ## 	\details
+##  "r" - Read - Default value. Opens a file for reading, error if the file does not exist
+##  "a" - Append - Opens a file for appending, creates the file if it does not exist
+##  "w" - Write - Opens a file for writing, creates the file if it does not exist
+##  "x" - Create - Creates the specified file, returns an error if the file exists
 #   \param[in] 	strFile
 #   \param[in]  txtStream
 #   \param[in]  oType

@@ -45,11 +45,14 @@
 #define MAX_IO          33
 #define S0BUS1_PIN      30
 #define S0BUS2_PIN      31
-#define IRQ_DELAY       200
+#define IRQ_DELAY       1000
 
 #define Vers_Addr       1000
 #define SoBus1_Addr     1100
 #define SoBus2_Addr     1110
+#define PumpeSo_Addr    1200
+#define PumpeFK_Addr    1202
+#define BrennSperr_Addr 1204
 #define OW_Addr         2000
 
 #define eBus0_Addr      3000
@@ -57,12 +60,18 @@
     #define eBus1_Addr  3500
 #endif
 
+#define SPEICHER_TEMP_MIN 41
+#define WARMWASSER_TEMP   54
+
+#define PSOLAR_PIN       4
+#define PFK_PIN          3
+#define BSP_PIN          2
 // Alle Eingänge LOW AKTIV
 // Ausgänge
 //LED_BUILTIN                   13      /*<! Eingebaute LED*/ 
 
 // Eingänge
-// OneWire PIN 32
+// OneWire  PIN 32
 // S0 Bus 1 PIN 30
 // S0 Bus 2 PIN 31
 // eBus 1 Rx/Tx 6
@@ -93,14 +102,14 @@ constexpr uint32_t                      kClientTimeout = 5000;  // 5 seconds
 // half close.
 constexpr uint32_t                      kShutdownTimeout = 30000;  // 30 seconds
 
-extern bool                             mDebugOn;           /*<! */
-extern bool                             mDebug_Ethernet;    /*<! */
-extern bool                             mDebug_SoBus;       /*<! */
-extern bool                             mDebug_eBus0;       /*<! */
-extern bool                             mDebug_eBus1;       /*<! */
-extern bool                             mSerialAvail;       /*<! */
-extern unsigned long                    mBlinkZeit;
-extern bool                             mBlink;             /*<! */
+extern volatile bool                    mDebugOn;           /*<! */
+extern volatile bool                    mDebug_Ethernet;    /*<! */
+extern volatile bool                    mDebug_SoBus;       /*<! */
+extern volatile bool                    mDebug_eBus0;       /*<! */
+extern volatile bool                    mDebug_eBus1;       /*<! */
+extern volatile bool                    mSerialAvail;       /*<! */
+extern volatile unsigned long           mBlinkZeit;
+extern volatile bool                    mBlink;             /*<! */
 
 constexpr uint32_t                      mainDelay_ms    = 20;
 constexpr uint32_t                      oneWireDelay_ms = 1500;
@@ -110,18 +119,18 @@ constexpr uint32_t                      eBusDelay_ms    = 50;
 /*OneWire*/
 constexpr int                           mResolution = 12;
 extern DeviceAddress                    mSensorAddress[MAXSENSORS];
-extern uint8_t                          mSensorError[MAXSENSORS];
-extern uint8_t                          mActualSensor;
-extern float                            mTemperature[MAXSENSORS];
-extern uint8_t                          mAddr[8];
+extern volatile uint8_t                 mSensorError[MAXSENSORS];
+extern volatile uint8_t                 mActualSensor;
+extern volatile float                   mTemperature[MAXSENSORS];
+extern volatile uint8_t                 mAddr[8];
 
 // So Bus
-extern unsigned int                     mS0_Counter1;       /*<! */
-extern unsigned int                     mS0_Counter2;       /*<! */
-extern bool                             mS0_Bus1_DelayOn;
-extern bool                             mS0_Bus2_DelayOn;
-extern unsigned int                     mS0Back1;
-extern unsigned int                     mS0Back2;
+extern volatile unsigned int            mS0_Counter1;       /*<! */
+extern volatile unsigned int            mS0_Counter2;       /*<! */
+extern volatile bool                    mS0_Bus1_DelayOn;
+extern volatile bool                    mS0_Bus2_DelayOn;
+extern volatile unsigned int            mS0Back1;
+extern volatile unsigned int            mS0Back2;
 
 extern EthernetServer*                  ethServer;
 // Set the static IP to something other than INADDR_NONE (zero)
@@ -129,7 +138,7 @@ extern EthernetServer*                  ethServer;
 extern IPAddress                        staticIP;
 extern IPAddress                        subnetMask;
 extern IPAddress                        gateway;
-extern boolean                          mbHasIp;
+extern volatile boolean                 mbHasIp;
 
 struct ClientState {
                     ClientState(EthernetClient client)
@@ -152,6 +161,13 @@ struct ClientState {
 
 // Keeps track of what and where belong to whom.
 extern std::vector<ClientState> clients;
+
+struct PinFuerSperre_st
+{
+    uint8_t PumpeSo;
+    uint8_t PumpeFK;
+    uint8_t bSperre;
+};
 
 //*************************************************************************************************
 // Funktionen: -
@@ -176,6 +192,8 @@ bool RisingEdge(bool*, bool*);
 
 bool InitEthernet();
 void informServer(bool hasIP);
+
+void BrennerSperre(eBusValues_st* eBusValues, PinFuerSperre_st* PinFuerSperre);
 
 /************************ Ende Funktionen *************************************************/
 #endif /* _MAIN_H_ */
